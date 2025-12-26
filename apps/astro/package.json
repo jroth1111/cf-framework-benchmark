@@ -1,0 +1,24 @@
+{
+  "name": "cf-bench-astro",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 5175",
+    "build": "astro build",
+    "preview": "pnpm run build && wrangler dev --port 8795 --inspector-port 9231",
+    "deploy": "pnpm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^12.6.12",
+    "@cf-bench/bench-config": "workspace:*",
+    "@cf-bench/bench-types": "workspace:*",
+    "@cf-bench/chart-core": "workspace:*",
+    "@cf-bench/dataset": "workspace:*",
+    "@cf-bench/ui": "workspace:*",
+    "astro": "^5.16.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wrangler": "^4.56.0"
+  }
+}

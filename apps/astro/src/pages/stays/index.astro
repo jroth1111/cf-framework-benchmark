@@ -1,0 +1,64 @@
+---
+import Base from "../../layouts/Base.astro";
+import { listings, formatUsd } from "@cf-bench/dataset";
+import { applyBenchCache } from "../../lib/bench-cache";
+
+export const prerender = false;
+
+const profile = Astro.request.headers.get("x-cf-bench-profile");
+applyBenchCache(Astro.response.headers, profile, "list");
+
+const city = Astro.url.searchParams.get("city") ?? "";
+const max = Astro.url.searchParams.get("max") ?? "";
+const maxNum = max ? Number(max) : null;
+
+const cities = Array.from(new Set(listings.map((l) => l.city))).sort();
+
+const filtered = listings.filter((l) => {
+  if (city && l.city !== city) return false;
+  if (maxNum != null && Number.isFinite(maxNum) && l.pricePerNight > maxNum) return false;
+  return true;
+});
+---
+<Base title="Stays">
+  <form method="get" action="/stays" class="card" style="padding:14px;margin-bottom:14px">
+    <div class="grid cols-3">
+      <div>
+        <div class="small muted">City</div>
+        <select class="input" name="city">
+          <option value="" selected={!city}>Any</option>
+          {cities.map((c) => (
+            <option value={c} selected={c === city}>{c}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <div class="small muted">Max price</div>
+        <input class="input" name="max" value={max} placeholder="e.g. 250" inputmode="numeric" />
+      </div>
+      <div style="display:flex;align-items:end">
+        <button class="btn" type="submit">Apply</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="grid cols-2">
+    {filtered.map((l) => (
+      <a class="card" data-testid="stay-card" href={`/stays/${l.id}`} style="padding:14px;display:block">
+        <div style="display:flex;justify-content:space-between;gap:12px">
+          <div>
+            <div style="font-weight:700">{l.title}</div>
+            <div class="muted small">
+              {l.city}, {l.country} • {l.bedrooms} bd • {l.baths} ba • up to {l.maxGuests} guests
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700">{formatUsd(l.pricePerNight)} <span class="muted small">/ night</span></div>
+            <div class="muted small">★ {l.rating} ({l.reviews})</div>
+          </div>
+        </div>
+        <div class="muted small" style="margin-top:10px">{l.summary}</div>
+      </a>
+    ))}
+  </div>
+</Base>

@@ -1,0 +1,44 @@
+---
+import "@cf-bench/ui/styles.css";
+const { title } = Astro.props;
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="container nav">
+      <a class="brand" href="/">CF Bench</a>
+      <nav class="links">
+        <a class="pill" href="/stays">Stays</a>
+        <a class="pill" href="/chart">Chart</a>
+        <a class="pill" href="/blog">Blog</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <h1 class="h1">{title}</h1>
+      <slot />
+      <div class="footer">
+        Astro variant • stays are SSR on the edge, blog is prerendered, chart is client-side canvas.
+      </div>
+    </main>
+    <script>
+      (() => {
+        const root = (window.__CF_BENCH__ = window.__CF_BENCH__ || {});
+        const hydration = (root.hydration = root.hydration || {});
+        if (hydration.startMs == null) hydration.startMs = performance.now();
+        const finalize = () => {
+          hydration.endMs = performance.now();
+        };
+        if (document.readyState === "complete") {
+          requestAnimationFrame(finalize);
+        } else {
+          window.addEventListener("load", () => requestAnimationFrame(finalize), { once: true });
+        }
+      })();
+    </script>
+  </body>
+</html>

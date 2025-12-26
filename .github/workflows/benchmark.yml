@@ -1,0 +1,71 @@
+name: Benchmark
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Iterations per scenario"
+        required: false
+        default: "5"
+      profile:
+        description: "Profile to run (parity, idiomatic, or both)"
+        required: false
+        default: "parity"
+      throttle:
+        description: "Throttle profile (none, fast-4g, slow-3g)"
+        required: false
+        default: "none"
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    env:
+      BENCH_ITERATIONS: ${{ github.event.inputs.iterations || '5' }}
+      BENCH_PROFILE: ${{ github.event.inputs.profile || 'parity' }}
+      BENCH_THROTTLE: ${{ github.event.inputs.throttle || 'none' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm -C bench exec playwright install --with-deps chromium
+
+      - name: Run benchmark
+        run: pnpm -C bench exec node src/run.mjs --iterations $BENCH_ITERATIONS --profile $BENCH_PROFILE --throttle $BENCH_THROTTLE
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results
+          path: |
+            bench/results.v2.json
+            bench/results.v2.md
+
+      - name: Run WebPageTest (optional)
+        if: ${{ secrets.WPT_API_KEY != '' && secrets.WPT_LOCATIONS != '' }}
+        env:
+          WPT_API_KEY: ${{ secrets.WPT_API_KEY }}
+          WPT_LOCATIONS: ${{ secrets.WPT_LOCATIONS }}
+        run: pnpm bench:remote
+
+      - name: Upload remote results
+        if: ${{ secrets.WPT_API_KEY != '' && secrets.WPT_LOCATIONS != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results-remote
+          path: bench/results.remote.json

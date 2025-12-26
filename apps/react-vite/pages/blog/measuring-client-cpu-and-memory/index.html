@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Measuring client CPU and memory — React + Vite</title>
+    <link rel="stylesheet" href="/src/main.css" />
+  </head>
+  <body>
+    <div>
+      <header class="container nav">
+        <a class="brand" href="/">CF Bench</a>
+        <nav class="links">
+          <a class="pill" href="/stays">Stays</a>
+          <a class="pill" href="/chart">Chart</a>
+          <a class="pill" href="/blog">Blog</a>
+        </nav>
+      </header>
+      <main class="container">
+        <h1 class="h1">Measuring client CPU and memory</h1>
+        
+      <div class="muted small">2025-03-11 • 6 min read</div>
+      <div class="card" style="padding:16px;margin-top:14px">
+        <div data-testid="blog-html"><p>We use Playwright + Chromium and record CDP metrics for:</p>
+        <ul>
+          <li><code>JSHeapUsedSize</code> / <code>JSHeapTotalSize</code></li>
+          <li><code>TaskDuration</code>, <code>ScriptDuration</code> (when available)</li>
+        </ul>
+        <p>Directionally useful for comparisons, but not a substitute for production RUM.</p></div>
+      </div>
+      <div style="margin-top:14px">
+        <a class="pill" href="/blog">← Back to blog</a>
+      </div>
+    
+        <div class="footer">React + Vite variant • <span class="kbd">/chart</span> is SPA-like, blog is SSG pages, stays are multi-page routes.</div>
+      </main>
+    </div>
+    
+    
+  </body>
+</html>

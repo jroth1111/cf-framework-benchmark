@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notes #1: shipping fast at the edge — React + Vite</title>
+    <link rel="stylesheet" href="/src/main.css" />
+  </head>
+  <body>
+    <div>
+      <header class="container nav">
+        <a class="brand" href="/">CF Bench</a>
+        <nav class="links">
+          <a class="pill" href="/stays">Stays</a>
+          <a class="pill" href="/chart">Chart</a>
+          <a class="pill" href="/blog">Blog</a>
+        </nav>
+      </header>
+      <main class="container">
+        <h1 class="h1">Notes #1: shipping fast at the edge</h1>
+        
+      <div class="muted small">2025-05-03 • 4 min read</div>
+      <div class="card" style="padding:16px;margin-top:14px">
+        <div data-testid="blog-html"><p>Short note 1. This post intentionally contains a few elements that impact layout and styling.</p>
+        <h3>Checklist</h3>
+        <ul>
+          <li>Prefer caching on static routes</li>
+          <li>Keep hydration scoped</li>
+          <li>Measure, then optimize</li>
+        </ul>
+        <p><strong>Micro-snippet</strong></p>
+        <pre><code>export default {
+  async fetch(req, env) {
+    return new Response('ok')
+  }
+}</code></pre></div>
+      </div>
+      <div style="margin-top:14px">
+        <a class="pill" href="/blog">← Back to blog</a>
+      </div>
+    
+        <div class="footer">React + Vite variant • <span class="kbd">/chart</span> is SPA-like, blog is SSG pages, stays are multi-page routes.</div>
+      </main>
+    </div>
+    
+    
+  </body>
+</html>

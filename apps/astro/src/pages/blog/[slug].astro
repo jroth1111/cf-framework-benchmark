@@ -1,0 +1,51 @@
+---
+export const prerender = false;
+import Base from "../../layouts/Base.astro";
+
+let post = null;
+let errorMessage = null;
+
+try {
+  const { blogPosts } = await import("@cf-bench/dataset");
+  const slug = Astro.params.slug;
+
+  if (!Array.isArray(blogPosts)) {
+    throw new Error('Blog posts data is not an array');
+  }
+
+  post = blogPosts.find((p) => p.slug === slug);
+
+  if (!post) {
+    errorMessage = 'Blog post not found';
+  }
+} catch (err) {
+  errorMessage = err instanceof Error ? err.message : String(err);
+  console.error('[Astro Blog Post] Error:', err);
+}
+---
+
+{errorMessage ? (
+  <Base title="Blog Post - Error">
+    <div class="card" style="padding: 14px; border: 1px solid red; background: #fee;">
+      <h2 style="color: red; margin: 0 0 8px 0;">Blog Error</h2>
+      <p style="margin: 0;">
+        {errorMessage}
+      </p>
+      <div style="margin-top: 14px;">
+        <a class="pill" href="/blog">← Back to blog</a>
+      </div>
+    </div>
+  </Base>
+) : (
+  <Base title={post.title}>
+    <div class="muted small">{post.dateISO} • {post.readingMinutes} min read</div>
+    <div class="card" style="padding:16px;margin-top:14px">
+      <div data-testid="blog-html" set:html={post.html} />
+    </div>
+    <div style="margin-top:14px">
+      <a class="pill" href="/blog">← Back to blog</a>
+    </div>
+  </Base>
+)}
+---
+

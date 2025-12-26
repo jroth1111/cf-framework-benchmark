@@ -1,0 +1,50 @@
+---
+export const prerender = true;
+import Base from "../../layouts/Base.astro";
+
+let posts = [];
+let error = null;
+
+try {
+  const { blogPosts } = await import("@cf-bench/dataset");
+  posts = blogPosts || [];
+
+  if (!Array.isArray(posts)) {
+    throw new Error('Blog posts data is not an array');
+  }
+} catch (err) {
+  error = err instanceof Error ? err.message : String(err);
+  console.error('[Astro Blog] Error loading blog posts:', err);
+}
+---
+
+{error ? (
+  <Base title="Blog - Error">
+    <div class="card" style="padding: 14px; border: 1px solid red; background: #fee;">
+      <h2 style="color: red; margin: 0 0 8px 0;">Blog Error</h2>
+      <p style="margin: 0;">
+        Failed to load blog posts.
+        {error && <div style="margin-top: 8px; font-family: monospace; font-size: 14px;">{error}</div>}
+      </p>
+    </div>
+  </Base>
+) : (
+  <Base title="Blog">
+    <div class="grid cols-2">
+      {posts.length === 0 ? (
+        <div class="card" style="padding: 14px; text-align: center;">
+          <div class="muted">No blog posts found.</div>
+        </div>
+      ) : (
+        posts.map((p) => (
+          <a class="card" data-testid="blog-post-card" href={`/blog/${p.slug}`} style="padding:14px;display:block">
+            <div style="font-weight:700">{p.title}</div>
+            <div class="muted small">{p.dateISO} • {p.readingMinutes} min read</div>
+            <div class="muted small" style="margin-top:10px">{p.excerpt}</div>
+          </a>
+        ))
+      )}
+    </div>
+  </Base>
+)}
+---

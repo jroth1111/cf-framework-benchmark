@@ -1,0 +1,13 @@
+{
+  "name": "bench",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "run": "node ./src/run.mjs",
+    "load": "node ./src/load-test.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0",
+    "web-vitals": "^5.1.0"
+  }
+}

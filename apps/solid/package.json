@@ -1,0 +1,27 @@
+{
+  "name": "cf-bench-solid",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node ./scripts/generate-pages.mjs",
+    "dev": "pnpm run generate && vite --port 5174",
+    "build": "pnpm run generate && vite build",
+    "preview": "pnpm run build && wrangler dev --port 8796 --inspector-port 9236",
+    "deploy": "pnpm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@cf-bench/bench-config": "workspace:*",
+    "@cf-bench/chart-core": "workspace:*",
+    "@cf-bench/chart-hooks": "workspace:*",
+    "@cf-bench/dataset": "workspace:*",
+    "@cf-bench/ui": "workspace:*",
+    "@solidjs/router": "^0.15.4",
+    "solid-js": "^1.9.10"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0",
+    "vite-plugin-solid": "^2.11.10",
+    "wrangler": "^4.56.0"
+  }
+}

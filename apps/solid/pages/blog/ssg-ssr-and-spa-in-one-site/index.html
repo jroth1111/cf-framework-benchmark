@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SSG, SSR, and SPA in one site — Solid</title>
+    <link rel="stylesheet" href="/src/main.css" />
+  </head>
+  <body>
+    <div>
+      <header class="container nav">
+        <a class="brand" href="/">CF Bench</a>
+        <nav class="links">
+          <a class="pill" href="/stays">Stays</a>
+          <a class="pill" href="/chart">Chart</a>
+          <a class="pill" href="/blog">Blog</a>
+        </nav>
+      </header>
+
+      <main class="container">
+        <h1 class="h1">SSG, SSR, and SPA in one site</h1>
+        
+      <div class="muted small">2025-04-02 • 7 min read</div>
+      <div class="card" style="padding:16px;margin-top:14px">
+        <div data-testid="blog-html"><p>Modern sites are usually hybrid:</p>
+        <ul>
+          <li>Some pages must be interactive (SPA-ish)</li>
+          <li>Some pages benefit from SSR (fast first paint + SEO)</li>
+          <li>Some pages are perfect for SSG (blog/docs)</li>
+        </ul>
+        <p>This benchmark implements all three so you can test your real constraints.</p></div>
+      </div>
+      <div style="margin-top:14px">
+        <a class="pill" href="/blog">← Back to blog</a>
+      </div>
+    
+        <div class="footer">SolidJS + Vite variant • <span class="kbd">/chart</span> is SPA-like, blog is SSG pages, stays are multi-page routes.</div>
+      </main>
+    </div>
+    
+    
+  </body>
+</html>

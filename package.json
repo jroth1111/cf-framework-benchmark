@@ -1,0 +1,30 @@
+{
+  "name": "cf-bench-nextjs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 5176",
+    "build": "next build",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+  },
+  "dependencies": {
+    "@cf-bench/bench-config": "workspace:*",
+    "@cf-bench/chart-core": "workspace:*",
+    "@cf-bench/chart-hooks": "workspace:*",
+    "@cf-bench/dataset": "workspace:*",
+    "@cf-bench/ui": "workspace:*",
+    "@opennextjs/cloudflare": "^1.14.7",
+    "next": "15.4.10",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.56.0"
+  }
+}

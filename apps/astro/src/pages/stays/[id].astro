@@ -1,0 +1,35 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getListing, formatUsd } from "@cf-bench/dataset";
+import { applyBenchCache } from "../../lib/bench-cache";
+
+export const prerender = false;
+
+const profile = Astro.request.headers.get("x-cf-bench-profile");
+applyBenchCache(Astro.response.headers, profile, "detail");
+
+const id = Astro.params.id ?? "";
+const l = getListing(id);
+---
+<Base title={l ? l.title : "Stay not found"}>
+  {l ? (
+    <div class="card" style="padding:16px">
+      <div class="muted small">
+        {l.city}, {l.country} • {l.bedrooms} bd • {l.baths} ba • up to {l.maxGuests} guests
+      </div>
+
+      <div style="margin-top:10px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap">
+        <div class="pill">★ {l.rating} <span class="muted">({l.reviews})</span></div>
+        <div class="pill"><strong>{formatUsd(l.pricePerNight)}</strong> <span class="muted">/ night</span></div>
+        <a class="pill" href="/stays">← Back to results</a>
+      </div>
+
+      <div data-testid="stay-description" style="margin-top:14px" set:html={l.descriptionHtml} />
+    </div>
+  ) : (
+    <div class="card" style="padding:16px">
+      <p>Unknown listing.</p>
+      <a class="pill" href="/stays">Back</a>
+    </div>
+  )}
+</Base>

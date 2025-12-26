@@ -1,0 +1,24 @@
+{
+  "name": "cf-bench-qwik",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 5180",
+    "build": "CF_TARGET=cloudflare QWIK_BUILD_TARGET=client vite build && CF_TARGET=cloudflare QWIK_BUILD_TARGET=ssr vite build && node ./scripts/copy-assetsignore.mjs",
+    "preview": "pnpm run build && wrangler dev --port 8792 --inspector-port 9235",
+    "deploy": "pnpm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@qwik.dev/core": "^2.0.0-beta.16",
+    "@qwik.dev/router": "^2.0.0-beta.16",
+    "@cf-bench/chart-core": "workspace:*",
+    "@cf-bench/dataset": "workspace:*",
+    "@cf-bench/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0",
+    "vite-tsconfig-paths": "^6.0.3",
+    "wrangler": "^4.56.0"
+  }
+}

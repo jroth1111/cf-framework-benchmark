@@ -1,0 +1,32 @@
+{
+  "name": "cf-bench-tanstack-start",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 5177",
+    "build": "vite build",
+    "preview": "pnpm run build && wrangler dev --port 8790 --inspector-port 9233",
+    "deploy": "pnpm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@cf-bench/bench-config": "workspace:*",
+    "@cf-bench/chart-core": "workspace:*",
+    "@cf-bench/chart-hooks": "workspace:*",
+    "@cf-bench/dataset": "workspace:*",
+    "@cf-bench/ui": "workspace:*",
+    "@tanstack/react-router": "^1.142.8",
+    "@tanstack/react-start": "^1.142.8",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.19.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.9.3",
+    "vinxi": "^0.5.10",
+    "vite": "^7.3.0",
+    "wrangler": "^4.56.0"
+  }
+}

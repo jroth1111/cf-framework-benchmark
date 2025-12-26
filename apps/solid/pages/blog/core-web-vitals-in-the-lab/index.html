@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Core Web Vitals in the lab — Solid</title>
+    <link rel="stylesheet" href="/src/main.css" />
+  </head>
+  <body>
+    <div>
+      <header class="container nav">
+        <a class="brand" href="/">CF Bench</a>
+        <nav class="links">
+          <a class="pill" href="/stays">Stays</a>
+          <a class="pill" href="/chart">Chart</a>
+          <a class="pill" href="/blog">Blog</a>
+        </nav>
+      </header>
+
+      <main class="container">
+        <h1 class="h1">Core Web Vitals in the lab</h1>
+        
+      <div class="muted small">2025-03-02 • 7 min read</div>
+      <div class="card" style="padding:16px;margin-top:14px">
+        <div data-testid="blog-html"><p>We collect CWV using the <code>web-vitals</code> library.</p>
+        <p>INP is interaction-based; a lab run needs real scripted interactions to be meaningful.</p>
+        <pre><code>onLCP(console.log)
+onCLS(console.log)
+onINP(console.log)</code></pre>
+        <p>We also compute Total Blocking Time from long tasks as a lab proxy.</p></div>
+      </div>
+      <div style="margin-top:14px">
+        <a class="pill" href="/blog">← Back to blog</a>
+      </div>
+    
+        <div class="footer">SolidJS + Vite variant • <span class="kbd">/chart</span> is SPA-like, blog is SSG pages, stays are multi-page routes.</div>
+      </main>
+    </div>
+    
+    
+  </body>
+</html>

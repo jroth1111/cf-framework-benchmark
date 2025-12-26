@@ -1,0 +1,26 @@
+{
+  "name": "cf-bench-sveltekit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 5178",
+    "build": "vite build",
+    "preview": "pnpm run build && wrangler dev --port 8791 --inspector-port 9234",
+    "deploy": "pnpm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@cf-bench/bench-config": "workspace:*",
+    "@cf-bench/chart-core": "workspace:*",
+    "@cf-bench/chart-hooks": "workspace:*",
+    "@cf-bench/dataset": "workspace:*",
+    "@cf-bench/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-cloudflare": "^7.2.4",
+    "@sveltejs/kit": "^2.49.2",
+    "svelte": "^5.46.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0",
+    "wrangler": "^4.56.0"
+  }
+}

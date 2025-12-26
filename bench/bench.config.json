@@ -1,0 +1,156 @@
+{
+  "iterations": 20,
+  "warmup": true,
+  "profiles": [
+    "parity",
+    "idiomatic",
+    "mobile-cold"
+  ],
+  "profileSettings": {
+    "parity": {
+      "chartCache": "no-store",
+      "throttling": "none"
+    },
+    "idiomatic": {
+      "chartCache": "default",
+      "throttling": "none"
+    },
+    "mobile-cold": {
+      "chartCache": "default",
+      "throttling": "fast-4g",
+      "warmup": false,
+      "iterations": 10
+    }
+  },
+  "throttlingProfiles": {
+    "none": {
+      "cpu": 1,
+      "network": "none"
+    },
+    "fast-4g": {
+      "cpu": 2,
+      "network": "fast-4g",
+      "timeoutScale": 2
+    },
+    "slow-3g": {
+      "cpu": 4,
+      "network": "slow-3g",
+      "timeoutScale": 3
+    }
+  },
+  "throttling": "none",
+  "frameworks": [
+    {
+      "name": "react-vite",
+      "url": "https://cf-bench-react-vite.gwizz.workers.dev",
+      "delivery": "worker-assets",
+      "features": {
+        "clientNav": false
+      },
+      "rendering": {
+        "home": "csr",
+        "stays": "csr",
+        "blog": "ssg",
+        "chart": "spa"
+      }
+    },
+    {
+      "name": "react-spa",
+      "url": "https://cf-bench-react-spa.gwizz.workers.dev",
+      "delivery": "worker-assets",
+      "features": {
+        "clientNav": true
+      },
+      "rendering": {
+        "home": "csr",
+        "stays": "csr",
+        "blog": "csr",
+        "chart": "spa"
+      }
+    },
+    {
+      "name": "astro",
+      "url": "https://cf-bench-astro.gwizz.workers.dev",
+      "delivery": "ssr-worker",
+      "features": {
+        "clientNav": false
+      },
+      "rendering": {
+        "home": "ssg",
+        "stays": "ssr",
+        "blog": "ssg",
+        "chart": "spa"
+      }
+    },
+    {
+      "name": "nextjs",
+      "url": "https://cf-bench-nextjs.gwizz.workers.dev",
+      "delivery": "ssr-worker",
+      "features": {
+        "clientNav": true
+      },
+      "rendering": {
+        "home": "ssg",
+        "stays": "ssr",
+        "blog": "ssg",
+        "chart": "spa"
+      }
+    },
+    {
+      "name": "tanstack-start",
+      "url": "https://cf-bench-tanstack-start.gwizz.workers.dev",
+      "delivery": "ssr-worker",
+      "features": {
+        "clientNav": true
+      },
+      "rendering": {
+        "home": "ssr",
+        "stays": "ssr",
+        "blog": "ssg",
+        "chart": "spa"
+      }
+    },
+    {
+      "name": "sveltekit",
+      "url": "https://cf-bench-sveltekit.gwizz.workers.dev",
+      "delivery": "ssr-worker",
+      "features": {
+        "clientNav": true
+      },
+      "rendering": {
+        "home": "ssr",
+        "stays": "ssr",
+        "blog": "ssg",
+        "chart": "spa"
+      }
+    },
+    {
+      "name": "qwik",
+      "url": "https://cf-bench-qwik.gwizz.workers.dev",
+      "delivery": "ssr-worker",
+      "features": {
+        "clientNav": true
+      },
+      "rendering": {
+        "home": "ssr",
+        "stays": "ssr",
+        "blog": "ssg",
+        "chart": "spa"
+      }
+    },
+    {
+      "name": "solid",
+      "url": "https://cf-bench-solid.gwizz.workers.dev",
+      "delivery": "worker-assets",
+      "features": {
+        "clientNav": false
+      },
+      "rendering": {
+        "home": "csr",
+        "stays": "csr",
+        "blog": "ssg",
+        "chart": "spa"
+      }
+    }
+  ]
+}

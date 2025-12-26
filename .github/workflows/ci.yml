@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      RUN_CONTRACTS: "1"
+      RUN_SMOKE: "1"
+      RUN_BENCH: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Dataset tests
+        run: pnpm test:dataset
+
+      - name: Build
+        run: pnpm -r build
+
+      - name: Install Playwright browsers
+        if: ${{ env.RUN_SMOKE == '1' || env.RUN_BENCH == '1' }}
+        run: pnpm -C bench exec playwright install --with-deps chromium
+
+      - name: Contract tests
+        if: ${{ env.RUN_CONTRACTS == '1' }}
+        run: pnpm test:contracts
+
+      - name: Smoke tests
+        if: ${{ env.RUN_SMOKE == '1' }}
+        run: pnpm smoke
+
+      - name: Bench smoke
+        if: ${{ env.RUN_BENCH == '1' }}
+        run: pnpm bench:smoke

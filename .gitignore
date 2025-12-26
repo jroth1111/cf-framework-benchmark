@@ -1,0 +1,82 @@
+# Dependencies
+node_modules
+.pnpm-store
+.pnpm-debug.log
+
+# Build outputs
+dist
+build
+.output
+.open-next
+.wrangler
+.svelte-kit
+.vercel
+.turbo
+.next
+.open-next
+.svelte-kit
+.qwik-city
+.vite
+.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and Editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.project
+.settings
+*.sublime-*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+bench-output.log
+benchmark-*.log
+results.v2.json
+
+# Testing and coverage
+coverage
+.nyc_output
+*.lcov
+.coverage
+
+# Temporary files
+.tmp
+*.tmp
+temp/
+tmp/
+
+# Benchmark results
+bench/results
+bench/results*.json
+bench/results*.md
+bench-output.log
+*.log
+
+# Misc
+.cache
+.parcel-cache
+eslint-cache

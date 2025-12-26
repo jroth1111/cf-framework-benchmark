@@ -1,0 +1,45 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base title="Chart (SPA-like)">
+  <div class="card" style="padding:14px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="pill">
+        <span class="muted small">Symbol</span>
+        <select data-testid="symbol-select" class="input" style="width:140px"></select>
+      </div>
+
+      <div class="pill">
+        <span class="muted small">Timeframe</span>
+        <select data-testid="timeframe-select" class="input" style="width:120px"></select>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px">
+        <label class="muted small" style="display:flex;gap:6px;align-items:center">
+          <input data-testid="ind-sma20" type="checkbox" checked />
+          SMA20
+        </label>
+        <label class="muted small" style="display:flex;gap:6px;align-items:center">
+          <input data-testid="ind-sma50" type="checkbox" />
+          SMA50
+        </label>
+        <label class="muted small" style="display:flex;gap:6px;align-items:center">
+          <input data-testid="ind-ema20" type="checkbox" />
+          EMA20
+        </label>
+        <label class="muted small" style="display:flex;gap:6px;align-items:center">
+          <input data-testid="ind-volume" type="checkbox" checked />
+          Volume
+        </label>
+      </div>
+
+      <div class="muted small">Pan: drag • Zoom: wheel/trackpad • Crosshair: move cursor</div>
+    </div>
+
+    <div style="height:420px;margin-top:12px">
+      <canvas data-testid="chart-canvas" style="width:100%;height:100%;border-radius:12px;border:1px solid var(--border)"></canvas>
+    </div>
+  </div>
+
+  <script src="../scripts/chart-client.ts"></script>
+</Base>

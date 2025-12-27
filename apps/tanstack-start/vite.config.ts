@@ -8,7 +8,7 @@ export default defineConfig({
     // Cloudflare Workers integration for the server environment.
     cloudflare({ viteEnvironment: { name: "ssr" } }),
     tanstackStart({
-      target: "cloudflare-module",
+      target: "cloudflare-pages",
       customViteReactPlugin: true,
       srcDirectory: "app",
       prerender: {
@@ -16,7 +16,13 @@ export default defineConfig({
         autoSubfolderIndex: true,
         autoStaticPathsDiscovery: true,
         crawlLinks: true,
-        filter: ({ path }) => path === "/blog" || path.startsWith("/blog/"),
+        filter: ({ path }) => 
+          path === "/" || 
+          path === "/blog" || 
+          path.startsWith("/blog/") || 
+          path === "/stays" ||
+          path.startsWith("/stays/") ||
+          path === "/chart",
       },
     }),
     react(),

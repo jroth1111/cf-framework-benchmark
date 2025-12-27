@@ -1,18 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition, useDeferredValue } from "react";
 import { chartSymbols, chartTimeframes } from "@cf-bench/dataset";
 import { createChart } from "@cf-bench/chart-core";
-
-declare global {
-    interface Window {
-        __CF_BENCH__?: any;
-        __CF_BENCH_CONFIG__?: { chartCache?: string };
-    }
-}
-
-function getChartFetchOptions(): RequestInit | undefined {
-    const mode = (globalThis as any).__CF_BENCH_CONFIG__?.chartCache;
-    return mode === "no-store" ? { cache: "no-store" } : undefined;
-}
+import { markChartReady, markChartError, updateChartCoreMetrics, startChartSwitch, getChartFetchOptions } from "@cf-bench/bench-types";
 
 async function fetchCandles(symbol: string, timeframe: string, points: number) {
     const opts = getChartFetchOptions();
@@ -46,8 +35,7 @@ export function Chart() {
     const chartOptions = useMemo(() => ({
         initialViewport: 180,
         onStats: (stats) => {
-            window.__CF_BENCH__ = window.__CF_BENCH__ || {};
-            window.__CF_BENCH__.chartCore = stats;
+            updateChartCoreMetrics(stats);
         },
     }), []);
 
@@ -84,9 +72,7 @@ export function Chart() {
             setStatus("loading");
             const points = timeframe === "1m" ? 900 : timeframe === "5m" ? 700 : timeframe === "15m" ? 520 : 360;
 
-            window.__CF_BENCH__ = window.__CF_BENCH__ || {};
-            window.__CF_BENCH__.chart = window.__CF_BENCH__.chart || {};
-            window.__CF_BENCH__.chart.switchStartTs = performance.now();
+            startChartSwitch();
 
             try {
                 const data = await fetchCandles(symbol, timeframe, points);
@@ -101,26 +87,11 @@ export function Chart() {
                     });
                 }
 
-                const end = performance.now();
-                window.__CF_BENCH__.chart = {
-                    ...window.__CF_BENCH__.chart,
-                    ready: true,
-                    symbol,
-                    timeframe,
-                    lastRenderTs: end,
-                    switchDurationMs: end - (window.__CF_BENCH__.chart.switchStartTs ?? end),
-                };
-
+                markChartReady(symbol, timeframe);
                 setStatus("ready");
             } catch (e) {
                 console.error(e);
-                window.__CF_BENCH__ = window.__CF_BENCH__ || {};
-                window.__CF_BENCH__.chart = {
-                    ...window.__CF_BENCH__.chart,
-                    ready: true,
-                    error: true,
-                    errorMessage: e instanceof Error ? e.message : String(e),
-                };
+                markChartError(e instanceof Error ? e : String(e));
                 setStatus("error");
             }
         }

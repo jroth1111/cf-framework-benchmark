@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import React, { useEffect, useRef, useMemo, useTransition, useDeferredValue, useState } from "react";
 import { createChart } from "@cf-bench/chart-core";
 import { useChart } from "@cf-bench/chart-hooks";
+import { markChartReady, markChartError, updateChartCoreMetrics } from "@cf-bench/bench-types";
 
 export const Route = createFileRoute("/chart")({
   component: ChartPage,
@@ -34,6 +35,9 @@ function ChartPage() {
   // useMemo for chart options
   const chartOptions = useMemo(() => ({
     initialViewport: 180,
+    onStats: (stats) => {
+      updateChartCoreMetrics(stats);
+    },
   }), []);
 
   // Initialize chart instance with requestAnimationFrame
@@ -42,14 +46,19 @@ function ChartPage() {
     if (!canvas || chartRef.current) return;
 
     requestAnimationFrame(() => {
-      const chart = createChart(canvas, chartOptions);
-      chartRef.current = chart;
+      try {
+        const chart = createChart(canvas, chartOptions);
+        chartRef.current = chart;
 
-      requestAnimationFrame(() => {
-        chart.setIndicators(deferredIndicators);
-        chart.resize();
-        setChartReady(true);
-      });
+        requestAnimationFrame(() => {
+          chart.setIndicators(deferredIndicators);
+          chart.resize();
+          setChartReady(true);
+          markChartReady(symbol, timeframe);
+        });
+      } catch (err) {
+        markChartError(err instanceof Error ? err : 'Chart initialization failed');
+      }
     });
   }, [canvasRef, chartOptions]);
 

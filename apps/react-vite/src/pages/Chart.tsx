@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useMemo, useTransition, useDeferredValue, use
 import { createChart } from "@cf-bench/chart-core";
 import { Layout } from "../components/Layout";
 import { useChart } from "@cf-bench/chart-hooks/react";
+import { markChartReady, markChartError, updateChartCoreMetrics } from "@cf-bench/bench-types";
 
 export function Chart() {
   const {
@@ -30,7 +31,6 @@ export function Chart() {
   const chartOptions = useMemo(() => ({
     initialViewport: 180,
     onStats: (stats) => {
-      const { updateChartCoreMetrics } = require("@cf-bench/bench-types");
       updateChartCoreMetrics(stats);
     },
   }), []);
@@ -41,14 +41,19 @@ export function Chart() {
     if (!canvas || chartRef.current) return;
 
     requestAnimationFrame(() => {
-      const chart = createChart(canvas, chartOptions);
-      chartRef.current = chart;
+      try {
+        const chart = createChart(canvas, chartOptions);
+        chartRef.current = chart;
 
-      requestAnimationFrame(() => {
-        chart.setIndicators(indicators);
-        chart.resize();
-        setChartReady(true);
-      });
+        requestAnimationFrame(() => {
+          chart.setIndicators(indicators);
+          chart.resize();
+          setChartReady(true);
+          markChartReady(symbol, timeframe);
+        });
+      } catch (err) {
+        markChartError(err instanceof Error ? err : 'Chart initialization failed');
+      }
     });
   }, [canvasRef, chartOptions]);
 

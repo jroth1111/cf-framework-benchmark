@@ -1,6 +1,7 @@
 import { createEffect, onCleanup, onMount, createSignal, For, Show, ErrorBoundary } from "solid-js";
 import { createChart } from "@cf-bench/chart-core";
 import { useChart as useChartSolid } from "@cf-bench/chart-hooks/solid";
+import { markChartReady, markChartError, updateChartCoreMetrics } from "@cf-bench/bench-types";
 import { Layout } from "../components/Layout";
 
 export function Chart() {
@@ -55,7 +56,7 @@ function ChartInner(props: { onError: (error: string) => void }) {
           chart = createChart(canvasRef, {
             initialViewport: 180,
             onStats: (stats) => {
-              // Stats already tracked in useChartSolid hook
+              updateChartCoreMetrics(stats);
             },
           });
 
@@ -64,20 +65,27 @@ function ChartInner(props: { onError: (error: string) => void }) {
             try {
               chart?.resize();
               setChartReady(true);
+              markChartReady(symbol(), timeframe());
               console.log('[Solid Chart] Ready');
             } catch (err) {
               console.error('[Solid Chart] Error during chart setup:', err);
-              props.onError(err instanceof Error ? err.message : 'Chart setup failed');
+              const errMsg = err instanceof Error ? err.message : 'Chart setup failed';
+              props.onError(errMsg);
+              markChartError(errMsg);
             }
           });
         } catch (err) {
           console.error('[Solid Chart] Error creating chart:', err);
-          props.onError(err instanceof Error ? err.message : 'Chart creation failed');
+          const errMsg = err instanceof Error ? err.message : 'Chart creation failed';
+          props.onError(errMsg);
+          markChartError(errMsg);
         }
       });
     } catch (err) {
       console.error('[Solid Chart] Mount error:', err);
-      props.onError(err instanceof Error ? err.message : 'Chart failed to load');
+      const errMsg = err instanceof Error ? err.message : 'Chart failed to load';
+      props.onError(errMsg);
+      markChartError(errMsg);
     }
   });
 

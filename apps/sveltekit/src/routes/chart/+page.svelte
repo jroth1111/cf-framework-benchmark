@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte";
   import { createChart } from "@cf-bench/chart-core";
   import { createChartStore } from "@cf-bench/chart-hooks/svelte";
+  import { markChartReady, markChartError, updateChartCoreMetrics } from "@cf-bench/bench-types";
 
   const chartStore = createChartStore();
 
@@ -35,6 +36,9 @@
         try {
           chart = createChart(canvas, {
             initialViewport: 180,
+            onStats: (stats) => {
+              updateChartCoreMetrics(stats);
+            }
           });
 
           // Defer resize to next frame
@@ -47,20 +51,24 @@
                 chart?.setCandles($chartStore.data.candles);
               }
               chartReady = true;
+              markChartReady($chartStore.symbol, $chartStore.timeframe);
               console.log('[SvelteKit Chart] Ready');
             } catch (err) {
               console.error('[SvelteKit Chart] Error during chart setup:', err);
               error = err instanceof Error ? err.message : 'Chart setup failed';
+              markChartError(err instanceof Error ? err : 'Chart setup failed');
             }
           });
         } catch (err) {
           console.error('[SvelteKit Chart] Error creating chart:', err);
           error = err instanceof Error ? err.message : 'Chart creation failed';
+          markChartError(err instanceof Error ? err : 'Chart creation failed');
         }
       });
     } catch (err) {
       console.error('[SvelteKit Chart] Mount error:', err);
       error = err instanceof Error ? err.message : 'Chart failed to load';
+      markChartError(err instanceof Error ? err : 'Chart failed to load');
     }
   });
 

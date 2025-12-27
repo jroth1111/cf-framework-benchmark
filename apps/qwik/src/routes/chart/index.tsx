@@ -1,6 +1,7 @@
 import { component$, useSignal, useVisibleTask$, Slot } from "@qwik.dev/core";
 import { chartSymbols, chartTimeframes } from "@cf-bench/dataset";
 import { createChart } from "@cf-bench/chart-core";
+import { markChartReady, markChartError, updateChartCoreMetrics, startChartSwitch, getChartFetchOptions } from "@cf-bench/bench-types";
 
 // Error boundary component for Qwik
 export const ChartErrorBoundary = component$<{ error: any }>((props) => {
@@ -17,18 +18,6 @@ export const ChartErrorBoundary = component$<{ error: any }>((props) => {
     </div>
   );
 });
-
-declare global {
-  interface Window {
-    __CF_BENCH__?: any;
-    __CF_BENCH_CONFIG__?: { chartCache?: string };
-  }
-}
-
-function getChartFetchOptions() {
-  const mode = (globalThis as any).__CF_BENCH_CONFIG__?.chartCache;
-  return mode === "no-store" ? { cache: "no-store" } : undefined;
-}
 
 async function fetchCandles(symbol: string, timeframe: string, points: number) {
   const opts = getChartFetchOptions();
@@ -74,8 +63,7 @@ export default component$(() => {
         chartRef.value = createChart(canvasRef.value, {
           initialViewport: 180,
           onStats: (stats) => {
-            window.__CF_BENCH__ = window.__CF_BENCH__ || {};
-            window.__CF_BENCH__.chartCore = stats;
+            updateChartCoreMetrics(stats);
           },
         });
         chartRef.value.resize();
@@ -86,9 +74,7 @@ export default component$(() => {
       const points =
         timeframe.value === "1m" ? 900 : timeframe.value === "5m" ? 700 : timeframe.value === "15m" ? 520 : 360;
 
-      window.__CF_BENCH__ = window.__CF_BENCH__ || {};
-      window.__CF_BENCH__.chart = window.__CF_BENCH__.chart || {};
-      window.__CF_BENCH__.chart.switchStartTs = performance.now();
+      startChartSwitch();
 
       const data = await fetchCandles(symbol.value, timeframe.value, points);
       chartRef.value?.setIndicators({
@@ -99,15 +85,7 @@ export default component$(() => {
       });
       chartRef.value?.setCandles(data.candles);
 
-      const end = performance.now();
-      window.__CF_BENCH__.chart = {
-        ...window.__CF_BENCH__.chart,
-        ready: true,
-        symbol: symbol.value,
-        timeframe: timeframe.value,
-        lastRenderTs: end,
-        switchDurationMs: end - (window.__CF_BENCH__.chart.switchStartTs ?? end),
-      };
+      markChartReady(symbol.value, timeframe.value);
       status.value = "ready";
       errorMessage.value = "";
       console.log('[Qwik Chart] Ready');
@@ -116,13 +94,7 @@ export default component$(() => {
       const errMsg = e instanceof Error ? e.message : String(e);
       errorMessage.value = errMsg;
       status.value = "error";
-      window.__CF_BENCH__ = window.__CF_BENCH__ || {};
-      window.__CF_BENCH__.chart = {
-        ...window.__CF_BENCH__.chart,
-        ready: true,
-        error: true,
-        errorMessage: errMsg,
-      };
+      markChartError(errMsg);
     }
   });
 

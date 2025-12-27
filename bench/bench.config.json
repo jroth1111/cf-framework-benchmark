@@ -98,8 +98,8 @@
     },
     {
       "name": "tanstack-start",
-      "url": "https://cf-bench-tanstack-start.gwizz.workers.dev",
-      "delivery": "ssr-worker",
+      "url": "https://master.cf-bench-tanstack-start.pages.dev",
+      "delivery": "ssr-pages",
       "features": {
         "clientNav": true
       },

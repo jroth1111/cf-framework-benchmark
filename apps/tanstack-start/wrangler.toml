@@ -9,3 +9,7 @@ main = "./worker/index.ts"
 directory = "./dist/client"
 binding = "ASSETS"
 html_handling = "drop-trailing-slash"
+
+[build]
+# Exclude TanStack Start virtual modules from bundling
+external = ["tanstack-start-injected-head-scripts:v", "tanstack-start-manifest:v"]

@@ -4,7 +4,8 @@ const BENCH_PROFILE_HEADER = "x-cf-bench-profile";
 const CACHE_LIST = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
 const CACHE_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
 
-function cacheKindForPath(pathname: string) {
+function cacheKindForPath(urlPathname: string) {
+  const pathname = urlPathname;
   if (pathname === "/stays" || pathname === "/blog") return "list";
   if (pathname.startsWith("/stays/") || pathname.startsWith("/blog/")) return "detail";
   return null;

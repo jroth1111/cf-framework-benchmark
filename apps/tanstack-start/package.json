@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "vite dev --port 5177",
     "build": "vite build",
-    "preview": "pnpm run build && wrangler dev --port 8790 --inspector-port 9233",
-    "deploy": "pnpm run build && wrangler deploy"
+    "preview": "wrangler pages dev dist/client",
+    "deploy": "pnpm run build && wrangler pages deploy dist/client --project-name=cf-bench-tanstack-start"
   },
   "dependencies": {
     "@cf-bench/bench-config": "workspace:*",

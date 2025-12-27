@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Core Web Vitals in the lab — Solid</title>
     <link rel="stylesheet" href="/src/main.css" />
-  </head>
+      <script>
+      if (typeof window !== "undefined") {
+        window.__CF_BENCH__ = window.__CF_BENCH__ || {};
+        window.__CF_BENCH__.hydration.startMs = performance.now();
+      }
+    </script>
+
+</head>
   <body>
     <div>
       <header class="container nav">
@@ -38,5 +45,12 @@ onINP(console.log)</code></pre>
     </div>
     
     
-  </body>
+      <script>
+      if (typeof window !== "undefined") {
+        window.__CF_BENCH__ = window.__CF_BENCH__ || {};
+        window.__CF_BENCH__.hydration.endMs = performance.now();
+      }
+    </script>
+
+</body>
 </html>

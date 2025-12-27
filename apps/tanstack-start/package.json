@@ -15,8 +15,8 @@
     "@cf-bench/chart-hooks": "workspace:*",
     "@cf-bench/dataset": "workspace:*",
     "@cf-bench/ui": "workspace:*",
-    "@tanstack/react-router": "^1.142.8",
-    "@tanstack/react-start": "^1.142.8",
+    "@tanstack/react-router": "^1.143.11",
+    "@tanstack/react-start": "^1.143.11",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

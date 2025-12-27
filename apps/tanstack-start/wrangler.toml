@@ -11,5 +11,4 @@ binding = "ASSETS"
 html_handling = "drop-trailing-slash"
 
 [build]
-# Exclude TanStack Start virtual modules from bundling
-external = ["tanstack-start-injected-head-scripts:v", "tanstack-start-manifest:v"]
+external = ["**/*.svg", "**/*.png", "**/*.jpg", "**/*.jpeg", "tanstack-start-injected-head-scripts:v", "tanstack-start-manifest:v"]

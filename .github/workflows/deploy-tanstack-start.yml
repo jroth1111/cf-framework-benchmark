@@ -10,9 +10,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./apps/tanstack-start
     
     steps:
       - name: Checkout
@@ -26,13 +23,15 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: ../../.nvmrc
+          node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install dependencies
+        working-directory: ./
         run: pnpm install --frozen-lockfile
 
       - name: Build TanStack Start
+        working-directory: apps/tanstack-start
         run: pnpm build
 
       - name: Deploy to Cloudflare Workers

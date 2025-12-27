@@ -42,6 +42,10 @@
             try {
               chart?.resize();
               chart?.setIndicators($chartStore.indicators);
+              // Set initial data after chart is created
+              if ($chartStore.data) {
+                chart?.setCandles($chartStore.data.candles);
+              }
               chartReady = true;
               console.log('[SvelteKit Chart] Ready');
             } catch (err) {

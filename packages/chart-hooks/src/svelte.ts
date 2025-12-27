@@ -104,6 +104,9 @@ export function createChartStore(options: {
     load();
   });
 
+  // Load initial data
+  load();
+
   return {
     // Stores
     symbol,

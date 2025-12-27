@@ -29,6 +29,6 @@
 <main class="container">
   <slot />
   <div class="footer">
-    SvelteKit variant • stays SSR, blog prerender, chart client-side canvas.
+    SvelteKit variant • stays SSR, blog prerender, chart client-side canvas. (v2)
   </div>
 </main>

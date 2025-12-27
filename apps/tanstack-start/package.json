@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@cf-bench/bench-config": "workspace:*",
+    "@cf-bench/bench-types": "workspace:*",
     "@cf-bench/chart-core": "workspace:*",
     "@cf-bench/chart-hooks": "workspace:*",
     "@cf-bench/dataset": "workspace:*",

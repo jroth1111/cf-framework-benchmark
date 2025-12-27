@@ -9,6 +9,7 @@
         "deploy": "pnpm run build && wrangler deploy"
     },
     "dependencies": {
+        "@cf-bench/bench-types": "workspace:*",
         "@cf-bench/chart-core": "workspace:*",
         "@cf-bench/dataset": "workspace:*",
         "@cf-bench/ui": "workspace:*",

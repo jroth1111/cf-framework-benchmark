@@ -41,3 +41,5 @@ jobs:
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           command: deploy
           workingDirectory: apps/tanstack-start
+          secrets: |
+            CLOUDFLARE_API_TOKEN

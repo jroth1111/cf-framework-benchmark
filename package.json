@@ -1,30 +1,24 @@
 {
-  "name": "cf-bench-nextjs",
+  "name": "cf-benchmark",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --port 5176",
-    "build": "next build",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
-  },
-  "dependencies": {
-    "@cf-bench/bench-config": "workspace:*",
-    "@cf-bench/chart-core": "workspace:*",
-    "@cf-bench/chart-hooks": "workspace:*",
-    "@cf-bench/dataset": "workspace:*",
-    "@cf-bench/ui": "workspace:*",
-    "@opennextjs/cloudflare": "^1.14.7",
-    "next": "15.4.10",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "deploy": "node scripts/deploy-bench.mjs",
+    "test": "pnpm -r test",
+    "test:dataset": "pnpm -C packages/dataset exec node src/test.mjs",
+    "test:contracts": "pnpm -C bench exec node contract-tests.mjs",
+    "smoke": "pnpm -C bench exec node smoke.mjs",
+    "bench": "pnpm -C bench exec node src/run.mjs",
+    "bench:smoke": "pnpm -C bench exec node src/run.mjs --iterations 1",
+    "bench:remote": "pnpm -C bench exec node bench-remote.mjs"
   },
   "devDependencies": {
-    "@types/node": "^25.0.3",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "typescript": "^5.9.3",
-    "wrangler": "^4.56.0"
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
   }
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useTransition, useDeferredValue, useState, Suspense, lazy } from "react";
+import React, { useEffect, useRef, useMemo, useTransition, useDeferredValue, useState } from "react";
 import { createChart } from "@cf-bench/chart-core";
 import { Layout } from "../components/Layout";
 import { useChart } from "@cf-bench/chart-hooks/react";

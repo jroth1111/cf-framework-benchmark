@@ -166,8 +166,8 @@ class CandleChart {
         });
       });
       this._resizeObserver.observe(this.canvas);
-    } catch {
-      // ignore
+    } catch (e) {
+      // ResizeObserver not supported in this environment
     }
   }
 

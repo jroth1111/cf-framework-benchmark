@@ -48,3 +48,14 @@ This glossary defines the metrics reported in `bench/results.v3.<suite>.json` an
 
 - `parity`: chart data fetches use `no-store` for equal caching across frameworks.
 - `idiomatic`: framework defaults (chart data can be cached per framework).
+
+## Flamegraph artifacts
+
+When `--flamegraphs` is enabled, benchmark rows can include attached CPU profile artifacts:
+
+| Field | Unit | Source | Definition |
+|-------|------|--------|------------|
+| `flamegraph.path` | path | CDP Profiler | Relative path to a Chrome `.cpuprofile` artifact for that run row. |
+| `flamegraph.sampleCount` | samples | CDP Profiler | Number of CPU samples recorded during the scenario. |
+| `flamegraph.totalDurationMs` | ms | CDP Profiler | Total sampled duration for the profile. |
+| `flamegraph.topFrames[]` | ms, % | Derived | Top self-time frames from the captured profile for quick hotspot analysis. |

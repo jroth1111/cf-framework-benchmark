@@ -120,6 +120,21 @@ Throughput (concurrency) check:
 pnpm bench:load -- --path /stays --duration 15000 --concurrency 50
 ```
 
+Flamegraph capture (CPU stacks for eval analysis):
+
+```bash
+pnpm bench:flame
+# or target custom scope
+pnpm -C bench exec node src/run-v3.mjs --suite spa_trading_media --profile parity --iterations 1 \
+  --flamegraphs \
+  --flamegraph-frameworks react,next,nuxt \
+  --flamegraph-scenarios chart,media \
+  --flamegraph-phases cold
+```
+
+This writes `.cpuprofile` artifacts under `bench/flamegraphs/<timestamp>/` and includes hotspot summaries in
+`bench/results.v3.<suite>.json` + `.md`.
+
 ## Directory layout
 
 - `packages/dataset` – shared content (listings + blog posts + price series generator)

@@ -3,9 +3,12 @@ import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const require = createRequire(import.meta.url);
+const BENCH_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const REPO_ROOT = path.resolve(BENCH_ROOT, '..');
 
 const DEFAULT_OUT = new URL('../results.v3.json', import.meta.url);
 
@@ -84,6 +87,14 @@ function flag(name) {
   return process.argv.includes(name);
 }
 
+function parseCsvSet(value) {
+  const tokens = String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return new Set(tokens);
+}
+
 function mean(a) {
   if (!a.length) return null;
   return a.reduce((s, x) => s + x, 0) / a.length;
@@ -138,6 +149,15 @@ function formatDuration(ms, digits = 1) {
   return `${ms.toFixed(digits)}ms`;
 }
 
+function sanitizePathToken(input, fallback = 'unknown') {
+  const value = String(input || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return value || fallback;
+}
+
 function safeExec(command) {
   try {
     return execSync(command, { encoding: 'utf8' }).trim();
@@ -167,11 +187,11 @@ async function readJsonFile(filePath) {
 async function collectFrameworkPackages(frameworks) {
   const out = {};
   for (const fw of frameworks) {
-    const pkgPath = path.join(process.cwd(), 'apps', fw.name, 'package.json');
+    const pkgPath = path.join(REPO_ROOT, 'apps', fw.name, 'package.json');
     const pkg = await readJsonFile(pkgPath);
     out[fw.name] = pkg
       ? {
-          path: path.relative(process.cwd(), pkgPath),
+          path: path.relative(REPO_ROOT, pkgPath),
           name: pkg.name ?? null,
           version: pkg.version ?? null,
           dependencies: pkg.dependencies ?? {},
@@ -183,11 +203,11 @@ async function collectFrameworkPackages(frameworks) {
 }
 
 async function collectDatasetInfo() {
-  const pkgPath = path.join(process.cwd(), 'packages', 'dataset', 'package.json');
+  const pkgPath = path.join(REPO_ROOT, 'packages', 'dataset', 'package.json');
   const pkg = await readJsonFile(pkgPath);
   if (!pkg) return null;
   return {
-    path: path.relative(process.cwd(), pkgPath),
+    path: path.relative(REPO_ROOT, pkgPath),
     name: pkg.name ?? null,
     version: pkg.version ?? null,
   };
@@ -618,6 +638,109 @@ async function cdpMemory(page, cdp = null) {
   }
 }
 
+function buildFlamegraphFileName(row) {
+  const framework = sanitizePathToken(row.framework);
+  const profile = sanitizePathToken(row.profile);
+  const scenario = sanitizePathToken(row.scenario);
+  const phase = sanitizePathToken(row.phase);
+  const iteration = Number.isFinite(row.iteration) ? String(row.iteration).padStart(2, '0') : '00';
+  return `${framework}.${profile}.${scenario}.${phase}.iter${iteration}.cpuprofile`;
+}
+
+function isFlamegraphEnabledForRow(flamegraphs, row) {
+  if (!flamegraphs?.enabled) return false;
+  if (flamegraphs.frameworks && !flamegraphs.frameworks.has(row.framework)) return false;
+  if (flamegraphs.profiles && !flamegraphs.profiles.has(row.profile)) return false;
+  if (flamegraphs.scenarios && !flamegraphs.scenarios.has(row.scenario)) return false;
+  if (flamegraphs.phases && !flamegraphs.phases.has(row.phase)) return false;
+  if (Number.isFinite(flamegraphs.maxIteration) && row.iteration > flamegraphs.maxIteration) return false;
+  return true;
+}
+
+function summarizeCpuProfile(profile, sampleIntervalUs = 100) {
+  const nodes = Array.isArray(profile?.nodes) ? profile.nodes : [];
+  if (!nodes.length) {
+    return {
+      sampleCount: 0,
+      totalDurationMs: 0,
+      topFrames: [],
+    };
+  }
+
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const samples = Array.isArray(profile?.samples) ? profile.samples : [];
+  const timeDeltas = Array.isArray(profile?.timeDeltas) ? profile.timeDeltas : [];
+  const fallbackDeltaUs = Number.isFinite(sampleIntervalUs) ? sampleIntervalUs : 100;
+  const selfTimeByNode = new Map();
+  let totalUs = 0;
+
+  for (let i = 0; i < samples.length; i++) {
+    const nodeId = samples[i];
+    if (!Number.isFinite(nodeId)) continue;
+    const deltaUs = Number.isFinite(timeDeltas[i]) ? timeDeltas[i] : fallbackDeltaUs;
+    totalUs += deltaUs;
+    selfTimeByNode.set(nodeId, (selfTimeByNode.get(nodeId) || 0) + deltaUs);
+  }
+
+  const topFrames = [...selfTimeByNode.entries()]
+    .map(([nodeId, selfUs]) => {
+      const node = nodeById.get(nodeId);
+      const frame = node?.callFrame || {};
+      const functionName = frame.functionName || '(anonymous)';
+      const script = frame.url || frame.scriptId || 'inline';
+      const line = Number.isFinite(frame.lineNumber) ? frame.lineNumber + 1 : null;
+      const column = Number.isFinite(frame.columnNumber) ? frame.columnNumber + 1 : null;
+      return {
+        functionName,
+        script,
+        line,
+        column,
+        selfMs: selfUs / 1000,
+        selfPct: totalUs > 0 ? (selfUs / totalUs) * 100 : 0,
+      };
+    })
+    .sort((a, b) => b.selfMs - a.selfMs)
+    .slice(0, 10);
+
+  return {
+    sampleCount: samples.length,
+    totalDurationMs: totalUs / 1000,
+    topFrames,
+  };
+}
+
+async function startCpuProfiler(page, sampleIntervalUs) {
+  const client = await page.context().newCDPSession(page);
+  await client.send('Profiler.enable');
+  if (Number.isFinite(sampleIntervalUs)) {
+    await client.send('Profiler.setSamplingInterval', { interval: sampleIntervalUs });
+  }
+  await client.send('Profiler.start');
+  return { client };
+}
+
+async function stopCpuProfiler(profiler, writePath, sampleIntervalUs = 100) {
+  if (!profiler?.client) return null;
+  try {
+    const stopped = await profiler.client.send('Profiler.stop');
+    const profile = stopped?.profile || null;
+    if (!profile) return null;
+    await fs.writeFile(writePath, JSON.stringify(profile));
+    const summary = summarizeCpuProfile(profile, sampleIntervalUs);
+    return {
+      path: writePath,
+      format: 'cpuprofile',
+      ...summary,
+    };
+  } finally {
+    try {
+      await profiler.client.detach();
+    } catch {
+      // ignore
+    }
+  }
+}
+
 async function waitForChartReady(page, timeoutMs = 8000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -898,7 +1021,19 @@ function scenarioUrl(fw, sc) {
   return fw.url;
 }
 
-async function runScenario(page, fw, sc, iteration, phase, bundleSizes, profile, throttling, timeoutScale, throttleApplied) {
+async function runScenario(
+  page,
+  fw,
+  sc,
+  iteration,
+  phase,
+  bundleSizes,
+  profile,
+  throttling,
+  timeoutScale,
+  throttleApplied,
+  flamegraphs
+) {
   const frameworkMeta = {
     delivery: fw.delivery ?? null,
     rendering: fw.rendering ?? null,
@@ -929,30 +1064,38 @@ async function runScenario(page, fw, sc, iteration, phase, bundleSizes, profile,
   let status = null;
   let navAttempts = 0;
   let cdp = null;
+  let profiler = null;
+  let flamegraphFilePath = null;
 
   if (sc.requiresFeature && !fw.features?.[sc.requiresFeature]) {
     return { ...base, ok: false, skipped: true, error: `missing_feature:${sc.requiresFeature}` };
   }
 
   const run = async () => {
+    let result = null;
     try {
       cdp = await startCdpMetrics(page);
-    if (sc.type === 'client-nav') {
-      const nav = sc.clientNav || {};
-      const fromUrl = fw.url + (nav.from || '/');
-      const waitUntil = nav.waitUntil || 'load';
-      const navResult = await navigateWithRetry(page, {
-        action: 'goto',
-        url: fromUrl,
-        waitUntil,
-        timeout: scenarioTimeout,
-      });
-      if (!navResult) {
-        throw new Error('navigateWithRetry returned undefined for client-nav from URL');
+      if (isFlamegraphEnabledForRow(flamegraphs, base)) {
+        flamegraphFilePath = path.join(flamegraphs.outputDirAbs, buildFlamegraphFileName(base));
+        profiler = await startCpuProfiler(page, flamegraphs.sampleIntervalUs);
       }
-      const res = navResult.res;
-      status = navResult.status ?? null;
-      navAttempts = navResult.attempts ?? 0;
+
+      if (sc.type === 'client-nav') {
+        const nav = sc.clientNav || {};
+        const fromUrl = fw.url + (nav.from || '/');
+        const waitUntil = nav.waitUntil || 'load';
+        const navResult = await navigateWithRetry(page, {
+          action: 'goto',
+          url: fromUrl,
+          waitUntil,
+          timeout: scenarioTimeout,
+        });
+        if (!navResult) {
+          throw new Error('navigateWithRetry returned undefined for client-nav from URL');
+        }
+        const res = navResult.res;
+        status = navResult.status ?? null;
+        navAttempts = navResult.attempts ?? 0;
         if (nav.waitForFrom) await page.waitForSelector(nav.waitForFrom, { timeout: navTimeout });
         const start = Date.now();
         if (nav.click) await page.click(nav.click);
@@ -979,7 +1122,7 @@ async function runScenario(page, fw, sc, iteration, phase, bundleSizes, profile,
           ttfb: data.synthetic?.nav?.ttfb ?? null,
           serverTiming,
         };
-        return {
+        result = {
           ...base,
           ok: true,
           status,
@@ -997,6 +1140,7 @@ async function runScenario(page, fw, sc, iteration, phase, bundleSizes, profile,
           serverMetrics,
           ...data,
         };
+        return result;
       }
 
       const waitUntil = sc.waitUntil || 'load';
@@ -1045,7 +1189,7 @@ async function runScenario(page, fw, sc, iteration, phase, bundleSizes, profile,
         bundleSizes[fw.name].measured = true;
       }
 
-      return {
+      result = {
         ...base,
         ok: true,
         status,
@@ -1062,10 +1206,21 @@ async function runScenario(page, fw, sc, iteration, phase, bundleSizes, profile,
         serverMetrics,
         ...data,
       };
+      return result;
     } catch (err) {
       const errStatus = typeof err?.status === 'number' ? err.status : status;
-      return { ...base, ok: false, status: errStatus ?? null, navAttempts, error: errorToString(err) };
+      result = { ...base, ok: false, status: errStatus ?? null, navAttempts, error: errorToString(err) };
+      return result;
     } finally {
+      if (profiler && flamegraphFilePath) {
+        const captured = await stopCpuProfiler(profiler, flamegraphFilePath, flamegraphs?.sampleIntervalUs);
+        if (captured && result) {
+          result.flamegraph = {
+            ...captured,
+            path: path.relative(REPO_ROOT, captured.path),
+          };
+        }
+      }
       await endCdpMetrics(cdp);
     }
   };
@@ -1131,6 +1286,15 @@ async function main() {
   const throttleArg = arg('--throttle', null);
   const cpuArg = arg('--cpu', null);
   const networkArg = arg('--network', null);
+  const rawFlamegraphConfig = config.flamegraphs || {};
+  const flamegraphsEnabled = flag('--flamegraphs') || Boolean(rawFlamegraphConfig.enabled);
+  const flamegraphDirArg = arg('--flamegraph-dir', null);
+  const flamegraphSampleIntervalArg = arg('--flamegraph-sample-interval', null);
+  const flamegraphFrameworksArg = arg('--flamegraph-frameworks', null);
+  const flamegraphProfilesArg = arg('--flamegraph-profiles', null);
+  const flamegraphScenariosArg = arg('--flamegraph-scenarios', null);
+  const flamegraphPhasesArg = arg('--flamegraph-phases', null);
+  const flamegraphMaxIterationArg = arg('--flamegraph-max-iteration', null);
   const cliThrottle = cpuArg || networkArg
     ? {
         cpu: Number.isFinite(Number(cpuArg)) ? Number(cpuArg) : undefined,
@@ -1201,12 +1365,50 @@ async function main() {
   const frameworkVersions = pickFrameworkVersions(frameworkPackages);
   const datasetInfo = await collectDatasetInfo();
   const gitInfo = getGitInfo();
+  const flamegraphDefaultScenarios = scenarios
+    .map((sc) => sc.name)
+    .filter((name) => name === 'chart' || name === 'media');
+  const flamegraphOutputDirRelative = flamegraphDirArg
+    || rawFlamegraphConfig.outputDir
+    || path.join('bench', 'flamegraphs', runStartedAt.replace(/[:.]/g, '-'));
+  const flamegraphOutputDirAbs = path.isAbsolute(flamegraphOutputDirRelative)
+    ? flamegraphOutputDirRelative
+    : path.resolve(REPO_ROOT, flamegraphOutputDirRelative);
+  const flamegraphSampleIntervalUs =
+    Number(flamegraphSampleIntervalArg ?? rawFlamegraphConfig.sampleIntervalUs ?? 100);
+  const flamegraphMaxIteration =
+    Number(flamegraphMaxIterationArg ?? rawFlamegraphConfig.maxIteration ?? 1);
+  const flamegraphs = {
+    enabled: flamegraphsEnabled,
+    outputDirAbs: flamegraphOutputDirAbs,
+    outputDirRelative: path.relative(REPO_ROOT, flamegraphOutputDirAbs),
+    sampleIntervalUs: Number.isFinite(flamegraphSampleIntervalUs) ? flamegraphSampleIntervalUs : 100,
+    maxIteration: Number.isFinite(flamegraphMaxIteration) ? flamegraphMaxIteration : 1,
+    frameworks: parseCsvSet(flamegraphFrameworksArg ?? rawFlamegraphConfig.frameworks),
+    profiles: parseCsvSet(flamegraphProfilesArg ?? rawFlamegraphConfig.profiles),
+    scenarios: parseCsvSet(
+      flamegraphScenariosArg
+      ?? rawFlamegraphConfig.scenarios
+      ?? flamegraphDefaultScenarios.join(',')
+    ),
+    phases: parseCsvSet(flamegraphPhasesArg ?? rawFlamegraphConfig.phases ?? 'cold'),
+  };
+  if (!flamegraphs.frameworks.size) flamegraphs.frameworks = null;
+  if (!flamegraphs.profiles.size) flamegraphs.profiles = null;
+  if (!flamegraphs.scenarios.size) flamegraphs.scenarios = null;
+  if (!flamegraphs.phases.size) flamegraphs.phases = null;
+  if (flamegraphs.enabled) {
+    await fs.mkdir(flamegraphs.outputDirAbs, { recursive: true });
+  }
 
   console.log(`\n🚀 Cloudflare Framework Benchmark`);
   console.log(`   Iterations: ${iterationsLabel}`);
   console.log(`   Warmup: ${warmupLabel}`);
   console.log(`   Frameworks: ${frameworks.length}`);
   console.log(`   Profiles: ${profiles.join(', ')}`);
+  if (flamegraphs.enabled) {
+    console.log(`   Flamegraphs: on (${flamegraphs.outputDirRelative})`);
+  }
 
   const webVitalsSrc = await loadWebVitalsScript();
 
@@ -1275,7 +1477,8 @@ async function main() {
             profile,
             throttling,
             timeoutScale,
-            throttleApplied
+            throttleApplied,
+            flamegraphs
           );
           all.push(cold);
           recordFailure(cold);
@@ -1292,7 +1495,8 @@ async function main() {
               profile,
               throttling,
               timeoutScale,
-              throttleApplied
+              throttleApplied,
+              flamegraphs
             );
             all.push(warm);
             recordFailure(warm);
@@ -1656,6 +1860,61 @@ async function main() {
   const cacheStatusSummary = summarizeHeaderValues(all, 'cf-cache-status');
   const cacheControlSummary = summarizeHeaderValues(all, 'cache-control');
   const serverTimingSummary = summarizeServerTiming(all);
+  const flamegraphCaptures = all
+    .filter((row) => row?.flamegraph?.path)
+    .map((row) => ({
+      framework: row.framework,
+      profile: row.profile,
+      phase: row.phase,
+      scenario: row.scenario,
+      iteration: row.iteration,
+      path: row.flamegraph.path,
+      sampleCount: row.flamegraph.sampleCount ?? 0,
+      totalDurationMs: row.flamegraph.totalDurationMs ?? 0,
+      topFrames: row.flamegraph.topFrames ?? [],
+    }));
+  const flamegraphHotspots = {};
+  for (const capture of flamegraphCaptures) {
+    const key = `${capture.framework}::${capture.profile}::${capture.phase}::${capture.scenario}`;
+    const bucket = flamegraphHotspots[key] || {
+      framework: capture.framework,
+      profile: capture.profile,
+      phase: capture.phase,
+      scenario: capture.scenario,
+      captures: 0,
+      totalDurationMs: 0,
+      frames: new Map(),
+    };
+    bucket.captures += 1;
+    bucket.totalDurationMs += capture.totalDurationMs || 0;
+    for (const frame of capture.topFrames || []) {
+      const frameKey = `${frame.functionName}@@${frame.script}@@${frame.line ?? 0}`;
+      const prev = bucket.frames.get(frameKey) || {
+        functionName: frame.functionName,
+        script: frame.script,
+        line: frame.line,
+        selfMs: 0,
+      };
+      prev.selfMs += frame.selfMs || 0;
+      bucket.frames.set(frameKey, prev);
+    }
+    flamegraphHotspots[key] = bucket;
+  }
+  for (const key of Object.keys(flamegraphHotspots)) {
+    const bucket = flamegraphHotspots[key];
+    const topFrames = [...bucket.frames.values()]
+      .sort((a, b) => b.selfMs - a.selfMs)
+      .slice(0, 8);
+    flamegraphHotspots[key] = {
+      framework: bucket.framework,
+      profile: bucket.profile,
+      phase: bucket.phase,
+      scenario: bucket.scenario,
+      captures: bucket.captures,
+      totalDurationMs: bucket.totalDurationMs,
+      topFrames,
+    };
+  }
 
   const environment = {
     ...systemInfo,
@@ -1674,6 +1933,16 @@ async function main() {
     profileArg,
     headless,
     skipWarmup,
+    flamegraphs: {
+      enabled: flamegraphs.enabled,
+      outputDir: flamegraphs.outputDirRelative,
+      sampleIntervalUs: flamegraphs.sampleIntervalUs,
+      maxIteration: flamegraphs.maxIteration,
+      frameworks: flamegraphs.frameworks ? [...flamegraphs.frameworks] : null,
+      profiles: flamegraphs.profiles ? [...flamegraphs.profiles] : null,
+      scenarios: flamegraphs.scenarios ? [...flamegraphs.scenarios] : null,
+      phases: flamegraphs.phases ? [...flamegraphs.phases] : null,
+    },
   };
 
   const network = {
@@ -1712,6 +1981,21 @@ async function main() {
     network,
     cache,
     provenance,
+    flamegraphs: {
+      enabled: flamegraphs.enabled,
+      outputDir: flamegraphs.outputDirRelative,
+      sampleIntervalUs: flamegraphs.sampleIntervalUs,
+      maxIteration: flamegraphs.maxIteration,
+      filters: {
+        frameworks: flamegraphs.frameworks ? [...flamegraphs.frameworks] : null,
+        profiles: flamegraphs.profiles ? [...flamegraphs.profiles] : null,
+        scenarios: flamegraphs.scenarios ? [...flamegraphs.scenarios] : null,
+        phases: flamegraphs.phases ? [...flamegraphs.phases] : null,
+      },
+      captureCount: flamegraphCaptures.length,
+      captures: flamegraphCaptures,
+      hotspots: flamegraphHotspots,
+    },
     edgeLocations,
     cacheStatusSummary,
     cacheControlSummary,
@@ -1768,7 +2052,10 @@ async function main() {
   md += `| Locale | ${browserEnv?.language || '—'} |\n`;
   md += `| User agent | ${browserEnv?.userAgent || '—'} |\n`;
   md += `| Run order | ${runOrder.order.join(' -> ')} |\n`;
-  md += `| Randomization | ${runOrder.randomization} |\n\n`;
+  md += `| Randomization | ${runOrder.randomization} |\n`;
+  md += `| Flamegraphs enabled | ${flamegraphs.enabled ? 'true' : 'false'} |\n`;
+  md += `| Flamegraph captures | ${flamegraphCaptures.length} |\n`;
+  md += `| Flamegraph output dir | ${flamegraphs.enabled ? flamegraphs.outputDirRelative : '—'} |\n\n`;
 
   md += `## Scenarios\n\n`;
   md += `| Name | Type | Path | Wait for | Client nav |\n`;
@@ -1817,6 +2104,53 @@ async function main() {
     md += `| ${p} | ${warm ? 'enabled' : 'disabled'} | ${Number.isFinite(iter) ? iter : '—'} |\n`;
   }
   md += '\n';
+
+  if (flamegraphs.enabled) {
+    md += `## Flamegraphs\n\n`;
+    md += `CPU profiles are captured as Chrome \`.cpuprofile\` artifacts and can be opened in speedscope or Chrome DevTools.\n\n`;
+    md += `| Setting | Value |\n`;
+    md += `|---------|-------|\n`;
+    md += `| Output dir | ${flamegraphs.outputDirRelative} |\n`;
+    md += `| Sample interval | ${flamegraphs.sampleIntervalUs}us |\n`;
+    md += `| Max iteration | ${flamegraphs.maxIteration} |\n`;
+    md += `| Framework filter | ${flamegraphs.frameworks ? [...flamegraphs.frameworks].join(', ') : 'all'} |\n`;
+    md += `| Profile filter | ${flamegraphs.profiles ? [...flamegraphs.profiles].join(', ') : 'all'} |\n`;
+    md += `| Scenario filter | ${flamegraphs.scenarios ? [...flamegraphs.scenarios].join(', ') : 'all'} |\n`;
+    md += `| Phase filter | ${flamegraphs.phases ? [...flamegraphs.phases].join(', ') : 'all'} |\n\n`;
+
+    md += `### Captures\n\n`;
+    md += `| Framework | Profile | Phase | Scenario | Iter | Samples | Duration | Artifact |\n`;
+    md += `|-----------|---------|-------|----------|-----:|--------:|---------:|----------|\n`;
+    if (flamegraphCaptures.length) {
+      for (const capture of flamegraphCaptures) {
+        md += `| ${capture.framework} | ${capture.profile} | ${capture.phase} | ${capture.scenario} | ${capture.iteration} | ${capture.sampleCount} | ${capture.totalDurationMs.toFixed(1)}ms | ${capture.path} |\n`;
+      }
+    } else {
+      md += `| — | — | — | — | 0 | 0 | 0ms | — |\n`;
+    }
+    md += '\n';
+
+    md += `### Hotspots\n\n`;
+    md += `| Framework | Profile | Phase | Scenario | Captures | Top self-time frames |\n`;
+    md += `|-----------|---------|-------|----------|---------:|----------------------|\n`;
+    const hotspotRows = Object.values(flamegraphHotspots).sort((a, b) => {
+      const aw = `${a.framework}:${a.profile}:${a.phase}:${a.scenario}`;
+      const bw = `${b.framework}:${b.profile}:${b.phase}:${b.scenario}`;
+      return aw.localeCompare(bw);
+    });
+    if (hotspotRows.length) {
+      for (const hotspot of hotspotRows) {
+        const topList = (hotspot.topFrames || [])
+          .slice(0, 3)
+          .map((frame) => `${frame.functionName} (${frame.selfMs.toFixed(1)}ms)`)
+          .join('; ');
+        md += `| ${hotspot.framework} | ${hotspot.profile} | ${hotspot.phase} | ${hotspot.scenario} | ${hotspot.captures} | ${topList || '—'} |\n`;
+      }
+    } else {
+      md += `| — | — | — | — | 0 | — |\n`;
+    }
+    md += '\n';
+  }
 
   md += `## Provenance\n\n`;
   md += `| Field | Value |\n`;

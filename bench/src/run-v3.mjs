@@ -139,8 +139,21 @@ async function main() {
   await fs.writeFile(tempConfigPath, JSON.stringify(config, null, 2));
 
   const passthroughArgs = [];
-  const passthroughFlags = ['--headed', '--skip-warmup'];
-  const passthroughPairs = ['--profile', '--iterations', '--throttle', '--cpu', '--network'];
+  const passthroughFlags = ['--headed', '--skip-warmup', '--flamegraphs'];
+  const passthroughPairs = [
+    '--profile',
+    '--iterations',
+    '--throttle',
+    '--cpu',
+    '--network',
+    '--flamegraph-dir',
+    '--flamegraph-frameworks',
+    '--flamegraph-profiles',
+    '--flamegraph-scenarios',
+    '--flamegraph-phases',
+    '--flamegraph-max-iteration',
+    '--flamegraph-sample-interval',
+  ];
 
   for (const flag of passthroughFlags) {
     if (hasFlag(flag)) passthroughArgs.push(flag);

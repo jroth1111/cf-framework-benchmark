@@ -11,31 +11,8 @@ function parseFrameworksFromHelp(helpText) {
   }
 
   const section = helpText.slice(idx);
-  const lines = section.split('\n');
-  let inAllowed = false;
-  let collected = '';
-
-  for (const rawLine of lines) {
-    const line = rawLine || '';
-    if (!inAllowed) {
-      if (line.includes('Allowed Values:')) {
-        inAllowed = true;
-      }
-      continue;
-    }
-
-    const trimmed = line.trim();
-    if (!trimmed) {
-      if (collected.trim().length > 0) break;
-      continue;
-    }
-
-    if (trimmed.startsWith('--')) {
-      break;
-    }
-
-    collected += ` ${trimmed}`;
-  }
+  const match = section.match(/Allowed Values:\s*([\s\S]*?)(?:\n\s*--[a-z-]+=<value>|\n\s*--[a-z-]+,|\n\n[A-Z]|\n$)/i);
+  const collected = match?.[1] ?? '';
 
   const values = (collected.match(/[a-z][a-z0-9-]*/g) || []).filter(
     (token) => !['allowed', 'values'].includes(token)
@@ -47,6 +24,8 @@ function parseFrameworksFromHelp(helpText) {
 
   return [...new Set(values)].sort((a, b) => a.localeCompare(b));
 }
+
+const DEPRECATED_FRAMEWORKS = new Set(['analog', 'docusaurus', 'gatsby']);
 
 function diffSets(expected, actual) {
   const exp = new Set(expected);
@@ -67,12 +46,12 @@ async function main() {
     throw new Error('framework-matrix.json contains duplicate framework names.');
   }
 
-  const helpText = execSync('pnpm create cloudflare@latest --help', {
+  const helpText = execSync('pnpm create cloudflare@latest --help --json', {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
-  const c3Frameworks = parseFrameworksFromHelp(helpText);
+  const c3Frameworks = parseFrameworksFromHelp(helpText).filter((name) => !DEPRECATED_FRAMEWORKS.has(name));
   const { missing, extra } = diffSets(c3Frameworks, sortedMatrixFrameworks);
 
   if (!missing.length && !extra.length) {

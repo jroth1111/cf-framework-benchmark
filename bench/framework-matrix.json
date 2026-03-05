@@ -8,26 +8,14 @@
   },
   "frameworks": [
     {
-      "name": "analog",
-      "status": "planned",
-      "benchmarkEnabled": false,
-      "appDir": "apps/analog",
-      "deploy": {
-        "type": "workers",
-        "command": "pnpm -C apps/analog deploy"
-      },
-      "notes": "Not yet implemented in this repository"
-    },
-    {
       "name": "angular",
-      "status": "planned",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/angular",
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/angular deploy"
-      },
-      "notes": "Not yet implemented in this repository"
+      }
     },
     {
       "name": "astro",
@@ -40,37 +28,14 @@
       }
     },
     {
-      "name": "docusaurus",
-      "status": "planned",
-      "benchmarkEnabled": false,
-      "appDir": "apps/docusaurus",
-      "deploy": {
-        "type": "workers",
-        "command": "pnpm -C apps/docusaurus deploy"
-      },
-      "notes": "Not yet implemented in this repository"
-    },
-    {
-      "name": "gatsby",
-      "status": "planned",
-      "benchmarkEnabled": false,
-      "appDir": "apps/gatsby",
-      "deploy": {
-        "type": "workers",
-        "command": "pnpm -C apps/gatsby deploy"
-      },
-      "notes": "Not yet implemented in this repository"
-    },
-    {
       "name": "hono",
-      "status": "planned",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/hono",
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono deploy"
-      },
-      "notes": "Not yet implemented in this repository"
+      }
     },
     {
       "name": "next",
@@ -84,14 +49,13 @@
     },
     {
       "name": "nuxt",
-      "status": "planned",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/nuxt",
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/nuxt deploy"
-      },
-      "notes": "Not yet implemented in this repository"
+      }
     },
     {
       "name": "qwik",
@@ -115,25 +79,23 @@
     },
     {
       "name": "react-router",
-      "status": "planned",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/react-router",
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/react-router deploy"
-      },
-      "notes": "Not yet implemented in this repository"
+      }
     },
     {
       "name": "redwood",
-      "status": "planned",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/redwood",
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/redwood deploy"
-      },
-      "notes": "Not yet implemented in this repository"
+      }
     },
     {
       "name": "solid",
@@ -157,47 +119,43 @@
     },
     {
       "name": "tanstack-start",
-      "status": "blocked",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/tanstack-start",
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/tanstack-start deploy"
-      },
-      "notes": "Current implementation still uses Cloudflare Pages deployment flow and must be migrated"
+      }
     },
     {
       "name": "vike",
-      "status": "planned",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/vike",
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vike deploy"
-      },
-      "notes": "Not yet implemented in this repository"
+      }
     },
     {
       "name": "vue",
-      "status": "planned",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/vue",
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vue deploy"
-      },
-      "notes": "Not yet implemented in this repository"
+      }
     },
     {
       "name": "waku",
-      "status": "planned",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/waku",
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/waku deploy"
-      },
-      "notes": "Not yet implemented in this repository"
+      }
     }
   ]
 }

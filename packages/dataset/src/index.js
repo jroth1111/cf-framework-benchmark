@@ -398,6 +398,93 @@ export function getPost(slug) {
   return blogPosts.find((p) => p.slug === slug);
 }
 
+/** @typedef {{ id: string; title: string; channel: string; durationSec: number; views: number; publishedISO: string; thumbnail: string; description: string; }} MediaItem */
+
+const mediaChannels = [
+  'Edge Lab',
+  'Workers Weekly',
+  'Cloud Native Notes',
+  'Frontend Signals',
+  'Data at the Edge',
+  'Realtime Systems',
+];
+
+const mediaTitleFragments = [
+  'Building Fast Search',
+  'Caching Under Load',
+  'Routing at Planet Scale',
+  'Designing for Latency',
+  'UI Rendering Tradeoffs',
+  'Streaming Response Patterns',
+  'Isolate Warmup Behavior',
+  'Framework SSR Reality Check',
+  'Data Fetching Patterns',
+  'Production Observability',
+];
+
+/** @type {MediaItem[]} */
+export const mediaItems = (() => {
+  const out = [];
+  const baseTs = Date.UTC(2025, 5, 1, 0, 0, 0, 0);
+
+  for (let i = 1; i <= 120; i++) {
+    const id = `m${String(i).padStart(4, '0')}`;
+    const rand = mulberry32(hashStringToSeed(`media:${id}`));
+    const channel = mediaChannels[Math.floor(rand() * mediaChannels.length)];
+    const title = `${mediaTitleFragments[Math.floor(rand() * mediaTitleFragments.length)]} #${i}`;
+    const durationSec = 120 + Math.floor(rand() * 2100);
+    const views = 2_000 + Math.floor(rand() * 2_500_000);
+    const daysAgo = 1 + Math.floor(rand() * 480);
+    const publishedISO = new Date(baseTs - daysAgo * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const thumbnail = `https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=960&q=80&sig=${i}`;
+    const description = `Episode ${i} covering edge runtime design, practical performance, and framework behavior under real constraints.`;
+
+    out.push({
+      id,
+      title,
+      channel,
+      durationSec,
+      views,
+      publishedISO,
+      thumbnail,
+      description,
+    });
+  }
+
+  out.sort((a, b) => (a.publishedISO < b.publishedISO ? 1 : -1));
+  return out;
+})();
+
+/** @param {string} id */
+export function getMedia(id) {
+  return mediaItems.find((m) => m.id === id);
+}
+
+/**
+ * @param {{ channel?: string; page?: number; pageSize?: number }} params
+ */
+export function queryMedia(params = {}) {
+  const channel = params.channel || '';
+  const pageSize = Math.max(1, Math.min(50, params.pageSize ?? 20));
+  const page = Math.max(1, params.page ?? 1);
+
+  let rows = mediaItems.slice();
+  if (channel) rows = rows.filter((m) => m.channel === channel);
+
+  const total = rows.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const p = Math.min(page, totalPages);
+  const start = (p - 1) * pageSize;
+
+  return {
+    total,
+    totalPages,
+    page: p,
+    pageSize,
+    results: rows.slice(start, start + pageSize),
+  };
+}
+
 export const chartSymbols = ['BTC', 'ETH', 'SOL', 'AAPL', 'TSLA', 'NVDA', 'GOOG', 'MSFT'];
 export const chartTimeframes = /** @type {const} */ (['1m', '5m', '15m', '1h', '4h', '1d']);
 

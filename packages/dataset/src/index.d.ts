@@ -41,6 +41,17 @@ export type BlogPost = {
   html: string;
 };
 
+export type MediaItem = {
+  id: string;
+  title: string;
+  channel: string;
+  durationSec: number;
+  views: number;
+  publishedISO: string;
+  thumbnail: string;
+  description: string;
+};
+
 export type Candle = { t: number; o: number; h: number; l: number; c: number; v: number };
 
 export const listings: Listing[];
@@ -62,6 +73,20 @@ export function queryListings(params?: {
 
 export const blogPosts: BlogPost[];
 export function getPost(slug: string): BlogPost | undefined;
+
+export const mediaItems: MediaItem[];
+export function getMedia(id: string): MediaItem | undefined;
+export function queryMedia(params?: {
+  channel?: string;
+  page?: number;
+  pageSize?: number;
+}): {
+  total: number;
+  totalPages: number;
+  page: number;
+  pageSize: number;
+  results: MediaItem[];
+};
 
 export const chartSymbols: string[];
 export const chartTimeframes: readonly ['1m', '5m', '15m', '1h', '4h', '1d'];

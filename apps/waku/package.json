@@ -8,8 +8,8 @@
 		"dev": "wrangler dev",
 		"build": "tsc --noEmit",
 		"start": "wrangler dev",
-		"deploy": "wrangler deploy",
-		"preview": "wrangler dev"
+		"deploy": "wrangler deploy --config wrangler.jsonc",
+		"preview": "wrangler dev --config wrangler.jsonc"
 	},
 	"dependencies": {
 		"@cf-bench/bench-contract": "workspace:*",

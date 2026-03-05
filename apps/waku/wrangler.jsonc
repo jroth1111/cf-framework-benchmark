@@ -23,16 +23,6 @@
 	"vars": {
 		"MAX_ITEMS": 10
 	},
-	"rules": [
-		{
-			"type": "ESModule",
-			"globs": [
-				"**/*.js",
-				"**/*.mjs"
-			]
-		}
-	],
-	"no_bundle": true,
 	"observability": {
 		"enabled": true
 	}

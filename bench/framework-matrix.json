@@ -14,7 +14,7 @@
       "appDir": "apps/angular",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/angular deploy"
+        "command": "pnpm -C apps/angular run deploy"
       }
     },
     {
@@ -24,7 +24,7 @@
       "appDir": "apps/astro",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/astro deploy"
+        "command": "pnpm -C apps/astro run deploy"
       }
     },
     {
@@ -34,7 +34,7 @@
       "appDir": "apps/hono",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/hono deploy"
+        "command": "pnpm -C apps/hono run deploy"
       }
     },
     {
@@ -44,7 +44,7 @@
       "appDir": "apps/next",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/next deploy"
+        "command": "pnpm -C apps/next run deploy"
       }
     },
     {
@@ -54,7 +54,7 @@
       "appDir": "apps/nuxt",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/nuxt deploy"
+        "command": "pnpm -C apps/nuxt run deploy"
       }
     },
     {
@@ -64,7 +64,7 @@
       "appDir": "apps/qwik",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/qwik deploy"
+        "command": "pnpm -C apps/qwik run deploy"
       }
     },
     {
@@ -74,7 +74,7 @@
       "appDir": "apps/react",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/react deploy"
+        "command": "pnpm -C apps/react run deploy"
       }
     },
     {
@@ -84,7 +84,7 @@
       "appDir": "apps/react-router",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/react-router deploy"
+        "command": "pnpm -C apps/react-router run deploy"
       }
     },
     {
@@ -94,7 +94,7 @@
       "appDir": "apps/redwood",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/redwood deploy"
+        "command": "pnpm -C apps/redwood run deploy"
       }
     },
     {
@@ -104,7 +104,7 @@
       "appDir": "apps/solid",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/solid deploy"
+        "command": "pnpm -C apps/solid run deploy"
       }
     },
     {
@@ -114,7 +114,7 @@
       "appDir": "apps/svelte",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/svelte deploy"
+        "command": "pnpm -C apps/svelte run deploy"
       }
     },
     {
@@ -124,7 +124,7 @@
       "appDir": "apps/tanstack-start",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/tanstack-start deploy"
+        "command": "pnpm -C apps/tanstack-start run deploy"
       }
     },
     {
@@ -134,7 +134,7 @@
       "appDir": "apps/vike",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/vike deploy"
+        "command": "pnpm -C apps/vike run deploy"
       }
     },
     {
@@ -144,7 +144,7 @@
       "appDir": "apps/vue",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/vue deploy"
+        "command": "pnpm -C apps/vue run deploy"
       }
     },
     {
@@ -154,7 +154,7 @@
       "appDir": "apps/waku",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/waku deploy"
+        "command": "pnpm -C apps/waku run deploy"
       }
     }
   ]

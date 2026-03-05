@@ -250,12 +250,11 @@ async function applyThrottling(page, throttling) {
 }
 
 const FRAMEWORK_VERSION_KEYS = {
-  'react-vite': ['react', 'react-dom', 'vite'],
-  'react-spa': ['react', 'react-dom', 'react-router-dom', 'vite'],
+  react: ['react', 'react-dom', 'react-router-dom', 'vite'],
   astro: ['astro'],
-  nextjs: ['next', 'react', 'react-dom'],
+  next: ['next', 'react', 'react-dom'],
   'tanstack-start': ['@tanstack/react-start', '@tanstack/react-router', 'react', 'react-dom', 'vinxi', 'vite'],
-  sveltekit: ['@sveltejs/kit', 'svelte', '@sveltejs/adapter-cloudflare', 'vite'],
+  svelte: ['@sveltejs/kit', 'svelte', '@sveltejs/adapter-cloudflare', 'vite'],
   qwik: ['@qwik.dev/core', '@qwik.dev/router', 'vite'],
   solid: ['solid-js', 'vite'],
 };

@@ -41,22 +41,8 @@
   "throttling": "none",
   "frameworks": [
     {
-      "name": "react-vite",
-      "url": "https://cf-bench-react-vite.gwizz.workers.dev",
-      "delivery": "worker-assets",
-      "features": {
-        "clientNav": false
-      },
-      "rendering": {
-        "home": "csr",
-        "stays": "csr",
-        "blog": "ssg",
-        "chart": "spa"
-      }
-    },
-    {
-      "name": "react-spa",
-      "url": "https://cf-bench-react-spa.gwizz.workers.dev",
+      "name": "react",
+      "url": "https://cf-bench-react.gwizz.workers.dev",
       "delivery": "worker-assets",
       "features": {
         "clientNav": true
@@ -83,7 +69,7 @@
       }
     },
     {
-      "name": "nextjs",
+      "name": "next",
       "url": "https://cf-bench-nextjs.gwizz.workers.dev",
       "delivery": "ssr-worker",
       "features": {
@@ -111,7 +97,7 @@
       }
     },
     {
-      "name": "sveltekit",
+      "name": "svelte",
       "url": "https://cf-bench-sveltekit.gwizz.workers.dev",
       "delivery": "ssr-worker",
       "features": {

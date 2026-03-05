@@ -4,8 +4,7 @@ This repository contains **the same demo site** implemented in multiple framewor
 
 Framework implementations included:
 
-- React + Vite (pre-rendered MPA) – `react-vite`
-- React + Vite (client-only SPA) – `react-spa`
+- React
 - Astro
 - Next.js (OpenNext on Workers)
 - TanStack Start
@@ -73,7 +72,7 @@ pnpm -r build
 Each app has its own `dev` / `preview` scripts. Examples:
 
 ```bash
-pnpm -C apps/react-vite dev
+pnpm -C apps/react dev
 pnpm -C apps/astro dev
 pnpm -C apps/sveltekit dev
 ```
@@ -85,7 +84,7 @@ Each app has a `deploy` script that calls `wrangler deploy` (or the framework’
 Example:
 
 ```bash
-pnpm -C apps/react-vite deploy
+pnpm -C apps/react deploy
 ```
 
 ### 5) Benchmark

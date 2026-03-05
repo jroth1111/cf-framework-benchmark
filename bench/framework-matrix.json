@@ -105,14 +105,13 @@
     },
     {
       "name": "react",
-      "status": "planned",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/react",
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/react deploy"
-      },
-      "notes": "Pending migration from legacy react-vite/react-spa variants"
+      }
     },
     {
       "name": "react-router",

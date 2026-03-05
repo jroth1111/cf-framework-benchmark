@@ -4,6 +4,11 @@
   "source": "bench/framework-matrix.json",
   "targets": [
     {
+      "framework": "react",
+      "platform": "workers",
+      "url": "https://cf-bench-react.gwizz.workers.dev"
+    },
+    {
       "framework": "astro",
       "platform": "workers",
       "url": "https://cf-bench-astro.gwizz.workers.dev"

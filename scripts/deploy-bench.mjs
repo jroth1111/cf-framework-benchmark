@@ -9,11 +9,10 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DEFAULT_PREFIX = process.env.CF_BENCH_PREFIX || "cf-benchmark";
 
 const FRAMEWORKS = [
-  { name: "react-vite", pkg: "cf-bench-react-vite", dir: "apps/react-vite" },
-  { name: "react-spa", pkg: "cf-bench-react-spa", dir: "apps/react-spa" },
+  { name: "react", pkg: "cf-bench-react", dir: "apps/react" },
   { name: "astro", pkg: "cf-bench-astro", dir: "apps/astro" },
   {
-    name: "nextjs",
+    name: "next",
     pkg: "cf-bench-nextjs",
     dir: "apps/nextjs",
     buildCmd: "pnpm -C apps/nextjs exec opennextjs-cloudflare build",
@@ -24,7 +23,7 @@ const FRAMEWORKS = [
     pkg: "cf-bench-tanstack-start",
     dir: "apps/tanstack-start",
   },
-  { name: "sveltekit", pkg: "cf-bench-sveltekit", dir: "apps/sveltekit" },
+  { name: "svelte", pkg: "cf-bench-sveltekit", dir: "apps/sveltekit" },
   { name: "qwik", pkg: "cf-bench-qwik", dir: "apps/qwik" },
   { name: "solid", pkg: "cf-bench-solid", dir: "apps/solid" },
 ];

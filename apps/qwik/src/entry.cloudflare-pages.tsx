@@ -1,4 +1,5 @@
 import { createQwikCity } from "@qwik.dev/router/middleware/cloudflare-pages";
+import { handleBenchmarkRequest } from "@cf-bench/bench-contract";
 import render from "./entry.ssr";
 
 const baseFetch = createQwikCity({ render });
@@ -22,6 +23,9 @@ function cacheHeaderFor(profile: string | null, kind: "list" | "detail" | null) 
 }
 
 const fetch: typeof baseFetch = async (request, env, ctx) => {
+  const bench = handleBenchmarkRequest("qwik", request);
+  if (bench) return bench;
+
   const response = await baseFetch(request, env, ctx);
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/html")) return response;

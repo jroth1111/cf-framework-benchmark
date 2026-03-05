@@ -7,7 +7,11 @@ import Base from "../layouts/Base.astro";
     <div class="card" style="padding:14px">
       <h2 style="margin-top:0">Feed</h2>
       <p id="media-status" class="muted">Loading media…</p>
-      <div id="media-feed" style="display:grid;gap:10px;max-height:560px;overflow:auto"></div>
+      <div id="media-feed" style="display:grid;gap:10px;max-height:560px;overflow:auto">
+        <button data-testid="media-card" class="card" style="padding:10px;text-align:left;opacity:.7" disabled>
+          Loading media...
+        </button>
+      </div>
     </div>
 
     <div class="card" style="padding:14px">

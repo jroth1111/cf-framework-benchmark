@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "vite dev --port 5177",
     "build": "vite build",
-    "preview": "pnpm run build && wrangler dev",
-    "deploy": "pnpm run build && wrangler deploy"
+    "preview": "pnpm run build && wrangler dev --config dist/client/wrangler.json",
+    "deploy": "pnpm run build && wrangler deploy --config dist/client/wrangler.json"
   },
   "dependencies": {
     "@cf-bench/bench-contract": "workspace:*",

@@ -18,6 +18,9 @@ const CACHE = {
 function toUrl(input) {
   if (input instanceof URL) return input;
   if (input instanceof Request) return new URL(input.url);
+  if (input && typeof input === "object" && typeof input.url === "string") {
+    return new URL(input.url);
+  }
   if (typeof input === "string") return new URL(input, "https://cf-bench.local");
   return new URL("https://cf-bench.local");
 }

@@ -13,7 +13,7 @@
 		"nodejs_als"
 	],
 	// https://developers.cloudflare.com/workers/platform/compatibility-dates
-	"compatibility_date": "2025-11-17",
+	"compatibility_date": "2026-03-05",
 	"assets": {
 		// https://developers.cloudflare.com/workers/static-assets/binding/
 		"binding": "ASSETS",

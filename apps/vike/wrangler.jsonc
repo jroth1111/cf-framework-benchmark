@@ -5,7 +5,7 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "cf-bench-vike",
-	"compatibility_date": "2025-09-06",
+	"compatibility_date": "2026-03-05",
 	"main": "src/worker.ts",
 	"observability": {
 		"enabled": true

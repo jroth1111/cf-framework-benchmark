@@ -10,7 +10,7 @@
 	// Entry point for your worker
 	"main": "src/worker.tsx",
 	// Compatibility settings
-	"compatibility_date": "2025-08-21",
+	"compatibility_date": "2026-03-05",
 	"compatibility_flags": [
 		"nodejs_compat"
 	],

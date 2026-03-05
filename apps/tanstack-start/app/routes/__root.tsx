@@ -26,6 +26,7 @@ function RootComponent() {
             <nav className="links">
               <Link className="pill" to="/stays">Stays</Link>
               <Link className="pill" to="/chart">Chart</Link>
+              <Link className="pill" to="/media">Media</Link>
               <Link className="pill" to="/blog">Blog</Link>
             </nav>
           </header>

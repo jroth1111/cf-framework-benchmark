@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { handleContractApi } from "@cf-bench/bench-contract";
 
-export const Route = createFileRoute("/api/listings/$id")({
+export const Route = createFileRoute("/api/media")({
   server: {
     handlers: {
       GET: async ({ request }) =>

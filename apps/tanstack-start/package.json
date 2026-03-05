@@ -5,10 +5,11 @@
   "scripts": {
     "dev": "vite dev --port 5177",
     "build": "vite build",
-    "preview": "wrangler pages dev dist/client",
-    "deploy": "pnpm run build && wrangler pages deploy dist/client --project-name=cf-bench-tanstack-start"
+    "preview": "pnpm run build && wrangler dev",
+    "deploy": "pnpm run build && wrangler deploy"
   },
   "dependencies": {
+    "@cf-bench/bench-contract": "workspace:*",
     "@cf-bench/bench-config": "workspace:*",
     "@cf-bench/bench-types": "workspace:*",
     "@cf-bench/chart-core": "workspace:*",

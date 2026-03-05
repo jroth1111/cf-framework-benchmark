@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MediaRouteImport } from './routes/media'
 import { Route as ChartRouteImport } from './routes/chart'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaysIndexRouteImport } from './routes/stays/index'
@@ -16,11 +17,17 @@ import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as StaysIdRouteImport } from './routes/stays/$id'
 import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
 import { Route as ApiPricesRouteImport } from './routes/api/prices'
+import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiBenchRouteImport } from './routes/api/bench'
 import { Route as ApiListingsIndexRouteImport } from './routes/api/listings/index'
 import { Route as ApiListingsIdRouteImport } from './routes/api/listings/$id'
 
+const MediaRoute = MediaRouteImport.update({
+  id: '/media',
+  path: '/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChartRoute = ChartRouteImport.update({
   id: '/chart',
   path: '/chart',
@@ -56,6 +63,11 @@ const ApiPricesRoute = ApiPricesRouteImport.update({
   path: '/api/prices',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMediaRoute = ApiMediaRouteImport.update({
+  id: '/api/media',
+  path: '/api/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
   path: '/api/health',
@@ -80,8 +92,10 @@ const ApiListingsIdRoute = ApiListingsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chart': typeof ChartRoute
+  '/media': typeof MediaRoute
   '/api/bench': typeof ApiBenchRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/media': typeof ApiMediaRoute
   '/api/prices': typeof ApiPricesRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/stays/$id': typeof StaysIdRoute
@@ -93,8 +107,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chart': typeof ChartRoute
+  '/media': typeof MediaRoute
   '/api/bench': typeof ApiBenchRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/media': typeof ApiMediaRoute
   '/api/prices': typeof ApiPricesRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/stays/$id': typeof StaysIdRoute
@@ -107,8 +123,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/chart': typeof ChartRoute
+  '/media': typeof MediaRoute
   '/api/bench': typeof ApiBenchRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/media': typeof ApiMediaRoute
   '/api/prices': typeof ApiPricesRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/stays/$id': typeof StaysIdRoute
@@ -122,8 +140,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/chart'
+    | '/media'
     | '/api/bench'
     | '/api/health'
+    | '/api/media'
     | '/api/prices'
     | '/blog/$slug'
     | '/stays/$id'
@@ -135,8 +155,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/chart'
+    | '/media'
     | '/api/bench'
     | '/api/health'
+    | '/api/media'
     | '/api/prices'
     | '/blog/$slug'
     | '/stays/$id'
@@ -148,8 +170,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/chart'
+    | '/media'
     | '/api/bench'
     | '/api/health'
+    | '/api/media'
     | '/api/prices'
     | '/blog/$slug'
     | '/stays/$id'
@@ -162,8 +186,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChartRoute: typeof ChartRoute
+  MediaRoute: typeof MediaRoute
   ApiBenchRoute: typeof ApiBenchRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  ApiMediaRoute: typeof ApiMediaRoute
   ApiPricesRoute: typeof ApiPricesRoute
   BlogSlugRoute: typeof BlogSlugRoute
   StaysIdRoute: typeof StaysIdRoute
@@ -175,6 +201,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/media': {
+      id: '/media'
+      path: '/media'
+      fullPath: '/media'
+      preLoaderRoute: typeof MediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chart': {
       id: '/chart'
       path: '/chart'
@@ -224,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPricesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/media': {
+      id: '/api/media'
+      path: '/api/media'
+      fullPath: '/api/media'
+      preLoaderRoute: typeof ApiMediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/health': {
       id: '/api/health'
       path: '/api/health'
@@ -258,8 +298,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChartRoute: ChartRoute,
+  MediaRoute: MediaRoute,
   ApiBenchRoute: ApiBenchRoute,
   ApiHealthRoute: ApiHealthRoute,
+  ApiMediaRoute: ApiMediaRoute,
   ApiPricesRoute: ApiPricesRoute,
   BlogSlugRoute: BlogSlugRoute,
   StaysIdRoute: StaysIdRoute,

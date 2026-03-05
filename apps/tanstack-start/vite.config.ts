@@ -8,21 +8,11 @@ export default defineConfig({
     // Cloudflare Workers integration for the server environment.
     cloudflare({ viteEnvironment: { name: "ssr" } }),
     tanstackStart({
-      target: "cloudflare-pages",
+      target: "cloudflare-workers",
       customViteReactPlugin: true,
       srcDirectory: "app",
       prerender: {
-        enabled: true,
-        autoSubfolderIndex: true,
-        autoStaticPathsDiscovery: true,
-        crawlLinks: true,
-        filter: ({ path }) => 
-          path === "/" || 
-          path === "/blog" || 
-          path.startsWith("/blog/") || 
-          path === "/stays" ||
-          path.startsWith("/stays/") ||
-          path === "/chart",
+        enabled: false,
       },
     }),
     react(),

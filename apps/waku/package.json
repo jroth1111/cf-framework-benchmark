@@ -1,0 +1,35 @@
+{
+	"name": "waku",
+	"version": "0.0.0",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"cf-typegen": "wrangler types",
+		"dev": "wrangler dev",
+		"build": "tsc --noEmit",
+		"start": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"preview": "wrangler dev"
+	},
+	"dependencies": {
+		"@cf-bench/bench-contract": "workspace:*",
+		"hono": "^4.10.0",
+		"react": "~19.2.4",
+		"react-dom": "~19.2.4",
+		"react-server-dom-webpack": "~19.2.4",
+		"waku": "1.0.0-alpha.5"
+	},
+	"devDependencies": {
+		"@cloudflare/vite-plugin": "^1.25.6",
+		"@tailwindcss/vite": "^4.2.1",
+		"@types/node": "^25.3.3",
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
+		"@vitejs/plugin-react": "^5.1.0",
+		"babel-plugin-react-compiler": "^1.0.0",
+		"miniflare": "^4.20260305.0",
+		"tailwindcss": "^4.2.1",
+		"typescript": "^5.9.3",
+		"wrangler": "^4.70.0"
+	}
+}

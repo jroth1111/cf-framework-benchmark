@@ -125,6 +125,7 @@ export const API_PATHS = {
   listings: "/api/listings",
   listingById: (id: string) => `/api/listings/${id}`,
   prices: "/api/prices",
+  media: "/api/media",
 } as const;
 
 /**
@@ -135,6 +136,7 @@ export const PAGE_ROUTES = {
   stays: "/stays",
   blog: "/blog",
   chart: "/chart",
+  media: "/media",
   blogPost: (slug: string) => `/blog/${slug}`,
   stayDetail: (id: string) => `/stays/${id}`,
 } as const;
@@ -145,7 +147,7 @@ export const PAGE_ROUTES = {
 export const CACHE_CONTROL = {
   noStore: "no-store",
   publicShort: "public, max-age=0, s-maxage=60",
-  publicLong: "public, max-age=300, s-maxage=300",
+  publicLong: "public, max-age=0, s-maxage=300",
   publicExtended: "public, max-age=3600, s-maxage=300",
 } as const;
 
@@ -156,6 +158,9 @@ export const TEST_SELECTORS = {
   symbolSelect: '[data-testid="symbol-select"]',
   timeframeSelect: '[data-testid="timeframe-select"]',
   chartCanvas: '[data-testid="chart-canvas"]',
+  mediaCard: '[data-testid="media-card"]',
+  mediaPlayer: '[data-testid="media-player"]',
+  mediaNext: '[data-testid="media-next"]',
   indicatorSma20: '[data-testid="ind-sma20"]',
   indicatorSma50: '[data-testid="ind-sma50"]',
   indicatorEma20: '[data-testid="ind-ema20"]',

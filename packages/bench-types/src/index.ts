@@ -18,6 +18,18 @@ export interface ChartMetrics {
 }
 
 /**
+ * Media-specific metrics captured during benchmark runs
+ */
+export interface MediaMetrics {
+  ready: boolean;
+  currentId?: string | null;
+  openDurationMs?: number;
+  nextDurationMs?: number;
+  error?: boolean;
+  errorMessage?: string;
+}
+
+/**
  * Low-level chart rendering performance metrics
  */
 export interface ChartCoreMetrics {
@@ -33,7 +45,18 @@ export interface ChartCoreMetrics {
 export interface BenchmarkMetrics {
   chart?: ChartMetrics;
   chartCore?: ChartCoreMetrics;
+  media?: MediaMetrics;
   [key: string]: any;
+}
+
+export interface BenchResponseV3 {
+  isolateId: string;
+  hits: number;
+  now: number;
+  runtime: "cloudflare-workers";
+  framework: string;
+  contractVersion: "v3.0.0";
+  suiteSupport: string[];
 }
 
 declare global {

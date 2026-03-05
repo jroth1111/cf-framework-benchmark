@@ -11,6 +11,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <nav className="links">
                     <NavLink className="pill" to="/stays">Stays</NavLink>
                     <NavLink className="pill" to="/chart">Chart</NavLink>
+                    <NavLink className="pill" to="/media">Media</NavLink>
                     <NavLink className="pill" to="/blog">Blog</NavLink>
                 </nav>
             </header>

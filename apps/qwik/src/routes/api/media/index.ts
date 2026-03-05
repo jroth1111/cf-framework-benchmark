@@ -1,4 +1,5 @@
 import type { RequestHandler } from "@qwik.dev/router";
+import { queryMedia } from "@cf-bench/dataset";
 
 function getIsolateId() {
   const globalAny = globalThis as any;
@@ -13,19 +14,19 @@ function serverTiming(start: number) {
   return `cf_bench;dur=${dur.toFixed(1)};desc=\"${getIsolateId()}\"`;
 }
 
-export const onGet: RequestHandler = async ({ json, headers }) => {
+export const onGet: RequestHandler = async ({ json, headers, url }) => {
   const start = performance.now();
+  const channel = url.searchParams.get("channel") || "";
+  const page = Number(url.searchParams.get("page") || "1");
+  const pageSize = Number(url.searchParams.get("pageSize") || "20");
+
   headers.set("content-type", "application/json; charset=utf-8");
-  (globalThis as any).__CF_BENCH_ISOLATE_HITS = ((globalThis as any).__CF_BENCH_ISOLATE_HITS ?? 0) + 1;
+  headers.set("cache-control", "public, max-age=0, s-maxage=60");
   headers.set("server-timing", serverTiming(start));
-  headers.set("cache-control", "no-store");
-  json(200, {
-    isolateId: getIsolateId(),
-    hits: (globalThis as any).__CF_BENCH_ISOLATE_HITS,
-    now: Date.now(),
-    runtime: "cloudflare-workers",
-    framework: "qwik",
-    contractVersion: "v3.0.0",
-    suiteSupport: ["mpa_airbnb", "spa_trading_media"],
-  });
+
+  json(200, queryMedia({
+    channel,
+    page: Number.isFinite(page) ? page : 1,
+    pageSize: Number.isFinite(pageSize) ? pageSize : 20,
+  }));
 };

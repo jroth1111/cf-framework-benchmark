@@ -1,3 +1,5 @@
+import { queryMedia } from "@cf-bench/dataset";
+
 function getIsolateId() {
   const globalAny = globalThis as any;
   if (!globalAny.__CF_BENCH_ISOLATE_ID) {
@@ -5,10 +7,11 @@ function getIsolateId() {
   }
   return globalAny.__CF_BENCH_ISOLATE_ID as string;
 }
+
 function json(data: unknown, init?: ResponseInit, timingStart?: number) {
   const headers = new Headers(init?.headers);
   headers.set("content-type", "application/json; charset=utf-8");
-  headers.set("cache-control", "no-store");
+  if (!headers.has("cache-control")) headers.set("cache-control", "public, max-age=0, s-maxage=60");
   if (!headers.has("server-timing")) {
     const dur = typeof timingStart === "number" ? performance.now() - timingStart : null;
     headers.set(
@@ -21,19 +24,19 @@ function json(data: unknown, init?: ResponseInit, timingStart?: number) {
   return new Response(JSON.stringify(data), { ...init, headers });
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   const start = performance.now();
-  (globalThis as any).__CF_BENCH_ISOLATE_HITS = ((globalThis as any).__CF_BENCH_ISOLATE_HITS ?? 0) + 1;
+  const url = new URL(req.url);
+  const channel = url.searchParams.get("channel") || "";
+  const page = Number(url.searchParams.get("page") || "1");
+  const pageSize = Number(url.searchParams.get("pageSize") || "20");
+
   return json(
-    {
-      isolateId: getIsolateId(),
-      hits: (globalThis as any).__CF_BENCH_ISOLATE_HITS,
-      now: Date.now(),
-      runtime: "cloudflare-workers",
-      framework: "next",
-      contractVersion: "v3.0.0",
-      suiteSupport: ["mpa_airbnb", "spa_trading_media"],
-    },
+    queryMedia({
+      channel,
+      page: Number.isFinite(page) ? page : 1,
+      pageSize: Number.isFinite(pageSize) ? pageSize : 20,
+    }),
     undefined,
     start
   );

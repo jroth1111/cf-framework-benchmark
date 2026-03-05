@@ -22,6 +22,7 @@
   <nav class="links">
     <a class="pill" href="/stays">Stays</a>
     <a class="pill" href="/chart">Chart</a>
+    <a class="pill" href="/media">Media</a>
     <a class="pill" href="/blog">Blog</a>
   </nav>
 </header>

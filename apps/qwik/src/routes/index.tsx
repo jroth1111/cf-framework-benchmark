@@ -22,6 +22,11 @@ export default component$(() => {
           <p class="muted">Generated at build time.</p>
           <Link class="btn" href="/blog">Read blog</Link>
         </div>
+        <div class="card" style="padding:16px">
+          <h2>Media feed</h2>
+          <p class="muted">YouTube-like browse and player interactions.</p>
+          <Link class="btn" href="/media">Open media</Link>
+        </div>
       </div>
     </>
   );

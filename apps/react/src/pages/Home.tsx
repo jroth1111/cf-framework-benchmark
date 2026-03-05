@@ -14,6 +14,11 @@ export function Home() {
                     This is a React SPA (single-page application) variant using react-router-dom for client-side navigation.
                     All navigation between pages happens client-side without full page reloads.
                 </p>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+                    <Link className="pill" to="/chart">Open chart</Link>
+                    <Link className="pill" to="/media">Open media feed</Link>
+                    <Link className="pill" to="/blog">Read blog</Link>
+                </div>
             </div>
 
             <h2 style={{ marginTop: 24 }}>Featured Stays</h2>

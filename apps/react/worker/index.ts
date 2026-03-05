@@ -1,4 +1,4 @@
-import { chartSymbols, generateCandles, getListing, queryListings } from "@cf-bench/dataset";
+import { chartSymbols, generateCandles, getListing, queryListings, queryMedia } from "@cf-bench/dataset";
 
 type Env = {
     ASSETS: Fetcher;
@@ -45,7 +45,15 @@ export default {
         if (url.pathname === "/api/bench") {
             (globalThis as any).__CF_BENCH_ISOLATE_HITS = ((globalThis as any).__CF_BENCH_ISOLATE_HITS ?? 0) + 1;
             return json(
-                { isolateId: getIsolateId(), hits: (globalThis as any).__CF_BENCH_ISOLATE_HITS, now: Date.now() },
+                {
+                    isolateId: getIsolateId(),
+                    hits: (globalThis as any).__CF_BENCH_ISOLATE_HITS,
+                    now: Date.now(),
+                    runtime: "cloudflare-workers",
+                    framework: "react",
+                    contractVersion: "v3.0.0",
+                    suiteSupport: ["mpa_airbnb", "spa_trading_media"],
+                },
                 { headers: { "cache-control": "no-store" } },
                 start
             );
@@ -100,6 +108,21 @@ export default {
             });
             return json(
                 { symbol, timeframe, candles },
+                { headers: { "cache-control": "public, max-age=0, s-maxage=60" } },
+                start
+            );
+        }
+
+        if (url.pathname === "/api/media") {
+            const channel = url.searchParams.get("channel") || "";
+            const page = Number(url.searchParams.get("page") || "1");
+            const pageSize = Number(url.searchParams.get("pageSize") || "20");
+            return json(
+                queryMedia({
+                    channel,
+                    page: Number.isFinite(page) ? page : 1,
+                    pageSize: Number.isFinite(pageSize) ? pageSize : 20,
+                }),
                 { headers: { "cache-control": "public, max-age=0, s-maxage=60" } },
                 start
             );

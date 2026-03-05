@@ -1,0 +1,113 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Media Feed (SPA-like)">
+  <div class="grid cols-2" style="gap:16px">
+    <div class="card" style="padding:14px">
+      <h2 style="margin-top:0">Feed</h2>
+      <p id="media-status" class="muted">Loading media…</p>
+      <div id="media-feed" style="display:grid;gap:10px;max-height:560px;overflow:auto"></div>
+    </div>
+
+    <div class="card" style="padding:14px">
+      <h2 style="margin-top:0">Player</h2>
+      <div data-testid="media-player" id="media-player" style="min-height:260px">
+        <p class="muted">Select a media item.</p>
+      </div>
+      <button data-testid="media-next" class="btn" id="media-next">Next</button>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const state = {
+        items: [],
+        selectedIndex: 0,
+      };
+
+      const statusEl = document.getElementById("media-status");
+      const feedEl = document.getElementById("media-feed");
+      const playerEl = document.getElementById("media-player");
+      const nextBtn = document.getElementById("media-next");
+
+      const ensureBenchMedia = () => {
+        const w = window;
+        w.__CF_BENCH__ = w.__CF_BENCH__ || {};
+        w.__CF_BENCH__.media = w.__CF_BENCH__.media || { ready: false };
+        return w.__CF_BENCH__.media;
+      };
+
+      const renderPlayer = () => {
+        const item = state.items[state.selectedIndex];
+        if (!item) {
+          playerEl.innerHTML = '<p class="muted">Select a media item.</p>';
+          return;
+        }
+        playerEl.innerHTML = `
+          <img src="${item.thumbnail}" alt="${item.title}" style="width:100%;max-height:280px;object-fit:cover;border-radius:10px" />
+          <h3>${item.title}</h3>
+          <p class="muted small">${item.channel} • ${item.views.toLocaleString()} views</p>
+          <p class="muted">${item.description}</p>
+        `;
+      };
+
+      const openByIndex = (idx, markerKey) => {
+        const start = performance.now();
+        state.selectedIndex = idx;
+        renderPlayer();
+        const media = ensureBenchMedia();
+        media[markerKey] = performance.now() - start;
+        media.ready = true;
+        media.currentId = state.items[idx]?.id || null;
+      };
+
+      const renderFeed = () => {
+        feedEl.innerHTML = "";
+        state.items.forEach((item, idx) => {
+          const btn = document.createElement("button");
+          btn.className = "card";
+          btn.dataset.testid = "media-card";
+          btn.style.padding = "10px";
+          btn.style.textAlign = "left";
+          btn.style.background = "var(--panel)";
+          btn.style.cursor = "pointer";
+          btn.style.border = idx === state.selectedIndex ? "1px solid var(--text)" : "1px solid var(--border)";
+          btn.innerHTML = `<div style="font-weight:600">${item.title}</div><div class="muted small">${item.channel} • ${item.publishedISO}</div>`;
+          btn.addEventListener("click", () => openByIndex(idx, "openDurationMs"));
+          feedEl.appendChild(btn);
+        });
+      };
+
+      nextBtn?.addEventListener("click", () => {
+        if (!state.items.length) return;
+        const next = (state.selectedIndex + 1) % state.items.length;
+        openByIndex(next, "nextDurationMs");
+        renderFeed();
+      });
+
+      fetch("/api/media?pageSize=30")
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          state.items = data.results || [];
+          state.selectedIndex = 0;
+          statusEl.textContent = "";
+          renderFeed();
+          renderPlayer();
+          const media = ensureBenchMedia();
+          media.ready = true;
+          media.currentId = state.items[0]?.id || null;
+        })
+        .catch((err) => {
+          statusEl.textContent = "Failed to load media.";
+          const media = ensureBenchMedia();
+          media.ready = true;
+          media.error = true;
+          media.errorMessage = err?.message || String(err);
+        });
+    })();
+  </script>
+</Base>

@@ -20,6 +20,11 @@ export default function Page() {
           <p className="muted">Prerendered at build time.</p>
           <Link className="btn" href="/blog">Read blog</Link>
         </div>
+        <div className="card" style={{ padding: 16 }}>
+          <h2>Media feed</h2>
+          <p className="muted">YouTube-like browse and player interactions.</p>
+          <Link className="btn" href="/media">Open media</Link>
+        </div>
       </div>
     </>
   );

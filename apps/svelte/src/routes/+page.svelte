@@ -16,4 +16,9 @@
     <p class="muted">Prerendered at build time.</p>
     <a class="btn" href="/blog">Read blog</a>
   </div>
+  <div class="card" style="padding:16px">
+    <h2>Media feed</h2>
+    <p class="muted">YouTube-like browse and player interactions.</p>
+    <a class="btn" href="/media">Open media</a>
+  </div>
 </div>

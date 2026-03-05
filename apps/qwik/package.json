@@ -11,6 +11,7 @@
   "dependencies": {
     "@qwik.dev/core": "^2.0.0-beta.16",
     "@qwik.dev/router": "^2.0.0-beta.16",
+    "@cf-bench/bench-types": "workspace:*",
     "@cf-bench/chart-core": "workspace:*",
     "@cf-bench/dataset": "workspace:*",
     "@cf-bench/ui": "workspace:*"

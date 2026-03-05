@@ -33,6 +33,7 @@ function layoutHtml({ heading, contentHtml, footerHtml }) {
         <nav class="links">
           <a class="pill" href="/stays">Stays</a>
           <a class="pill" href="/chart">Chart</a>
+          <a class="pill" href="/media">Media</a>
           <a class="pill" href="/blog">Blog</a>
         </nav>
       </header>
@@ -75,6 +76,7 @@ const footerHtml = 'SolidJS + Vite variant • <span class="kbd">/chart</span> i
 writeFile(path.join(pagesDir, "index.html"), html({ docTitle: "CF Bench — Solid", entry: "home" }));
 writeFile(path.join(pagesDir, "stays", "index.html"), html({ docTitle: "Stays — Solid", entry: "stays" }));
 writeFile(path.join(pagesDir, "chart", "index.html"), html({ docTitle: "Chart — Solid", entry: "chart" }));
+writeFile(path.join(pagesDir, "media", "index.html"), html({ docTitle: "Media — Solid", entry: "media" }));
 
 for (const l of listings) {
   writeFile(

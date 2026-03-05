@@ -25,6 +25,7 @@ export default component$(() => {
           <nav class="links">
             <Link class="pill" href="/stays">Stays</Link>
             <Link class="pill" href="/chart">Chart</Link>
+            <Link class="pill" href="/media">Media</Link>
             <Link class="pill" href="/blog">Blog</Link>
           </nav>
         </header>

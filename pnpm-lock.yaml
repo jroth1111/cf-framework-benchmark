@@ -94,6 +94,9 @@ importers:
 
   apps/qwik:
     dependencies:
+      '@cf-bench/bench-types':
+        specifier: workspace:*
+        version: link:../../packages/bench-types
       '@cf-bench/chart-core':
         specifier: workspace:*
         version: link:../../packages/chart-core
@@ -174,6 +177,9 @@ importers:
       '@cf-bench/bench-config':
         specifier: workspace:*
         version: link:../../packages/bench-config
+      '@cf-bench/bench-types':
+        specifier: workspace:*
+        version: link:../../packages/bench-types
       '@cf-bench/chart-core':
         specifier: workspace:*
         version: link:../../packages/chart-core

@@ -17,7 +17,15 @@ export function GET() {
   const start = performance.now();
   (globalThis as any).__CF_BENCH_ISOLATE_HITS = ((globalThis as any).__CF_BENCH_ISOLATE_HITS ?? 0) + 1;
   return new Response(
-    JSON.stringify({ isolateId: getIsolateId(), hits: (globalThis as any).__CF_BENCH_ISOLATE_HITS, now: Date.now() }),
+    JSON.stringify({
+      isolateId: getIsolateId(),
+      hits: (globalThis as any).__CF_BENCH_ISOLATE_HITS,
+      now: Date.now(),
+      runtime: "cloudflare-workers",
+      framework: "astro",
+      contractVersion: "v3.0.0",
+      suiteSupport: ["mpa_airbnb", "spa_trading_media"],
+    }),
     {
       headers: {
         "content-type": "application/json; charset=utf-8",

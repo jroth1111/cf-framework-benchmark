@@ -3,6 +3,7 @@
 	"version": "0.0.0",
 	"scripts": {
 		"ng": "ng",
+		"dev": "wrangler dev",
 		"start": "ng serve",
 		"build": "ng build",
 		"watch": "ng build --watch --configuration development",

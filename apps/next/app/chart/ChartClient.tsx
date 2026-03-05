@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useMemo, useTransition, useDeferredValue, useState } from "react";
 import { createChart } from "@cf-bench/chart-core";
+import type { ChartStats } from "@cf-bench/chart-core";
 import { useChart } from "@cf-bench/chart-hooks";
 import { markChartReady, markChartError, updateChartCoreMetrics } from "@cf-bench/bench-types";
 
@@ -32,7 +33,7 @@ export function ChartClient() {
   // useMemo for chart options (prevents unnecessary recreations)
   const chartOptions = useMemo(() => ({
     initialViewport: 180,
-    onStats: (stats) => {
+    onStats: (stats: ChartStats) => {
       updateChartCoreMetrics(stats);
     },
   }), []);

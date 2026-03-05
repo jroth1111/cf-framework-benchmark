@@ -74,7 +74,7 @@ Each app has its own `dev` / `preview` scripts. Examples:
 ```bash
 pnpm -C apps/react dev
 pnpm -C apps/astro dev
-pnpm -C apps/sveltekit dev
+pnpm -C apps/svelte dev
 ```
 
 ### 4) Deploy (per app)

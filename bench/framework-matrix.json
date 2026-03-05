@@ -76,10 +76,10 @@
       "name": "next",
       "status": "implemented",
       "benchmarkEnabled": true,
-      "appDir": "apps/nextjs",
+      "appDir": "apps/next",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/nextjs deploy"
+        "command": "pnpm -C apps/next deploy"
       }
     },
     {
@@ -149,10 +149,10 @@
       "name": "svelte",
       "status": "implemented",
       "benchmarkEnabled": true,
-      "appDir": "apps/sveltekit",
+      "appDir": "apps/svelte",
       "deploy": {
         "type": "workers",
-        "command": "pnpm -C apps/sveltekit deploy"
+        "command": "pnpm -C apps/svelte deploy"
       }
     },
     {

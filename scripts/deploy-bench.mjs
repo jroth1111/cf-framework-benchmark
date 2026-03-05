@@ -13,9 +13,9 @@ const FRAMEWORKS = [
   { name: "astro", pkg: "cf-bench-astro", dir: "apps/astro" },
   {
     name: "next",
-    pkg: "cf-bench-nextjs",
-    dir: "apps/nextjs",
-    buildCmd: "pnpm -C apps/nextjs exec opennextjs-cloudflare build",
+    pkg: "cf-bench-next",
+    dir: "apps/next",
+    buildCmd: "pnpm -C apps/next exec opennextjs-cloudflare build",
     useTempConfig: true,
   },
   {
@@ -23,7 +23,7 @@ const FRAMEWORKS = [
     pkg: "cf-bench-tanstack-start",
     dir: "apps/tanstack-start",
   },
-  { name: "svelte", pkg: "cf-bench-sveltekit", dir: "apps/sveltekit" },
+  { name: "svelte", pkg: "cf-bench-svelte", dir: "apps/svelte" },
   { name: "qwik", pkg: "cf-bench-qwik", dir: "apps/qwik" },
   { name: "solid", pkg: "cf-bench-solid", dir: "apps/solid" },
 ];

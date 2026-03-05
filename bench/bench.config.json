@@ -70,7 +70,7 @@
     },
     {
       "name": "next",
-      "url": "https://cf-bench-nextjs.gwizz.workers.dev",
+      "url": "https://cf-bench-next.gwizz.workers.dev",
       "delivery": "ssr-worker",
       "features": {
         "clientNav": true
@@ -98,7 +98,7 @@
     },
     {
       "name": "svelte",
-      "url": "https://cf-bench-sveltekit.gwizz.workers.dev",
+      "url": "https://cf-bench-svelte.gwizz.workers.dev",
       "delivery": "ssr-worker",
       "features": {
         "clientNav": true

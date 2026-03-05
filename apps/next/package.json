@@ -1,5 +1,5 @@
 {
-  "name": "cf-bench-nextjs",
+  "name": "cf-bench-next",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,6 +10,7 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
+    "@cf-bench/bench-types": "workspace:*",
     "@cf-bench/bench-config": "workspace:*",
     "@cf-bench/chart-core": "workspace:*",
     "@cf-bench/chart-hooks": "workspace:*",

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-03-05T00:00:00.000Z",
+  "source": "bench/framework-matrix.json",
+  "targets": [
+    {
+      "framework": "astro",
+      "platform": "workers",
+      "url": "https://cf-bench-astro.gwizz.workers.dev"
+    },
+    {
+      "framework": "next",
+      "platform": "workers",
+      "url": "https://cf-bench-nextjs.gwizz.workers.dev"
+    },
+    {
+      "framework": "qwik",
+      "platform": "workers",
+      "url": "https://cf-bench-qwik.gwizz.workers.dev"
+    },
+    {
+      "framework": "solid",
+      "platform": "workers",
+      "url": "https://cf-bench-solid.gwizz.workers.dev"
+    },
+    {
+      "framework": "svelte",
+      "platform": "workers",
+      "url": "https://cf-bench-sveltekit.gwizz.workers.dev"
+    }
+  ]
+}

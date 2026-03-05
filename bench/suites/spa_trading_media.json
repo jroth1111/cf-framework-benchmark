@@ -1,0 +1,40 @@
+{
+  "id": "spa_trading_media",
+  "description": "Workers-only SPA benchmark focused on chart and media interactions",
+  "requiredRoutes": ["/chart", "/media"],
+  "scenarios": [
+    {
+      "name": "chart",
+      "path": "/chart",
+      "type": "spa",
+      "waitFor": "[data-testid=\"chart-canvas\"]",
+      "interactions": [
+        {
+          "kind": "chart-switch",
+          "symbolSelect": "[data-testid=\"symbol-select\"]",
+          "timeframeSelect": "[data-testid=\"timeframe-select\"]",
+          "targetSymbol": "ETH",
+          "targetTimeframe": "15m"
+        }
+      ]
+    },
+    {
+      "name": "media",
+      "path": "/media",
+      "type": "spa",
+      "waitFor": "[data-testid=\"media-card\"]",
+      "interactions": [
+        {
+          "kind": "media-open-first",
+          "click": "[data-testid=\"media-card\"]",
+          "waitFor": "[data-testid=\"media-player\"]"
+        },
+        {
+          "kind": "media-next",
+          "click": "[data-testid=\"media-next\"]",
+          "waitFor": "[data-testid=\"media-player\"]"
+        }
+      ]
+    }
+  ]
+}

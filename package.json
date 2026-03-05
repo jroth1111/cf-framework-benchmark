@@ -7,6 +7,8 @@
     "dev": "pnpm -r --parallel dev",
     "deploy": "node scripts/deploy-bench.mjs",
     "test": "pnpm -r test",
+    "check:matrix": "node scripts/check-matrix-drift.mjs",
+    "check:targets": "node scripts/verify-workers-targets.mjs",
     "test:dataset": "pnpm -C packages/dataset exec node src/test.mjs",
     "test:contracts": "pnpm -C bench exec node contract-tests.mjs",
     "smoke": "pnpm -C bench exec node smoke.mjs",

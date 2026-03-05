@@ -1,0 +1,37 @@
+{
+  "id": "mpa_airbnb",
+  "description": "Workers-only multi-page benchmark focused on listing and blog navigation",
+  "requiredRoutes": ["/", "/stays", "/stays/:id", "/blog", "/blog/:slug"],
+  "scenarios": [
+    {
+      "name": "home",
+      "path": "/",
+      "type": "document",
+      "waitFor": "a[href=\"/stays\"]"
+    },
+    {
+      "name": "stays",
+      "path": "/stays",
+      "type": "document",
+      "waitFor": "[data-testid=\"stay-card\"]"
+    },
+    {
+      "name": "stay_detail",
+      "path": "/stays/001",
+      "type": "document",
+      "waitFor": "[data-testid=\"stay-description\"]"
+    },
+    {
+      "name": "blog",
+      "path": "/blog",
+      "type": "document",
+      "waitFor": "[data-testid=\"blog-post-card\"]"
+    },
+    {
+      "name": "blog_post",
+      "path": "/blog/why-this-benchmark-exists",
+      "type": "document",
+      "waitFor": "[data-testid=\"blog-html\"]"
+    }
+  ]
+}

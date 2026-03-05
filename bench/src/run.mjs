@@ -739,6 +739,29 @@ async function chartInteractions(page, timeoutScale = 1) {
   }
 }
 
+async function mediaInteractions(page, timeoutScale = 1) {
+  const waitMs = 8000 * timeoutScale;
+  await page.waitForSelector('[data-testid="media-card"]', { timeout: waitMs });
+
+  // Open first media card and wait for player region.
+  await page.click('[data-testid="media-card"]');
+  await page.waitForSelector('[data-testid="media-player"]', { timeout: waitMs });
+  await page.waitForTimeout(TIMING.CONTROL_CHANGE_MS * timeoutScale);
+
+  // Advance once to trigger "next" interaction marker when available.
+  const nextButton = page.locator('[data-testid="media-next"]');
+  if (await nextButton.count()) {
+    await nextButton.first().click();
+    await page.waitForTimeout(TIMING.CONTROL_CHANGE_MS * timeoutScale);
+  }
+
+  try {
+    await page.waitForFunction(() => globalThis.__CF_BENCH__?.media?.ready === true, { timeout: waitMs });
+  } catch {
+    // Media marker is best effort; selector-based waits are authoritative.
+  }
+}
+
 async function collect(page, options = {}) {
   const { skipLcp = false, suppressCwv = false, suppressNav = false, timeoutScale = 1, cdp = null } = options;
   // Let LCP stabilize and long tasks collect
@@ -990,7 +1013,11 @@ async function runScenario(page, fw, sc, iteration, phase, bundleSizes, profile,
       navAttempts = navResult.attempts ?? 0;
       if (sc.waitFor) await page.waitForSelector(sc.waitFor, { timeout: scenarioTimeout });
       if (sc.interact) {
-        await chartInteractions(page, timeoutScale);
+        if (sc.interactType === 'media' || sc.name === 'media') {
+          await mediaInteractions(page, timeoutScale);
+        } else {
+          await chartInteractions(page, timeoutScale);
+        }
         await waitForInp(page, TIMING.INP_SETTLE_MS * timeoutScale);
       }
       const data = await collect(page, { timeoutScale, cdp });
@@ -1235,9 +1262,6 @@ async function main() {
           await ctx.addInitScript({ content: initScript });
           const page = await ctx.newPage();
           const throttleApplied = await applyThrottling(page, throttling);
-
-          // Sanity check
-          try { await page.goto(fw.url + '/api/bench', { waitUntil: 'load' }); } catch { }
 
           const cold = await runScenario(
             page,

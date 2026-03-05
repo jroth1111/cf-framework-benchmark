@@ -3,7 +3,7 @@
 		"dev": "wrangler dev",
 		"build": "tsc --noEmit",
 		"preview": "wrangler dev",
-		"deploy": "wrangler deploy",
+		"deploy": "wrangler deploy --minify",
 		"generate-types": "wrangler types",
 		"cf-typegen": "wrangler types"
 	},

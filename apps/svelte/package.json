@@ -6,7 +6,7 @@
     "dev": "vite dev --port 5178",
     "build": "vite build",
     "preview": "pnpm run build && wrangler dev --port 8791 --inspector-port 9234",
-    "deploy": "pnpm run build && wrangler deploy"
+    "deploy": "pnpm run build && wrangler deploy --minify"
   },
   "dependencies": {
     "@cf-bench/bench-contract": "workspace:*",

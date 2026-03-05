@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "vite dev --port 5177",
     "build": "vite build",
-    "preview": "pnpm run build && rm -f .wrangler/deploy/config.json && wrangler dev dist/server/server.js --assets dist/client --name cf-bench-tanstack-start --compatibility-date 2025-12-17 --compatibility-flags nodejs_compat",
-    "deploy": "pnpm run build && rm -f .wrangler/deploy/config.json && wrangler deploy dist/server/server.js --assets dist/client --name cf-bench-tanstack-start --compatibility-date 2025-12-17 --compatibility-flags nodejs_compat"
+    "preview": "pnpm run build && wrangler dev",
+    "deploy": "pnpm run build && wrangler deploy --minify"
   },
   "dependencies": {
     "@cf-bench/bench-contract": "workspace:*",

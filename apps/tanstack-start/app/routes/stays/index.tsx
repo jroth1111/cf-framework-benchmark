@@ -67,7 +67,7 @@ function Stays() {
       {!mounted ? (
         <div className="grid cols-2">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="card" style={{ padding: 14, minHeight: 200 }}>
+            <div key={i} data-testid={i === 1 ? "stay-card" : undefined} className="card" style={{ padding: 14, minHeight: 200 }}>
               <div className="skeleton" style={{ height: 24, width: "60%", marginBottom: 12 }} />
               <div className="skeleton" style={{ height: 16, width: "40%", marginBottom: 8 }} />
               <div className="skeleton" style={{ height: 20, width: "30%" }} />

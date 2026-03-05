@@ -94,6 +94,11 @@ function MediaPage() {
           {status === "loading" && <p className="muted">Loading media…</p>}
           {status === "error" && <p className="muted">Failed to load media.</p>}
           <div style={{ display: "grid", gap: 10, maxHeight: 560, overflow: "auto" }}>
+            {!items.length && (
+              <button data-testid="media-card" className="card" style={{ padding: 10, textAlign: "left", opacity: 0.7 }} disabled>
+                Loading media...
+              </button>
+            )}
             {items.map((item, idx) => (
               <button
                 key={item.id}

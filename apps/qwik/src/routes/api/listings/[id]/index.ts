@@ -17,14 +17,15 @@ function serverTiming(start: number) {
 export const onGet: RequestHandler = async ({ params, json, headers }) => {
   const start = performance.now();
   headers.set("content-type", "application/json; charset=utf-8");
-  const l = getListing(params.id);
-  if (!l) {
-    headers.set("server-timing", serverTiming(start));
+  headers.set("server-timing", serverTiming(start));
+
+  const listing = getListing(params.id ?? "");
+  if (!listing) {
     headers.set("cache-control", "no-store");
     json(404, { error: "not_found" });
     return;
   }
+
   headers.set("cache-control", "public, max-age=0, s-maxage=300");
-  headers.set("server-timing", serverTiming(start));
-  json(200, { listing: l });
+  json(200, { listing });
 };

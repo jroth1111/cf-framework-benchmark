@@ -15,8 +15,8 @@ function serverTiming(start: number) {
 
 export async function GET({ params }: { params: { id: string } }) {
   const start = performance.now();
-  const l = getListing(params.id);
-  if (!l) {
+  const listing = getListing(params.id ?? "");
+  if (!listing) {
     return new Response(JSON.stringify({ error: "not_found" }), {
       status: 404,
       headers: {
@@ -26,7 +26,8 @@ export async function GET({ params }: { params: { id: string } }) {
       },
     });
   }
-  return new Response(JSON.stringify({ listing: l }), {
+
+  return new Response(JSON.stringify({ listing }), {
     headers: {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "public, max-age=0, s-maxage=300",

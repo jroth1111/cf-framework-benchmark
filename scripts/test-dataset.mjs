@@ -1,4 +1,4 @@
-import { blogPosts, generateCandles, listings } from "../packages/dataset/src/index.js";
+import { blogPosts, generateCandles, listings, mediaItems, queryMedia } from "../packages/dataset/src/index.js";
 
 const failures = [];
 
@@ -15,7 +15,7 @@ function unique(values) {
 }
 
 assert(Array.isArray(listings), "listings should be an array");
-assert(listings.length === 100, `listings length expected 100, got ${listings.length}`);
+assert(listings.length === 60, `listings length expected 60, got ${listings.length}`);
 
 const listingIds = listings.map((l) => l.id);
 assert(unique(listingIds), "listing ids should be unique");
@@ -27,6 +27,18 @@ assert(blogPosts.length > 0, "blogPosts should not be empty");
 const blogSlugs = blogPosts.map((p) => p.slug);
 assert(unique(blogSlugs), "blog slugs should be unique");
 assert(blogSlugs.every((slug) => slug && typeof slug === "string"), "blog slugs should be non-empty strings");
+
+assert(Array.isArray(mediaItems), "mediaItems should be an array");
+assert(mediaItems.length === 120, `mediaItems length expected 120, got ${mediaItems.length}`);
+assert(unique(mediaItems.map((m) => m.id)), "media ids should be unique");
+
+const mediaPageA = queryMedia({ page: 2, pageSize: 10 });
+const mediaPageB = queryMedia({ page: 2, pageSize: 10 });
+assert(mediaPageA.results.length === 10, `queryMedia pageSize expected 10, got ${mediaPageA.results.length}`);
+assert(
+  mediaPageA.results[0]?.id === mediaPageB.results[0]?.id,
+  "queryMedia should be deterministic for same params"
+);
 
 const candlesA = generateCandles("BTC", { timeframe: "1h", points: 120 });
 const candlesB = generateCandles("BTC", { timeframe: "1h", points: 120 });

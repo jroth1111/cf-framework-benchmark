@@ -1,20 +1,18 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
+import {
+  DEFAULT_MATRIX_PATH,
+  DEFAULT_TARGETS_PATH,
+  parseCsvSet,
+  resolveLiveTargets,
+  toAbsolutePath,
+} from "./config-v3.mjs";
 
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);
   if (idx === -1) return fallback;
   return process.argv[idx + 1] ?? fallback;
-}
-
-function normalizeFrameworks(frameworks) {
-  if (Array.isArray(frameworks)) return frameworks;
-  if (!frameworks) return [];
-  return Object.entries(frameworks).map(([name, value]) => {
-    if (typeof value === "string") return { name, url: value };
-    return { name, ...value };
-  });
 }
 
 function percentile(values, p) {
@@ -39,10 +37,8 @@ async function fetchWithTimeout(url, timeoutMs) {
 }
 
 async function runLoadTest() {
-  const configPath = argValue(
-    "--config",
-    new URL("../bench.config.json", import.meta.url).pathname
-  );
+  const targetsPath = toAbsolutePath(argValue("--targets", null), DEFAULT_TARGETS_PATH);
+  const matrixPath = toAbsolutePath(argValue("--matrix", null), DEFAULT_MATRIX_PATH);
   const outPath = argValue(
     "--out",
     new URL("../load-results.json", import.meta.url).pathname
@@ -50,7 +46,7 @@ async function runLoadTest() {
   const durationMs = Number(argValue("--duration", "15000"));
   const concurrency = Number(argValue("--concurrency", "50"));
   const targetPath = argValue("--path", "/stays");
-  const only = argValue("--only");
+  const only = parseCsvSet(argValue("--only", ""));
   const timeoutMs = Number(argValue("--timeout", "10000"));
 
   if (!Number.isFinite(durationMs) || durationMs <= 0) {
@@ -60,12 +56,13 @@ async function runLoadTest() {
     throw new Error(`Invalid --concurrency ${concurrency}`);
   }
 
-  const rawConfig = JSON.parse(await fs.readFile(configPath, "utf8"));
-  let frameworks = normalizeFrameworks(rawConfig.frameworks);
-  if (only) {
-    const allow = new Set(only.split(",").map((s) => s.trim()).filter(Boolean));
-    frameworks = frameworks.filter((fw) => allow.has(fw.name));
-  }
+  const frameworks = await resolveLiveTargets({
+    matrixPath,
+    targetsPath,
+    only,
+    requireWorkers: true,
+    requireEnabled: true,
+  });
 
   console.log(`\n🚀 Cloudflare Worker Throughput Test`);
   console.log(`   Target: ${targetPath}`);
@@ -147,7 +144,8 @@ async function runLoadTest() {
 
   const output = {
     ts: new Date().toISOString(),
-    configPath: path.relative(process.cwd(), configPath),
+    targetsPath: path.relative(process.cwd(), targetsPath),
+    matrixPath: path.relative(process.cwd(), matrixPath),
     targetPath,
     durationMs,
     concurrency,

@@ -1,13 +1,13 @@
 # Metrics Glossary
 
-This glossary defines the metrics reported in `bench/results.v2.json` and
-`bench/results.v2.md`. Summary tables use p50 (median) across iterations.
+This glossary defines the metrics reported in `bench/results.v3.<suite>.json` and
+`bench/results.v3.<suite>.md`. Summary tables use p50 (median) across iterations.
 
 ## Scope
 
 - Server and network metrics: TTFB, server-timing.
 - Client metrics: LCP, CLS, INP, FCP, TBT, CPU durations, JS heap, chart timing,
-  and client-nav timing.
+  media timing, and client-nav timing.
 
 ## Core metrics
 
@@ -33,11 +33,14 @@ This glossary defines the metrics reported in `bench/results.v2.json` and
 |--------|------|--------|------------|
 | Chart switch | ms | App marker | `window.__CF_BENCH__.chart.switchDurationMs` for symbol/timeframe changes. |
 | Chart draw | ms | App marker | `window.__CF_BENCH__.chartCore.lastDrawMs` for last chart render. |
+| Media open | ms | App marker | `window.__CF_BENCH__.media.openDurationMs` when opening a media item. |
+| Media next | ms | App marker | `window.__CF_BENCH__.media.nextDurationMs` when advancing to the next item. |
 | Client nav | ms | App timing | Time between click and route completion for the client-nav scenario. |
 
 ## Scenarios and phases
 
-- Scenarios: `home`, `stays`, `blog`, `chart`, and `spa_nav`.
+- MPA suite (`mpa_airbnb`): `home`, `stays`, `stay_detail`, `blog`, `blog_post`.
+- SPA suite (`spa_trading_media`): `chart`, `media`.
 - Phases: `cold` is first navigation in a fresh browser context; `warm` is a reload
   in the same context.
 
@@ -45,4 +48,3 @@ This glossary defines the metrics reported in `bench/results.v2.json` and
 
 - `parity`: chart data fetches use `no-store` for equal caching across frameworks.
 - `idiomatic`: framework defaults (chart data can be cached per framework).
-

@@ -2,6 +2,17 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import {
+  DEFAULT_MATRIX_PATH,
+  DEFAULT_TARGETS_PATH,
+  DEFAULT_SUITES_DIR,
+  loadSuite,
+  parseCsvSet,
+  resolveLiveTargets,
+  toAbsolutePath,
+} from './config-v3.mjs';
+
+const BENCH_DIR = path.dirname(DEFAULT_TARGETS_PATH);
 
 function argValue(name, fallback = null) {
   const idx = process.argv.indexOf(name);
@@ -13,18 +24,15 @@ function hasFlag(name) {
   return process.argv.includes(name);
 }
 
-function normalizeTargets(doc) {
-  const rows = Array.isArray(doc?.targets) ? doc.targets : [];
-  return rows
-    .filter((row) => row && row.framework && row.url)
-    .map((row) => ({
-      framework: String(row.framework),
-      url: String(row.url).replace(/\/$/, ''),
-      platform: row.platform || 'workers',
-    }));
-}
-
 function mapScenario(sc) {
+  const interactions = Array.isArray(sc.interactions) ? sc.interactions : [];
+  const interactionKinds = new Set(
+    interactions.map((item) => String(item?.kind || '').toLowerCase()).filter(Boolean)
+  );
+  const looksMedia =
+    String(sc.name || '').toLowerCase().includes('media') ||
+    [...interactionKinds].some((kind) => kind.startsWith('media'));
+
   const out = {
     name: sc.name,
     path: sc.path,
@@ -33,10 +41,9 @@ function mapScenario(sc) {
     waitUntil: sc.waitUntil || (sc.type === 'spa' ? 'domcontentloaded' : 'load'),
   };
 
-  if (Array.isArray(sc.interactions) && sc.interactions.length > 0) {
+  if (interactions.length > 0) {
     out.interact = true;
-    if (sc.name === 'media') out.interactType = 'media';
-    if (sc.name === 'chart') out.interactType = 'chart';
+    out.interactType = looksMedia ? 'media' : 'chart';
   }
 
   return out;
@@ -49,7 +56,7 @@ function toRenderingType(scType) {
 
 async function runLegacyRunner({ configPath, outPath, passthroughArgs }) {
   const child = spawn('node', ['./src/run.mjs', '--config', configPath, '--out', outPath, ...passthroughArgs], {
-    cwd: path.join(process.cwd(), 'bench'),
+    cwd: BENCH_DIR,
     stdio: 'inherit',
     env: process.env,
   });
@@ -65,43 +72,26 @@ async function runLegacyRunner({ configPath, outPath, passthroughArgs }) {
 
 async function main() {
   const suiteName = argValue('--suite', 'mpa_airbnb');
-  const targetsPath = argValue('--targets', path.join(process.cwd(), 'bench', 'targets.live.json'));
-  const matrixPath = argValue('--matrix', path.join(process.cwd(), 'bench', 'framework-matrix.json'));
-  const outPath = argValue('--out', path.join(process.cwd(), 'bench', `results.v3.${suiteName}.json`));
+  const targetsPath = toAbsolutePath(argValue('--targets', null), DEFAULT_TARGETS_PATH);
+  const matrixPath = toAbsolutePath(argValue('--matrix', null), DEFAULT_MATRIX_PATH);
+  const suitesDir = toAbsolutePath(argValue('--suites-dir', null), DEFAULT_SUITES_DIR);
+  const outPath = toAbsolutePath(argValue('--out', null), path.join(BENCH_DIR, `results.v3.${suiteName}.json`));
+  const only = parseCsvSet(argValue('--only', ''));
 
-  const suitePath = path.join(process.cwd(), 'bench', 'suites', `${suiteName}.json`);
-
-  const [suiteDoc, targetsDoc, matrixDoc] = await Promise.all([
-    fs.readFile(suitePath, 'utf8').then(JSON.parse),
-    fs.readFile(targetsPath, 'utf8').then(JSON.parse),
-    fs.readFile(matrixPath, 'utf8').then(JSON.parse),
+  const [suite, targets] = await Promise.all([
+    loadSuite(suiteName, suitesDir),
+    resolveLiveTargets({
+      matrixPath,
+      targetsPath,
+      only,
+      requireWorkers: true,
+      requireEnabled: true,
+    }),
   ]);
-
-  const targets = normalizeTargets(targetsDoc);
-  const scenarios = (Array.isArray(suiteDoc?.scenarios) ? suiteDoc.scenarios : []).map(mapScenario);
-  const matrixRows = Array.isArray(matrixDoc?.frameworks) ? matrixDoc.frameworks : [];
-  const matrixByName = new Map(matrixRows.map((row) => [row.name, row]));
-
-  if (!scenarios.length) {
-    throw new Error(`Suite ${suiteName} has no scenarios.`);
-  }
+  const scenarios = suite.scenarios.map(mapScenario);
 
   const frameworks = [];
   for (const target of targets) {
-    const meta = matrixByName.get(target.framework);
-    if (!meta) {
-      throw new Error(`Target framework ${target.framework} is missing from framework matrix.`);
-    }
-    if (!meta.benchmarkEnabled) {
-      continue;
-    }
-    if (target.platform !== 'workers') {
-      throw new Error(`Target ${target.framework} is not workers platform.`);
-    }
-    if (/\.pages\.dev\b/i.test(target.url)) {
-      throw new Error(`Target ${target.framework} points to pages.dev (${target.url}).`);
-    }
-
     const rendering = {};
     for (const sc of scenarios) {
       rendering[sc.name] = toRenderingType(sc.type);

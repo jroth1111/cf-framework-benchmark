@@ -7,7 +7,6 @@ Framework implementations included:
 - React
 - Astro
 - Next.js (OpenNext on Workers)
-- TanStack Start
 - SvelteKit
 - Qwik (Qwik City)
 - Solid (SolidJS + Vite)
@@ -18,9 +17,11 @@ The app is intentionally **hybrid**:
 
 1. **SPA-like section** (`/chart`)
    - TradingView-ish: interactive canvas chart, symbol switching without a full page reload.
-2. **“App pages” section** (`/stays`, `/stays/:id`)
+2. **Media SPA section** (`/media`)
+   - YouTube-ish: feed + player interactions (open item, next item).
+3. **“App pages” section** (`/stays`, `/stays/:id`)
    - Airbnb-ish: listing index + listing detail pages.
-3. **SSG blog** (`/blog`, `/blog/:slug`)
+4. **SSG blog** (`/blog`, `/blog/:slug`)
    - Blog index + post pages.
 
 All apps use the **same dataset** (a shared workspace package) so the UX and content stay comparable.
@@ -34,6 +35,7 @@ We measure (synthetically, in a controlled browser) for each framework deploymen
 - **Repeat view / subsequent load** (reload within the same browser context)
 - **Client CPU + memory** (CDP Performance metrics + JS heap)
 - **Chart interaction latency** (symbol/timeframe switch + draw time on `/chart`)
+- **Media interaction latency** (open + next actions on `/media`)
 
 The benchmark runner lives in `bench/`.
 
@@ -44,7 +46,7 @@ See `docs/metrics-glossary.md` for definitions and metric sources.
 > Notes:
 > - Browser-based “response time” includes network + TLS + CDN edge variance.
 > - To reduce noise, the runner runs multiple iterations and summarizes medians.
-> - You can run against local `wrangler dev` or against `*.workers.dev`.
+> - v3 benchmarks are Workers-only and run against live `*.workers.dev` targets.
 
 ## Prerequisites
 
@@ -89,10 +91,13 @@ pnpm -C apps/react deploy
 
 ### 5) Benchmark
 
-Edit `bench/bench.config.json` to point to your deployed URLs, then run:
+Update `bench/targets.live.json` URLs, then run:
 
 ```bash
-pnpm -C bench run
+pnpm bench
+pnpm bench:spa
+# or run both suites
+pnpm bench:all
 ```
 
 Profiles:
@@ -104,8 +109,10 @@ Profiles:
 
 This produces:
 
-- `bench/results.v2.json`
-- `bench/results.v2.md`
+- `bench/results.v3.mpa_airbnb.json`
+- `bench/results.v3.mpa_airbnb.md`
+- `bench/results.v3.spa_trading_media.json`
+- `bench/results.v3.spa_trading_media.md`
 
 Throughput (concurrency) check:
 

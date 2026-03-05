@@ -1,69 +1,24 @@
 #!/usr/bin/env node
+import fs from "node:fs/promises";
 import { spawn } from "node:child_process";
-import fs from "node:fs";
-import path from "node:path";
-import process from "node:process";
-import { fileURLToPath } from "node:url";
+import {
+  DEFAULT_MATRIX_PATH,
+  DEFAULT_TARGETS_PATH,
+  loadMatrix,
+  parseCsvSet,
+  resolveLiveTargets,
+  toAbsolutePath,
+} from "../bench/src/config-v3.mjs";
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const DEFAULT_PREFIX = process.env.CF_BENCH_PREFIX || "cf-benchmark";
-
-const FRAMEWORKS = [
-  { name: "react", pkg: "cf-bench-react", dir: "apps/react" },
-  { name: "astro", pkg: "cf-bench-astro", dir: "apps/astro" },
-  {
-    name: "next",
-    pkg: "cf-bench-next",
-    dir: "apps/next",
-    buildCmd: "pnpm -C apps/next exec opennextjs-cloudflare build",
-    useTempConfig: true,
-  },
-  {
-    name: "tanstack-start",
-    pkg: "cf-bench-tanstack-start",
-    dir: "apps/tanstack-start",
-  },
-  { name: "svelte", pkg: "cf-bench-svelte", dir: "apps/svelte" },
-  { name: "qwik", pkg: "cf-bench-qwik", dir: "apps/qwik" },
-  { name: "solid", pkg: "cf-bench-solid", dir: "apps/solid" },
-];
-
-function parseArgs(argv) {
-  const args = argv.slice(2);
-  let prefix = DEFAULT_PREFIX;
-  let only = null;
-  let configPath = path.join(ROOT, "bench", "bench.config.json");
-
-  for (let i = 0; i < args.length; i += 1) {
-    const arg = args[i];
-    if (arg === "--prefix") {
-      prefix = args[i + 1] || prefix;
-      i += 1;
-      continue;
-    }
-    if (arg === "--only") {
-      const next = args[i + 1] || "";
-      only = new Set(next.split(",").map((item) => item.trim()).filter(Boolean));
-      i += 1;
-      continue;
-    }
-    if (arg === "--config") {
-      const next = args[i + 1];
-      if (next) {
-        configPath = path.resolve(ROOT, next);
-      }
-      i += 1;
-      continue;
-    }
-  }
-
-  return { prefix, only, configPath };
+function argValue(flag, fallback = null) {
+  const idx = process.argv.indexOf(flag);
+  if (idx === -1) return fallback;
+  return process.argv[idx + 1] ?? fallback;
 }
 
-function runAndCollect(cmd, cwd) {
+function runAndCollect(cmd) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, {
-      cwd,
       shell: true,
       env: process.env,
       stdio: ["inherit", "pipe", "pipe"],
@@ -93,97 +48,77 @@ function runAndCollect(cmd, cwd) {
       }
       resolve({ stdout, stderr, combined: `${stdout}\n${stderr}` });
     });
+    child.on("error", reject);
   });
 }
 
 function extractDeployUrl(output) {
   const urls = output.match(/https?:\/\/[^\s)]+/g) || [];
-  const candidates = urls.filter(
-    (url) => url.includes(".workers.dev") || url.includes(".pages.dev"),
-  );
-  return candidates[candidates.length - 1] || urls[urls.length - 1] || null;
+  const workers = urls.filter((url) => /\.workers\.dev\b/i.test(url));
+  if (workers.length) return workers[workers.length - 1];
+  return urls[urls.length - 1] || null;
 }
 
-async function deployFramework(entry, prefix) {
-  const workerName = `${prefix}-${entry.name}`;
-  console.log(`\n==> Deploying ${entry.name} (${workerName})`);
-  const buildCmd =
-    entry.buildCmd || `pnpm --filter ${entry.pkg} run build`;
-  await runAndCollect(buildCmd, ROOT);
+async function updateTargets(targetsPath, deployedMap) {
+  const doc = JSON.parse(await fs.readFile(targetsPath, "utf8"));
+  const rows = Array.isArray(doc.targets) ? doc.targets : [];
 
-  let deployCmd = `pnpm -C ${entry.dir} exec wrangler deploy --name ${workerName}`;
-  let configPath = null;
-  let originalConfig = null;
-  if (entry.useTempConfig) {
-    configPath = path.join(ROOT, entry.dir, "wrangler.toml");
-    originalConfig = fs.readFileSync(configPath, "utf8");
-    const updated = originalConfig.match(/^name\s*=/m)
-      ? originalConfig.replace(/^name\s*=\s*".*?"/m, `name = "${workerName}"`)
-      : `name = "${workerName}"\n${originalConfig}`;
-    fs.writeFileSync(configPath, updated);
-    deployCmd = `pnpm -C ${entry.dir} exec wrangler deploy`;
+  for (const row of rows) {
+    const nextUrl = deployedMap.get(row.framework);
+    if (nextUrl) row.url = nextUrl;
   }
 
-  let result;
-  try {
-    result = await runAndCollect(deployCmd, ROOT);
-  } finally {
-    if (configPath && originalConfig !== null) {
-      try {
-        fs.writeFileSync(configPath, originalConfig);
-      } catch {
-        // ignore
-      }
-    }
-  }
-
-  const url = extractDeployUrl(result.combined);
-  if (!url) {
-    throw new Error(`Failed to detect deployed URL for ${entry.name}.`);
-  }
-  return url;
-}
-
-function updateBenchConfig(configPath, deployed) {
-  const raw = fs.readFileSync(configPath, "utf8");
-  const config = JSON.parse(raw);
-  const frameworkMap = new Map(config.frameworks.map((fw) => [fw.name, fw]));
-
-  for (const [name, url] of Object.entries(deployed)) {
-    const target = frameworkMap.get(name);
-    if (target) {
-      target.url = url;
-    }
-  }
-
-  fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+  await fs.writeFile(targetsPath, `${JSON.stringify(doc, null, 2)}\n`);
 }
 
 async function main() {
-  const { prefix, only, configPath } = parseArgs(process.argv);
-  const selected = only
-    ? FRAMEWORKS.filter((fw) => only.has(fw.name))
-    : FRAMEWORKS;
+  const only = parseCsvSet(argValue("--only", ""));
+  const matrixPath = toAbsolutePath(argValue("--matrix", null), DEFAULT_MATRIX_PATH);
+  const targetsPath = toAbsolutePath(argValue("--targets", null), DEFAULT_TARGETS_PATH);
+  const noWrite = process.argv.includes("--no-write");
 
-  if (selected.length === 0) {
-    console.error("No frameworks selected for deploy.");
-    process.exit(1);
+  const [liveTargets, matrix] = await Promise.all([
+    resolveLiveTargets({
+      matrixPath,
+      targetsPath,
+      only,
+      requireWorkers: true,
+      requireEnabled: true,
+    }),
+    loadMatrix(matrixPath),
+  ]);
+
+  const deployed = new Map();
+  for (const target of liveTargets) {
+    const meta = matrix.byName.get(target.name);
+    const command = String(meta?.deploy?.command || "").trim();
+    if (!command) {
+      throw new Error(`Missing deploy.command for framework ${target.name} in matrix.`);
+    }
+
+    console.log(`\n==> Deploying ${target.name}`);
+    const result = await runAndCollect(command);
+    const url = extractDeployUrl(result.combined);
+    if (!url) {
+      throw new Error(`Failed to detect deploy URL for ${target.name}.`);
+    }
+    if (/\.pages\.dev\b/i.test(url)) {
+      throw new Error(`Deploy for ${target.name} returned pages.dev URL (${url}).`);
+    }
+
+    deployed.set(target.name, url.replace(/\/$/, ""));
+    console.log(`✓ ${target.name} -> ${url}`);
   }
 
-  const deployed = {};
-  for (const entry of selected) {
-    const url = await deployFramework(entry, prefix);
-    deployed[entry.name] = url;
-    console.log(`✓ ${entry.name} -> ${url}`);
+  if (!noWrite) {
+    await updateTargets(targetsPath, deployed);
+    console.log(`\nUpdated ${targetsPath}`);
   }
 
-  updateBenchConfig(configPath, deployed);
-
-  console.log("\nUpdated bench config:");
-  for (const [name, url] of Object.entries(deployed)) {
+  console.log("\nDeploy summary:");
+  for (const [name, url] of deployed.entries()) {
     console.log(`- ${name}: ${url}`);
   }
-  console.log(`\nConfig: ${path.relative(ROOT, configPath)}`);
 }
 
 main().catch((err) => {

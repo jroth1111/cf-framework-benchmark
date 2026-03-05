@@ -7,8 +7,7 @@ import { chromium } from 'playwright';
 
 const require = createRequire(import.meta.url);
 
-const DEFAULT_CONFIG = new URL('../bench.config.json', import.meta.url);
-const DEFAULT_OUT = new URL('../results.v2.json', import.meta.url);
+const DEFAULT_OUT = new URL('../results.v3.json', import.meta.url);
 
 /**
  * Timing constants for benchmark measurements.
@@ -1106,7 +1105,10 @@ async function warmupFramework(browser, fw, initScript, scenarios, throttling, t
 async function main() {
   const runStart = Date.now();
   const runStartedAt = new Date().toISOString();
-  const configPath = arg('--config', DEFAULT_CONFIG.pathname);
+  const configPath = arg('--config', null);
+  if (!configPath) {
+    throw new Error('Missing --config. Use bench/src/run-v3.mjs for standard v3 runs.');
+  }
   const outPath = arg('--out', DEFAULT_OUT.pathname);
   const config = JSON.parse(await fs.readFile(configPath, 'utf8'));
   const configIterations = Number(config.iterations ?? 5);

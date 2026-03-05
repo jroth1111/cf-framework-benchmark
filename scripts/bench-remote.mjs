@@ -1,6 +1,15 @@
 #!/usr/bin/env node
 import fs from "node:fs/promises";
 import path from "node:path";
+import {
+  DEFAULT_MATRIX_PATH,
+  DEFAULT_SUITES_DIR,
+  DEFAULT_TARGETS_PATH,
+  loadSuite,
+  parseCsvSet,
+  resolveLiveTargets,
+  toAbsolutePath,
+} from "../bench/src/config-v3.mjs";
 
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);
@@ -11,7 +20,11 @@ function argValue(flag, fallback = null) {
 const apiKey = argValue("--api-key", process.env.WPT_API_KEY || "");
 const endpoint = argValue("--endpoint", process.env.WPT_ENDPOINT || "https://www.webpagetest.org");
 const locationsRaw = argValue("--locations", process.env.WPT_LOCATIONS || "");
-const configPath = argValue("--config", path.join(process.cwd(), "bench", "bench.config.json"));
+const targetsPath = toAbsolutePath(argValue("--targets", null), DEFAULT_TARGETS_PATH);
+const matrixPath = toAbsolutePath(argValue("--matrix", null), DEFAULT_MATRIX_PATH);
+const suitesDir = toAbsolutePath(argValue("--suites-dir", null), DEFAULT_SUITES_DIR);
+const only = parseCsvSet(argValue("--only", ""));
+const suiteNames = parseCsvSet(argValue("--suites", "mpa_airbnb,spa_trading_media"));
 const outPath = argValue("--out", path.join(process.cwd(), "bench", "results.remote.json"));
 
 if (!apiKey) {
@@ -29,15 +42,18 @@ if (!locations.length) {
   process.exit(1);
 }
 
-const rawConfig = JSON.parse(await fs.readFile(configPath, "utf8"));
-const frameworks = Array.isArray(rawConfig.frameworks) ? rawConfig.frameworks : [];
+const frameworks = await resolveLiveTargets({
+  matrixPath,
+  targetsPath,
+  only,
+  requireWorkers: true,
+  requireEnabled: true,
+});
 
-const SCENARIOS = [
-  { name: "home", path: "/" },
-  { name: "stays", path: "/stays" },
-  { name: "blog", path: "/blog" },
-  { name: "chart", path: "/chart" }
-];
+const suites = await Promise.all([...suiteNames].map((name) => loadSuite(name, suitesDir)));
+const scenarios = suites
+  .flatMap((suite) => suite.scenarios.map((scenario) => ({ name: scenario.name, path: scenario.path })))
+  .filter((scenario, idx, arr) => arr.findIndex((row) => row.path === scenario.path) === idx);
 
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -76,10 +92,10 @@ function pickMetric(obj, keys) {
 const results = [];
 
 for (const fw of frameworks) {
-  const baseUrl = (fw.url || "").replace(/\/$/, "");
+  const baseUrl = fw.url.replace(/\/$/, "");
   if (!baseUrl) continue;
 
-  for (const scenario of SCENARIOS) {
+  for (const scenario of scenarios) {
     const url = `${baseUrl}${scenario.path}`;
     for (const location of locations) {
       console.log(`WPT: ${fw.name} ${scenario.name} @ ${location}`);

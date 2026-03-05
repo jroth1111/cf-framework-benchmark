@@ -46,15 +46,19 @@ jobs:
         run: pnpm -C bench exec playwright install --with-deps chromium
 
       - name: Run benchmark
-        run: pnpm -C bench exec node src/run.mjs --iterations $BENCH_ITERATIONS --profile $BENCH_PROFILE --throttle $BENCH_THROTTLE
+        run: |
+          pnpm -C bench exec node src/run-v3.mjs --suite mpa_airbnb --iterations $BENCH_ITERATIONS --profile $BENCH_PROFILE --throttle $BENCH_THROTTLE
+          pnpm -C bench exec node src/run-v3.mjs --suite spa_trading_media --iterations $BENCH_ITERATIONS --profile $BENCH_PROFILE --throttle $BENCH_THROTTLE
 
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
           name: bench-results
           path: |
-            bench/results.v2.json
-            bench/results.v2.md
+            bench/results.v3.mpa_airbnb.json
+            bench/results.v3.mpa_airbnb.md
+            bench/results.v3.spa_trading_media.json
+            bench/results.v3.spa_trading_media.md
 
       - name: Run WebPageTest (optional)
         if: ${{ secrets.WPT_API_KEY != '' && secrets.WPT_LOCATIONS != '' }}

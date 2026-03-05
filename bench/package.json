@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "run": "node ./src/run.mjs",
+    "run": "node ./src/run-v3.mjs --suite mpa_airbnb",
+    "run:spa": "node ./src/run-v3.mjs --suite spa_trading_media",
+    "run:all": "pnpm run run && pnpm run run:spa",
     "load": "node ./src/load-test.mjs"
   },
   "dependencies": {

@@ -1,18 +1,18 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@qwik.dev/core";
-import type { MediaItem } from "@cf-bench/dataset";
+import { queryMedia, type MediaItem } from "@cf-bench/dataset";
+import { routeLoader$ } from "@qwik.dev/router";
 
-type MediaResponse = {
-  total: number;
-  totalPages: number;
-  page: number;
-  pageSize: number;
-  results: MediaItem[];
-};
+export const useMediaItems = routeLoader$(() => {
+  return queryMedia({ pageSize: 30 }).results;
+});
 
 export default component$(() => {
-  const items = useSignal<MediaItem[]>([]);
+  const initialItems = useMediaItems();
+  const items = useSignal<MediaItem[]>(initialItems.value);
   const selectedIndex = useSignal(0);
-  const status = useSignal<"loading" | "ready" | "error">("loading");
+  const status = useSignal<"loading" | "ready" | "error">(
+    initialItems.value.length ? "ready" : "loading"
+  );
 
   const ensureBenchMedia = () => {
     const w = window as any;
@@ -21,24 +21,14 @@ export default component$(() => {
     return w.__CF_BENCH__.media;
   };
 
-  useVisibleTask$(async () => {
-    status.value = "loading";
-    try {
-      const res = await fetch("/api/media?pageSize=30");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const payload = (await res.json()) as MediaResponse;
-      items.value = payload.results || [];
-      selectedIndex.value = 0;
-      status.value = "ready";
-      const media = ensureBenchMedia();
-      media.ready = true;
-      media.currentId = items.value[0]?.id || null;
-    } catch (err) {
-      status.value = "error";
-      const media = ensureBenchMedia();
-      media.ready = true;
+  useVisibleTask$(() => {
+    status.value = items.value.length ? "ready" : "error";
+    const media = ensureBenchMedia();
+    media.ready = true;
+    media.currentId = items.value[0]?.id || null;
+    if (!items.value.length) {
       media.error = true;
-      media.errorMessage = err instanceof Error ? err.message : String(err);
+      media.errorMessage = "No media items available";
     }
   });
 

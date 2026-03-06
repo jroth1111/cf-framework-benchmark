@@ -6,9 +6,9 @@
 		"build": "nuxt build",
 		"dev": "nuxt dev",
 		"generate": "nuxt generate",
-		"preview": "pnpm run build && wrangler dev",
+		"preview": "pnpm run build && (find .wrangler/deploy -type f -delete 2>/dev/null || true) && wrangler dev",
 		"postinstall": "nuxt prepare",
-		"deploy": "pnpm run build && wrangler deploy --minify",
+		"deploy": "pnpm run build && (find .wrangler/deploy -type f -delete 2>/dev/null || true) && wrangler deploy --minify",
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {

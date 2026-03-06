@@ -6,13 +6,16 @@
 	"scripts": {
 		"cf-typegen": "wrangler types",
 		"dev": "wrangler dev",
-		"build": "tsc --noEmit",
+		"build": "CLOUDFLARE=1 pnpm exec waku build",
 		"start": "wrangler dev",
-		"deploy": "wrangler deploy --config wrangler.jsonc",
+		"deploy": "pnpm run build && wrangler deploy --config wrangler.jsonc",
 		"preview": "wrangler dev --config wrangler.jsonc"
 	},
 	"dependencies": {
 		"@cf-bench/bench-contract": "workspace:*",
+		"@cf-bench/bench-types": "workspace:*",
+		"@cf-bench/chart-core": "workspace:*",
+		"@cf-bench/dataset": "workspace:*",
 		"hono": "^4.10.0",
 		"react": "~19.2.4",
 		"react-dom": "~19.2.4",

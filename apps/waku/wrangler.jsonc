@@ -15,10 +15,19 @@
 	// https://developers.cloudflare.com/workers/platform/compatibility-dates
 	"compatibility_date": "2026-03-05",
 	"assets": {
-		// https://developers.cloudflare.com/workers/static-assets/binding/
 		"binding": "ASSETS",
 		"directory": "./dist/public",
-		"html_handling": "drop-trailing-slash"
+		"html_handling": "drop-trailing-slash",
+		"run_worker_first": [
+			"/",
+			"/stays",
+			"/stays/*",
+			"/blog",
+			"/blog/*",
+			"/chart",
+			"/media",
+			"/api/*"
+		]
 	},
 	"vars": {
 		"MAX_ITEMS": 10

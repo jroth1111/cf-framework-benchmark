@@ -9,6 +9,11 @@ export const DEFAULT_MATRIX_PATH = path.join(BENCH_DIR, "framework-matrix.json")
 export const DEFAULT_TARGETS_PATH = path.join(BENCH_DIR, "targets.live.json");
 export const DEFAULT_SUITES_DIR = path.join(BENCH_DIR, "suites");
 
+const IMPLEMENTATION_KINDS = new Set(["native", "control"]);
+const RENDER_MODES = new Set(["ssr", "prerender", "spa"]);
+const INITIAL_DATA_MODES = new Set(["document", "client-fetch"]);
+const HYDRATION_MODELS = new Set(["framework", "none"]);
+
 export function parseCsvSet(value) {
   const tokens = String(value || "")
     .split(",")
@@ -26,9 +31,96 @@ async function readJson(filePath) {
   return JSON.parse(await fs.readFile(filePath, "utf8"));
 }
 
+function mergeScenarioContracts(base = {}, override = {}) {
+  const out = {};
+  for (const suiteName of new Set([...Object.keys(base), ...Object.keys(override)])) {
+    const baseSuite = base[suiteName];
+    const overrideSuite = override[suiteName];
+    if (!baseSuite && !overrideSuite) continue;
+    const scenarioNames = new Set([
+      ...Object.keys(baseSuite || {}),
+      ...Object.keys(overrideSuite || {}),
+    ]);
+    out[suiteName] = {};
+    for (const scenarioName of scenarioNames) {
+      out[suiteName][scenarioName] = {
+        ...(baseSuite?.[scenarioName] || {}),
+        ...(overrideSuite?.[scenarioName] || {}),
+      };
+    }
+  }
+  return out;
+}
+
+function expectEnum(value, allowed, label) {
+  if (!allowed.has(value)) {
+    throw new Error(`${label} must be one of: ${[...allowed].join(", ")}`);
+  }
+  return value;
+}
+
+function normalizeScenarioContracts(rawContracts, label) {
+  const out = {};
+  for (const [suiteName, suiteContracts] of Object.entries(rawContracts || {})) {
+    if (!suiteContracts || typeof suiteContracts !== "object" || Array.isArray(suiteContracts)) {
+      throw new Error(`${label}.scenarioContracts.${suiteName} must be an object.`);
+    }
+    out[suiteName] = {};
+    for (const [scenarioName, contract] of Object.entries(suiteContracts)) {
+      if (!contract || typeof contract !== "object" || Array.isArray(contract)) {
+        throw new Error(`${label}.scenarioContracts.${suiteName}.${scenarioName} must be an object.`);
+      }
+      const renderMode = expectEnum(
+        String(contract.renderMode || ""),
+        RENDER_MODES,
+        `${label}.scenarioContracts.${suiteName}.${scenarioName}.renderMode`
+      );
+      const initialData = expectEnum(
+        String(contract.initialData || ""),
+        INITIAL_DATA_MODES,
+        `${label}.scenarioContracts.${suiteName}.${scenarioName}.initialData`
+      );
+      const hydrationModel = expectEnum(
+        String(contract.hydrationModel || ""),
+        HYDRATION_MODELS,
+        `${label}.scenarioContracts.${suiteName}.${scenarioName}.hydrationModel`
+      );
+      out[suiteName][scenarioName] = { renderMode, initialData, hydrationModel };
+    }
+  }
+  return out;
+}
+
 export async function loadMatrix(matrixPath = DEFAULT_MATRIX_PATH) {
   const doc = await readJson(matrixPath);
-  const frameworks = Array.isArray(doc.frameworks) ? doc.frameworks : [];
+  const rawFrameworks = Array.isArray(doc.frameworks) ? doc.frameworks : [];
+  const benchmarkDefaults = doc.benchmarkDefaults || {};
+  const defaultImplementationKind = expectEnum(
+    String(benchmarkDefaults.implementationKind || "native"),
+    IMPLEMENTATION_KINDS,
+    "benchmarkDefaults.implementationKind"
+  );
+  const defaultScenarioContracts = normalizeScenarioContracts(
+    benchmarkDefaults.scenarioContracts || {},
+    "benchmarkDefaults"
+  );
+  const frameworks = rawFrameworks.map((row) => {
+    const name = String(row?.name || "");
+    const implementationKind = expectEnum(
+      String(row?.implementationKind || defaultImplementationKind),
+      IMPLEMENTATION_KINDS,
+      `frameworks.${name || "<unknown>"}.implementationKind`
+    );
+    const scenarioContracts = normalizeScenarioContracts(
+      mergeScenarioContracts(defaultScenarioContracts, row?.scenarioContracts || {}),
+      `frameworks.${name || "<unknown>"}`
+    );
+    return {
+      ...row,
+      implementationKind,
+      scenarioContracts,
+    };
+  });
   const byName = new Map();
 
   for (const row of frameworks) {
@@ -119,4 +211,3 @@ export async function loadSuite(id, suitesDir = DEFAULT_SUITES_DIR) {
 
   return { id, path: suitePath, doc, scenarios, requiredRoutes };
 }
-

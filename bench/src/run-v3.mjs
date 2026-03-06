@@ -36,7 +36,7 @@ function mapScenario(sc) {
   const out = {
     name: sc.name,
     path: sc.path,
-    type: sc.type === 'spa' ? 'spa' : 'ssr',
+    type: sc.type === 'spa' ? 'spa' : 'document',
     waitFor: sc.waitFor || undefined,
     waitUntil: sc.waitUntil || (sc.type === 'spa' ? 'domcontentloaded' : 'load'),
   };
@@ -49,9 +49,19 @@ function mapScenario(sc) {
   return out;
 }
 
-function toRenderingType(scType) {
-  if (scType === 'spa') return 'spa';
-  return 'ssr';
+function defaultScenarioContract(scType) {
+  if (scType === 'spa') {
+    return {
+      renderMode: 'spa',
+      initialData: 'client-fetch',
+      hydrationModel: 'framework',
+    };
+  }
+  return {
+    renderMode: 'ssr',
+    initialData: 'document',
+    hydrationModel: 'framework',
+  };
 }
 
 async function runLegacyRunner({ configPath, outPath, passthroughArgs }) {
@@ -92,17 +102,21 @@ async function main() {
 
   const frameworks = [];
   for (const target of targets) {
-    const rendering = {};
+    const scenarioContracts = {};
     for (const sc of scenarios) {
-      rendering[sc.name] = toRenderingType(sc.type);
+      scenarioContracts[sc.name] = {
+        ...defaultScenarioContract(sc.type),
+        ...(target.matrix?.scenarioContracts?.[suiteName]?.[sc.name] || {}),
+      };
     }
 
     frameworks.push({
       name: target.framework,
       url: target.url,
       delivery: 'workers',
+      implementationKind: target.matrix?.implementationKind || 'native',
       features: { clientNav: false },
-      rendering,
+      scenarioContracts,
     });
   }
 

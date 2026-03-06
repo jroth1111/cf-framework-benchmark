@@ -447,6 +447,47 @@ function normalizeFrameworks(frameworks) {
   });
 }
 
+function fallbackScenarioContractForType(type) {
+  if (type === 'spa') {
+    return { renderMode: 'spa', initialData: 'client-fetch', hydrationModel: 'framework' };
+  }
+  return { renderMode: 'ssr', initialData: 'document', hydrationModel: 'framework' };
+}
+
+function scenarioContractForFramework(fw, scenarioName, scenarioType) {
+  return {
+    ...fallbackScenarioContractForType(scenarioType),
+    ...(fw?.scenarioContracts?.[scenarioName] || {}),
+  };
+}
+
+function scenarioContractBucketKey({ delivery, implementationKind, scenario, contract }) {
+  return [
+    `delivery=${delivery || 'unknown'}`,
+    `impl=${implementationKind || 'unknown'}`,
+    `scenario=${scenario}`,
+    `render=${contract.renderMode || 'unknown'}`,
+    `data=${contract.initialData || 'unknown'}`,
+    `hydration=${contract.hydrationModel || 'unknown'}`,
+  ].join('::');
+}
+
+function frameworkBucketKey(meta, scenarioNames, scenarioTypesByName) {
+  const delivery = meta?.delivery ?? 'unknown';
+  const implementationKind = meta?.implementationKind ?? 'unknown';
+  const segments = [
+    `delivery=${delivery}`,
+    `impl=${implementationKind}`,
+  ];
+  for (const scenarioName of scenarioNames) {
+    const contract = scenarioContractForFramework(meta, scenarioName, scenarioTypesByName.get(scenarioName));
+    segments.push(
+      `${scenarioName}[render=${contract.renderMode || 'unknown'},data=${contract.initialData || 'unknown'},hydration=${contract.hydrationModel || 'unknown'}]`
+    );
+  }
+  return segments.join('::');
+}
+
 async function loadWebVitalsScript() {
   // Prefer IIFE bundles for browser injection; fall back to UMD if needed.
   const distDir = path.dirname(require.resolve('web-vitals'));
@@ -1034,9 +1075,11 @@ async function runScenario(
   throttleApplied,
   flamegraphs
 ) {
+  const scenarioContract = scenarioContractForFramework(fw, sc.name, sc.type);
   const frameworkMeta = {
     delivery: fw.delivery ?? null,
-    rendering: fw.rendering ?? null,
+    implementationKind: fw.implementationKind ?? null,
+    scenarioContracts: fw.scenarioContracts ?? null,
     features: fw.features ?? null,
   };
   const base = {
@@ -1047,6 +1090,7 @@ async function runScenario(
     phase,
     scenario: sc.name,
     scenarioType: sc.type,
+    scenarioContract,
     url: scenarioUrl(fw, sc),
     isCold: phase === 'cold' && iteration === 0 && sc.name === 'home',
     throttling: throttling
@@ -1560,8 +1604,15 @@ async function main() {
     const [framework, profile, phase, scenario] = key.split('::');
     const meta = frameworkMetaByName.get(framework) || {};
     const delivery = meta.delivery ?? 'unknown';
-    const rendering = meta.rendering?.[scenario] ?? 'unknown';
-    const bucketKeyScenario = `${delivery}::${scenario}=${rendering}`;
+    const implementationKind = meta.implementationKind ?? 'unknown';
+    const scenarioType = rows[0]?.scenarioType;
+    const scenarioContract = scenarioContractForFramework(meta, scenario, scenarioType);
+    const bucketKeyScenario = scenarioContractBucketKey({
+      delivery,
+      implementationKind,
+      scenario,
+      contract: scenarioContract,
+    });
     const ttfb = rows.map((r) => r.serverMetrics?.ttfb ?? r.synthetic?.nav?.ttfb).filter((x) => typeof x === 'number');
     const lcp = rows.map((r) => r.synthetic?.cwv?.lcp?.value).filter((x) => typeof x === 'number');
     const cls = rows.map((r) => r.synthetic?.cwv?.cls?.value).filter((x) => typeof x === 'number');
@@ -1615,7 +1666,9 @@ async function main() {
       profile,
       phase,
       scenario,
-      scenarioType: rows[0]?.scenarioType,
+      scenarioType,
+      implementationKind,
+      scenarioContract,
       bucketKeyScenario,
       samples: { expected, ok, failed, skipped },
       firstRequest,
@@ -1663,26 +1716,17 @@ async function main() {
   const scenarioNames = [...new Set(summary.filter(s => s.scenarioType !== 'client-nav').map(s => s.scenario))];
   const clientNavScenarios = [...new Set(summary.filter(s => s.scenarioType === 'client-nav').map(s => s.scenario))];
   const phases = [...new Set(summary.map(s => s.phase))];
+  const scenarioTypesByName = new Map(scenarios.map((sc) => [sc.name, sc.type]));
 
   const metricWeights = { ttfb: 0.25, lcp: 0.4, tbt: 0.2, heap: 0.15 };
   const scenarioWeights = { home: 0.2, stays: 0.25, blog: 0.2, chart: 0.35, spa_nav: 0 };
-
-  const bucketKeyForFramework = (fw) => {
-    const delivery = fw?.delivery ?? 'unknown';
-    const rendering = fw?.rendering ?? {};
-    const home = rendering.home ?? 'unknown';
-    const stays = rendering.stays ?? 'unknown';
-    const blog = rendering.blog ?? 'unknown';
-    const chart = rendering.chart ?? 'unknown';
-    return `${delivery}::home=${home}::stays=${stays}::blog=${blog}::chart=${chart}`;
-  };
 
   const formatBucketKey = (key) => key.replace(/::/g, ' | ');
 
   const buckets = new Map();
   for (const name of frameworkNames) {
     const meta = frameworkMetaByName.get(name) || {};
-    const key = bucketKeyForFramework(meta);
+    const key = frameworkBucketKey(meta, scenarioNames, scenarioTypesByName);
     const bucket = buckets.get(key) || { key, frameworks: [] };
     bucket.frameworks.push(name);
     buckets.set(key, bucket);
@@ -2010,7 +2054,8 @@ async function main() {
       name: fw.name,
       url: fw.url,
       delivery: fw.delivery ?? null,
-      rendering: fw.rendering ?? null,
+      implementationKind: fw.implementationKind ?? null,
+      scenarioContracts: fw.scenarioContracts ?? null,
       features: fw.features ?? null,
       deploy: fw.deploy ?? null,
     })),

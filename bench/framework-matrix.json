@@ -6,12 +6,67 @@
     "platform": "workers",
     "capturedAt": "2026-03-05"
   },
+  "benchmarkDefaults": {
+    "implementationKind": "native",
+    "scenarioContracts": {
+      "mpa_airbnb": {
+        "home": {
+          "renderMode": "ssr",
+          "initialData": "document",
+          "hydrationModel": "framework"
+        },
+        "stays": {
+          "renderMode": "ssr",
+          "initialData": "document",
+          "hydrationModel": "framework"
+        },
+        "stay_detail": {
+          "renderMode": "ssr",
+          "initialData": "document",
+          "hydrationModel": "framework"
+        },
+        "blog": {
+          "renderMode": "ssr",
+          "initialData": "document",
+          "hydrationModel": "framework"
+        },
+        "blog_post": {
+          "renderMode": "ssr",
+          "initialData": "document",
+          "hydrationModel": "framework"
+        }
+      },
+      "spa_trading_media": {
+        "chart": {
+          "renderMode": "spa",
+          "initialData": "client-fetch",
+          "hydrationModel": "framework"
+        },
+        "media": {
+          "renderMode": "spa",
+          "initialData": "client-fetch",
+          "hydrationModel": "framework"
+        }
+      }
+    }
+  },
   "frameworks": [
     {
       "name": "angular",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/angular",
+      "scenarioContracts": {
+        "mpa_airbnb": {
+          "home": { "renderMode": "prerender" },
+          "stays": { "renderMode": "prerender" },
+          "blog": { "renderMode": "prerender" }
+        },
+        "spa_trading_media": {
+          "chart": { "renderMode": "prerender" },
+          "media": { "renderMode": "prerender" }
+        }
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/angular run deploy"
@@ -22,6 +77,15 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/astro",
+      "scenarioContracts": {
+        "mpa_airbnb": {
+          "home": { "renderMode": "prerender" }
+        },
+        "spa_trading_media": {
+          "chart": { "renderMode": "prerender" },
+          "media": { "renderMode": "prerender" }
+        }
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/astro run deploy"
@@ -42,6 +106,12 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/next",
+      "scenarioContracts": {
+        "mpa_airbnb": {
+          "blog": { "renderMode": "prerender" },
+          "blog_post": { "renderMode": "prerender" }
+        }
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/next run deploy"
@@ -62,6 +132,12 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/qwik",
+      "scenarioContracts": {
+        "mpa_airbnb": {
+          "blog": { "renderMode": "prerender" },
+          "blog_post": { "renderMode": "prerender" }
+        }
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/qwik run deploy"
@@ -132,6 +208,19 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/vike",
+      "scenarioContracts": {
+        "mpa_airbnb": {
+          "home": { "renderMode": "prerender" },
+          "stays": { "renderMode": "prerender" },
+          "stay_detail": { "renderMode": "prerender" },
+          "blog": { "renderMode": "prerender" },
+          "blog_post": { "renderMode": "prerender" }
+        },
+        "spa_trading_media": {
+          "chart": { "renderMode": "prerender" },
+          "media": { "renderMode": "prerender" }
+        }
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vike run deploy"
@@ -152,6 +241,19 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/waku",
+      "scenarioContracts": {
+        "mpa_airbnb": {
+          "home": { "renderMode": "prerender" },
+          "stays": { "renderMode": "prerender" },
+          "stay_detail": { "renderMode": "prerender" },
+          "blog": { "renderMode": "prerender" },
+          "blog_post": { "renderMode": "prerender" }
+        },
+        "spa_trading_media": {
+          "chart": { "renderMode": "prerender" },
+          "media": { "renderMode": "prerender" }
+        }
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/waku run deploy"

@@ -1,4 +1,5 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/solid-router'
+import { HydrationScript } from 'solid-js/web'
 import { HydrationMarker } from '../components/HydrationMarker'
 import '@cf-bench/ui/styles.css'
 
@@ -20,6 +21,7 @@ function RootComponent() {
         <script
           innerHTML={`(function(){var w=window;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(h.startMs==null)h.startMs=performance.now();})();`}
         />
+        <HydrationScript />
         <HeadContent />
       </head>
       <body>

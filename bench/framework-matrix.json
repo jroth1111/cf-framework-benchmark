@@ -129,8 +129,8 @@
     },
     {
       "name": "vike",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/vike",
       "deploy": {
         "type": "workers",

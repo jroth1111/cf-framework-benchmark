@@ -34,19 +34,28 @@ function assetRequestFor(request: Request, url: URL) {
   });
 }
 
+function resolvePagePath(url: URL) {
+  if (url.pathname.startsWith("/api/")) return null;
+  if (url.pathname.includes(".")) return null;
+  const base = url.pathname.endsWith("/") ? url.pathname.slice(0, -1) : url.pathname;
+  if (!base) return "/index.html";
+  return `${base}/index.html`;
+}
+
 export default {
   async fetch(request: Request, env: BenchEnv): Promise<Response> {
     const api = handleContractApi("vike", request);
     if (api) return api;
 
     const start = performance.now();
-    const response = await env.ASSETS.fetch(assetRequestFor(request, new URL(request.url)));
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("text/html")) {
-      return response;
-    }
-
     const url = new URL(request.url);
+    const pagePath = resolvePagePath(url);
+    const response = await env.ASSETS.fetch(
+      assetRequestFor(request, pagePath ? new URL(pagePath, url) : url)
+    );
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("text/html")) return response;
+
     const headers = new Headers(response.headers);
     headers.set(
       "cache-control",

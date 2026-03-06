@@ -4,7 +4,19 @@
   import { createChartStore } from "@cf-bench/chart-hooks/svelte";
   import { markChartReady, markChartError, updateChartCoreMetrics } from "@cf-bench/bench-types";
 
-  const chartStore = createChartStore();
+  const {
+    symbol,
+    timeframe,
+    indicators,
+    status,
+    data,
+    symbols,
+    timeframes,
+    setSymbol,
+    setTimeframe,
+    setIndicators,
+    destroy,
+  } = createChartStore();
 
   let canvas: HTMLCanvasElement;
   let chart: ReturnType<typeof createChart> | null = null;
@@ -44,13 +56,13 @@
           requestAnimationFrame(() => {
             try {
               chart?.resize();
-              chart?.setIndicators($chartStore.indicators);
+              chart?.setIndicators($indicators);
               // Set initial data after chart is created
-              if ($chartStore.data) {
-                chart?.setCandles($chartStore.data.candles);
+              if ($data) {
+                chart?.setCandles($data.candles);
               }
               chartReady = true;
-              markChartReady($chartStore.symbol, $chartStore.timeframe);
+              markChartReady($symbol, $timeframe);
             } catch (err) {
               error = err instanceof Error ? err.message : "Chart setup failed";
               markChartError(err instanceof Error ? err : "Chart setup failed");
@@ -74,16 +86,16 @@
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
     }
-    chartStore.destroy();
+    destroy();
     chart?.destroy?.();
   });
 
   // Update candles when data changes (with rAF)
-  $: if ($chartStore.data && chart && chartReady) {
+  $: if ($data && chart && chartReady) {
     debouncedUpdate(() => {
       requestAnimationFrame(() => {
-        chart?.setIndicators($chartStore.indicators);
-        chart?.setCandles($chartStore.data.candles);
+        chart?.setIndicators($indicators);
+        chart?.setCandles($data.candles);
       });
     });
   }
@@ -92,24 +104,24 @@
   $: if (chart && chartReady) {
     debouncedUpdate(() => {
       requestAnimationFrame(() => {
-        chart?.setIndicators($chartStore.indicators);
+        chart?.setIndicators($indicators);
       });
     });
   }
 
   function handleSymbolChange(e: Event) {
     const target = e.target as HTMLSelectElement;
-    chartStore.setSymbol(target.value);
+    setSymbol(target.value);
   }
 
   function handleTimeframeChange(e: Event) {
     const target = e.target as HTMLSelectElement;
-    chartStore.setTimeframe(target.value as any);
+    setTimeframe(target.value as any);
   }
 
-  function handleIndicatorChange(key: keyof typeof $chartStore.indicators, e: Event) {
+  function handleIndicatorChange(key: "sma20" | "sma50" | "ema20" | "volume", e: Event) {
     const target = e.target as HTMLInputElement;
-    chartStore.setIndicators((prev) => ({ ...prev, [key]: target.checked }));
+    setIndicators((prev) => ({ ...prev, [key]: target.checked }));
   }
 </script>
 
@@ -130,10 +142,10 @@
         data-testid="symbol-select"
         class="input"
         style="width: 140px"
-        value={$chartStore.symbol}
+        value={$symbol}
         on:change={handleSymbolChange}
       >
-        {#each $chartStore.symbols as s}
+        {#each symbols as s}
           <option value={s}>{s}</option>
         {/each}
       </select>
@@ -145,10 +157,10 @@
         data-testid="timeframe-select"
         class="input"
         style="width: 120px"
-        value={$chartStore.timeframe}
+        value={$timeframe}
         on:change={handleTimeframeChange}
       >
-        {#each $chartStore.timeframes as tf}
+        {#each timeframes as tf}
           <option value={tf}>{tf}</option>
         {/each}
       </select>
@@ -158,7 +170,7 @@
       <label class="muted small" style="display: flex; gap: 6px; align-items: center">
         <input
           type="checkbox"
-          checked={$chartStore.indicators.sma20}
+          checked={$indicators.sma20}
           on:change={(e) => handleIndicatorChange("sma20", e)}
         />
         SMA20
@@ -166,7 +178,7 @@
       <label class="muted small" style="display: flex; gap: 6px; align-items: center">
         <input
           type="checkbox"
-          checked={$chartStore.indicators.sma50}
+          checked={$indicators.sma50}
           on:change={(e) => handleIndicatorChange("sma50", e)}
         />
         SMA50
@@ -174,7 +186,7 @@
       <label class="muted small" style="display: flex; gap: 6px; align-items: center">
         <input
           type="checkbox"
-          checked={$chartStore.indicators.ema20}
+          checked={$indicators.ema20}
           on:change={(e) => handleIndicatorChange("ema20", e)}
         />
         EMA20
@@ -182,7 +194,7 @@
       <label class="muted small" style="display: flex; gap: 6px; align-items: center">
         <input
           type="checkbox"
-          checked={$chartStore.indicators.volume}
+          checked={$indicators.volume}
           on:change={(e) => handleIndicatorChange("volume", e)}
         />
         Volume
@@ -190,7 +202,7 @@
     </div>
 
     <div class="muted small">
-      {$chartStore.status === "loading" ? "Loading…" : $chartStore.status === "error" ? "Error" : "Ready"}
+      {$status === "loading" ? "Loading…" : $status === "error" ? "Error" : "Ready"}
     </div>
   </div>
 

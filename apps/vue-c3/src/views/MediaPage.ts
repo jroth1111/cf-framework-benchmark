@@ -12,8 +12,9 @@ function ensureBenchMedia() {
 export default defineComponent({
 	name: "MediaPage",
 	setup() {
-		const items = queryMedia({ pageSize: 30 }).results;
+		const items = queryMedia({ pageSize: 20 }).results;
 		const selectedIndex = ref(0);
+		const showPoster = ref(false);
 		const selected = computed<MediaItem | null>(() => items[selectedIndex.value] ?? null);
 
 		onMounted(() => {
@@ -25,6 +26,7 @@ export default defineComponent({
 		function openByIndex(index: number) {
 			const start = performance.now();
 			selectedIndex.value = index;
+			showPoster.value = true;
 			requestAnimationFrame(() => {
 				const media = ensureBenchMedia();
 				media.openDurationMs = performance.now() - start;
@@ -38,6 +40,7 @@ export default defineComponent({
 			const start = performance.now();
 			const next = (selectedIndex.value + 1) % items.length;
 			selectedIndex.value = next;
+			showPoster.value = true;
 			requestAnimationFrame(() => {
 				const media = ensureBenchMedia();
 				media.nextDurationMs = performance.now() - start;
@@ -84,16 +87,21 @@ export default defineComponent({
 						h("div", { "data-testid": "media-player", style: { minHeight: "260px" } }, [
 							selected.value
 								? [
-										h("img", {
-											src: selected.value.thumbnail,
-											alt: selected.value.title,
-											style: {
-												width: "100%",
-												maxHeight: "280px",
-												objectFit: "cover",
-												borderRadius: "10px",
-											},
-										}),
+										showPoster.value
+											? h("img", {
+													src: selected.value.thumbnail,
+													alt: selected.value.title,
+													loading: "lazy",
+													decoding: "async",
+													fetchpriority: "low",
+													style: {
+														width: "100%",
+														maxHeight: "280px",
+														objectFit: "cover",
+														borderRadius: "10px",
+													},
+												})
+											: null,
 										h("h3", selected.value.title),
 										h("p", { class: "muted small" }, `${selected.value.channel} • ${selected.value.views.toLocaleString()} views`),
 										h("p", { class: "muted" }, selected.value.description),

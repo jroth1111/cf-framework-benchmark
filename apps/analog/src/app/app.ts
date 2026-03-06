@@ -1,17 +1,36 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
+import { AfterViewInit, Component, PLATFORM_ID, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+
+type BenchWindow = Window & {
+  __CF_BENCH__?: {
+    hydration?: { endMs?: number };
+  };
+};
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  template: `<router-outlet />`,
-  styles: `
-    :host {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 2rem;
-      text-align: center;
-    }
-  `,
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class App {}
+export class App implements AfterViewInit {
+  private readonly platformId = inject(PLATFORM_ID);
+
+  readonly navItems = [
+    { label: 'Home', href: '/' },
+    { label: 'Stays', href: '/stays' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Chart', href: '/chart' },
+    { label: 'Media', href: '/media' },
+  ];
+
+  ngAfterViewInit() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const w = window as BenchWindow;
+    w.__CF_BENCH__ = w.__CF_BENCH__ || {};
+    const hydration = w.__CF_BENCH__.hydration || {};
+    hydration.endMs = performance.now();
+    w.__CF_BENCH__.hydration = hydration;
+  }
+}

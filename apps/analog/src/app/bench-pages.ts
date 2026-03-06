@@ -1,9 +1,8 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, ElementRef, OnDestroy, PLATFORM_ID, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, PLATFORM_ID, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { createChart } from '@cf-bench/chart-core';
 import {
   blogPosts,
   chartSymbols,
@@ -114,6 +113,7 @@ function markAnalogChartError(error: Error | string) {
       </a>
     </section>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomePageComponent {}
 
@@ -146,6 +146,7 @@ export class HomePageComponent {}
       </a>
     </section>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StaysPageComponent {
   readonly listings: Listing[] = queryListings({ page: 1, pageSize: 12 }).results;
@@ -212,6 +213,7 @@ export class StaysPageComponent {
       </section>
     </ng-template>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StayDetailPageComponent {
   private readonly route = inject(ActivatedRoute);
@@ -252,6 +254,7 @@ export class StayDetailPageComponent {
       </a>
     </section>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BlogPageComponent {
   readonly posts: BlogPost[] = blogPosts;
@@ -283,6 +286,7 @@ export class BlogPageComponent {
       </section>
     </ng-template>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BlogPostPageComponent {
   private readonly route = inject(ActivatedRoute);
@@ -356,10 +360,13 @@ export class BlogPostPageComponent {
       </div>
     </section>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChartPageComponent implements OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
-  private chart: ReturnType<typeof createChart> | null = null;
+  private chart: ReturnType<(typeof import('@cf-bench/chart-core'))['createChart']> | null = null;
+  private initFrame: number | null = null;
+  private readyFrame: number | null = null;
 
   @ViewChild('chartCanvas') canvasRef?: ElementRef<HTMLCanvasElement>;
 
@@ -386,17 +393,27 @@ export class ChartPageComponent implements OnDestroy {
   async ngAfterViewInit() {
     if (!isPlatformBrowser(this.platformId) || !this.canvasRef?.nativeElement) return;
 
-    this.chart = createChart(this.canvasRef.nativeElement, {
-      initialViewport: 180,
-      onStats: (stats: unknown) => updateAnalogChartCoreMetrics(stats as Record<string, unknown>),
+    const canvas = this.canvasRef.nativeElement;
+    this.initFrame = requestAnimationFrame(() => {
+      void (async () => {
+        const { createChart } = await import('@cf-bench/chart-core');
+        this.chart = createChart(canvas, {
+          initialViewport: 180,
+          onStats: (stats: unknown) => updateAnalogChartCoreMetrics(stats as Record<string, unknown>),
+        });
+        this.chart.setIndicators(this.currentIndicators());
+        this.readyFrame = requestAnimationFrame(() => {
+          this.chart?.resize();
+          this.chartReady = true;
+        });
+        await this.refreshChart();
+      })();
     });
-    this.chart.resize();
-    this.chart.setIndicators(this.currentIndicators());
-    this.chartReady = true;
-    await this.refreshChart();
   }
 
   ngOnDestroy() {
+    if (this.initFrame !== null) cancelAnimationFrame(this.initFrame);
+    if (this.readyFrame !== null) cancelAnimationFrame(this.readyFrame);
     this.chart?.destroy();
   }
 
@@ -445,8 +462,10 @@ export class ChartPageComponent implements OnDestroy {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = (await response.json()) as { candles: unknown[] };
-      this.chart.setIndicators(this.currentIndicators());
-      this.chart.setCandles(data.candles as never[]);
+      requestAnimationFrame(() => {
+        this.chart?.setIndicators(this.currentIndicators());
+        this.chart?.setCandles(data.candles as never[]);
+      });
       markAnalogChartReady(this.symbol, this.timeframe);
       this.status = 'ready';
     } catch (error) {
@@ -487,7 +506,15 @@ export class ChartPageComponent implements OnDestroy {
       <div class="card detail-panel">
         <h2>Player</h2>
         <div data-testid="media-player" class="player-shell" *ngIf="selected as active; else emptyState">
-          <img class="player-image" [src]="active.thumbnail" [alt]="active.title" />
+          <img
+            *ngIf="showPoster"
+            class="player-image"
+            [src]="active.thumbnail"
+            [alt]="active.title"
+            loading="lazy"
+            decoding="async"
+            fetchpriority="low"
+          />
           <h3>{{ active.title }}</h3>
           <p class="muted small">{{ active.channel }} · {{ formatViews(active.views) }} views</p>
           <p class="muted">{{ active.description }}</p>
@@ -505,12 +532,14 @@ export class ChartPageComponent implements OnDestroy {
       </div>
     </section>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MediaPageComponent {
   private readonly platformId = inject(PLATFORM_ID);
 
-  readonly items: MediaItem[] = queryMedia({ pageSize: 30 }).results;
+  readonly items: MediaItem[] = queryMedia({ pageSize: 20 }).results;
   selectedIndex = 0;
+  showPoster = false;
 
   constructor() {
     if (isPlatformBrowser(this.platformId) && this.selected) {
@@ -532,6 +561,7 @@ export class MediaPageComponent {
     if (!this.items[index]) return;
     const start = performance.now();
     this.selectedIndex = index;
+    this.showPoster = true;
     requestAnimationFrame(() => {
       const media = ensureBenchMedia();
       media['openDurationMs'] = performance.now() - start;
@@ -545,6 +575,7 @@ export class MediaPageComponent {
     const start = performance.now();
     const next = (this.selectedIndex + 1) % this.items.length;
     this.selectedIndex = next;
+    this.showPoster = true;
     requestAnimationFrame(() => {
       const media = ensureBenchMedia();
       media['nextDurationMs'] = performance.now() - start;

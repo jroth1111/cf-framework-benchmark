@@ -52,6 +52,18 @@
   },
   "frameworks": [
     {
+      "name": "analog",
+      "c3Template": "analog",
+      "benchmarkVariantOf": "analog",
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
+      "appDir": "apps/analog",
+      "deploy": {
+        "type": "workers",
+        "command": "pnpm -C apps/analog run deploy"
+      }
+    },
+    {
       "name": "angular",
       "status": "implemented",
       "benchmarkEnabled": true,
@@ -99,6 +111,54 @@
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono run deploy"
+      }
+    },
+    {
+      "name": "hono-solid",
+      "c3Template": "hono",
+      "benchmarkVariantOf": "solid",
+      "composition": {
+        "backend": "hono",
+        "frontend": "solid"
+      },
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
+      "appDir": "apps/hono-solid",
+      "deploy": {
+        "type": "workers",
+        "command": "pnpm -C apps/hono-solid run deploy"
+      }
+    },
+    {
+      "name": "hono-svelte",
+      "c3Template": "hono",
+      "benchmarkVariantOf": "svelte",
+      "composition": {
+        "backend": "hono",
+        "frontend": "svelte"
+      },
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
+      "appDir": "apps/hono-svelte",
+      "deploy": {
+        "type": "workers",
+        "command": "pnpm -C apps/hono-svelte run deploy"
+      }
+    },
+    {
+      "name": "hono-vue",
+      "c3Template": "hono",
+      "benchmarkVariantOf": "vue",
+      "composition": {
+        "backend": "hono",
+        "frontend": "vue"
+      },
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
+      "appDir": "apps/hono-vue",
+      "deploy": {
+        "type": "workers",
+        "command": "pnpm -C apps/hono-vue run deploy"
       }
     },
     {
@@ -184,6 +244,18 @@
       }
     },
     {
+      "name": "solidstart",
+      "c3Template": "solid",
+      "benchmarkVariantOf": "solid",
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
+      "appDir": "apps/solidstart",
+      "deploy": {
+        "type": "workers",
+        "command": "pnpm -C apps/solidstart run deploy"
+      }
+    },
+    {
       "name": "svelte",
       "status": "implemented",
       "benchmarkEnabled": true,
@@ -201,6 +273,18 @@
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/tanstack-start run deploy"
+      }
+    },
+    {
+      "name": "tanstack-start-solid",
+      "c3Template": "tanstack-start",
+      "benchmarkVariantOf": "tanstack-start",
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
+      "appDir": "apps/tanstack-start-solid",
+      "deploy": {
+        "type": "workers",
+        "command": "pnpm -C apps/tanstack-start-solid run deploy"
       }
     },
     {
@@ -234,6 +318,18 @@
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vue run deploy"
+      }
+    },
+    {
+      "name": "vue-c3",
+      "c3Template": "vue",
+      "benchmarkVariantOf": "vue",
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
+      "appDir": "apps/vue-c3",
+      "deploy": {
+        "type": "workers",
+        "command": "pnpm -C apps/vue-c3 run deploy"
       }
     },
     {

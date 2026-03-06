@@ -39,7 +39,8 @@ async function main() {
   const matrixPath = process.argv[2] || path.join(process.cwd(), 'bench', 'framework-matrix.json');
 
   const rawMatrix = JSON.parse(await fs.readFile(matrixPath, 'utf8'));
-  const matrixFrameworks = (rawMatrix.frameworks || []).map((fw) => fw.name);
+  const matrixEntries = rawMatrix.frameworks || [];
+  const matrixFrameworks = matrixEntries.map((fw) => fw.name);
   const sortedMatrixFrameworks = [...new Set(matrixFrameworks)].sort((a, b) => a.localeCompare(b));
 
   if (sortedMatrixFrameworks.length !== matrixFrameworks.length) {
@@ -51,19 +52,26 @@ async function main() {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
-  const c3Frameworks = parseFrameworksFromHelp(helpText).filter((name) => !DEPRECATED_FRAMEWORKS.has(name));
-  const { missing, extra } = diffSets(c3Frameworks, sortedMatrixFrameworks);
+  const availableC3Frameworks = parseFrameworksFromHelp(helpText);
+  const supportedC3Frameworks = availableC3Frameworks.filter((name) => !DEPRECATED_FRAMEWORKS.has(name));
+  const validC3Frameworks = new Set(availableC3Frameworks);
+  const matrixC3Frameworks = matrixEntries.map((fw) => fw.c3Template || fw.name);
+  const coveredC3Frameworks = [...new Set(matrixC3Frameworks)].sort((a, b) => a.localeCompare(b));
+  const invalidMappings = matrixEntries
+    .filter((fw) => !validC3Frameworks.has(fw.c3Template || fw.name))
+    .map((fw) => `${fw.name}:${fw.c3Template || fw.name}`);
+  const { missing } = diffSets(supportedC3Frameworks, coveredC3Frameworks);
 
-  if (!missing.length && !extra.length) {
-    console.log(`Framework matrix is in sync (${c3Frameworks.length} frameworks).`);
+  if (!missing.length && !invalidMappings.length) {
+    console.log(`Framework matrix is in sync (${supportedC3Frameworks.length} required C3 Workers templates).`);
     return;
   }
 
   if (missing.length) {
     console.error(`Missing from matrix: ${missing.join(', ')}`);
   }
-  if (extra.length) {
-    console.error(`Extra in matrix: ${extra.join(', ')}`);
+  if (invalidMappings.length) {
+    console.error(`Invalid c3Template mappings: ${invalidMappings.join(', ')}`);
   }
 
   process.exit(1);

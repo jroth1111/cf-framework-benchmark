@@ -2,8 +2,8 @@
 	"scripts": {
 		"dev": "wrangler dev",
 		"build": "vite build",
-		"preview": "pnpm run build && wrangler dev",
-		"deploy": "pnpm run build && wrangler deploy --minify",
+		"preview": "pnpm run build && (find .wrangler/deploy -type f -delete 2>/dev/null || true) && wrangler dev",
+		"deploy": "pnpm run build && (find .wrangler/deploy -type f -delete 2>/dev/null || true) && wrangler deploy --minify",
 		"generate-types": "wrangler types",
 		"cf-typegen": "wrangler types"
 	},

@@ -9,8 +9,8 @@
   "frameworks": [
     {
       "name": "angular",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/angular",
       "deploy": {
         "type": "workers",

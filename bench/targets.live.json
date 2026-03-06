@@ -9,6 +9,11 @@
       "url": "https://cf-bench-astro.gwizz.workers.dev"
     },
     {
+      "framework": "angular",
+      "platform": "workers",
+      "url": "https://cf-bench-angular.gwizz.workers.dev"
+    },
+    {
       "framework": "hono",
       "platform": "workers",
       "url": "https://cf-bench-hono.gwizz.workers.dev"

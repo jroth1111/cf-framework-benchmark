@@ -9,8 +9,8 @@
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings"
 	},
 	"dependencies": {
-		"@cf-bench/bench-control": "workspace:*",
 		"@cf-bench/bench-contract": "workspace:*",
+		"@cf-bench/dataset": "workspace:*",
 		"hono": "^4.12.5"
 	},
 	"devDependencies": {

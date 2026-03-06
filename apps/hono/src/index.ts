@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { handleControlRequest } from "@cf-bench/bench-control";
 import { handleContractApi } from "@cf-bench/bench-contract";
+import { handleHonoPageRequest } from "./render";
 
 type Bindings = CloudflareBindings & {
   ASSETS?: Fetcher;
@@ -27,20 +27,20 @@ app.all("*", async (c) => {
   const contract = handleContractApi("hono", c.req.raw);
   if (contract) return contract;
 
-  const control = handleControlRequest("hono", c.req.raw);
-  if (control) {
-    const contentType = control.headers.get("content-type") || "";
-    if (!contentType.includes("text/html")) return control;
+  const page = handleHonoPageRequest(c.req.raw);
+  if (page) {
+    const contentType = page.headers.get("content-type") || "";
+    if (!contentType.includes("text/html")) return page;
 
     const url = new URL(c.req.raw.url);
-    const headers = new Headers(control.headers);
+    const headers = new Headers(page.headers);
     headers.set(
       "cache-control",
       benchmarkPageCache(c.req.header("x-cf-bench-profile") ?? null, benchmarkPageKind(url.pathname))
     );
-    return new Response(control.body, {
-      status: control.status,
-      statusText: control.statusText,
+    return new Response(page.body, {
+      status: page.status,
+      statusText: page.statusText,
       headers,
     });
   }

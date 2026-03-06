@@ -61,6 +61,8 @@ export function createChartStore(options: {
 
   const symbols = chartSymbols as readonly string[];
   const timeframes = [...chartTimeframes] as readonly string[];
+  const isClient = typeof window !== "undefined";
+  let initialized = false;
 
   // Load data when symbol or timeframe changes
   let currentReqId = 0;
@@ -96,16 +98,23 @@ export function createChartStore(options: {
   };
 
   // Subscribe to symbol and timeframe changes
-  symbol.subscribe(() => {
-    load();
+  const maybeLoad = () => {
+    if (!isClient || !initialized) return;
+    void load();
+  };
+
+  const unsubscribeSymbol = symbol.subscribe(() => {
+    maybeLoad();
   });
 
-  timeframe.subscribe(() => {
-    load();
+  const unsubscribeTimeframe = timeframe.subscribe(() => {
+    maybeLoad();
   });
 
-  // Load initial data
-  load();
+  if (isClient) {
+    initialized = true;
+    void load();
+  }
 
   return {
     // Stores
@@ -134,6 +143,8 @@ export function createChartStore(options: {
     // Cleanup
     destroy: () => {
       currentReqId++;
+      unsubscribeSymbol();
+      unsubscribeTimeframe();
     },
   };
 }

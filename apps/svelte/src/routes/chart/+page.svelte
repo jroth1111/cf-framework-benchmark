@@ -26,9 +26,8 @@
 
   onMount(async () => {
     try {
-      console.log('[SvelteKit Chart] Mounting...');
       if (!canvas) {
-        throw new Error('Canvas element not found');
+        throw new Error("Canvas element not found");
       }
 
       // Defer chart creation to next frame
@@ -52,23 +51,19 @@
               }
               chartReady = true;
               markChartReady($chartStore.symbol, $chartStore.timeframe);
-              console.log('[SvelteKit Chart] Ready');
             } catch (err) {
-              console.error('[SvelteKit Chart] Error during chart setup:', err);
-              error = err instanceof Error ? err.message : 'Chart setup failed';
-              markChartError(err instanceof Error ? err : 'Chart setup failed');
+              error = err instanceof Error ? err.message : "Chart setup failed";
+              markChartError(err instanceof Error ? err : "Chart setup failed");
             }
           });
         } catch (err) {
-          console.error('[SvelteKit Chart] Error creating chart:', err);
-          error = err instanceof Error ? err.message : 'Chart creation failed';
-          markChartError(err instanceof Error ? err : 'Chart creation failed');
+          error = err instanceof Error ? err.message : "Chart creation failed";
+          markChartError(err instanceof Error ? err : "Chart creation failed");
         }
       });
     } catch (err) {
-      console.error('[SvelteKit Chart] Mount error:', err);
-      error = err instanceof Error ? err.message : 'Chart failed to load';
-      markChartError(err instanceof Error ? err : 'Chart failed to load');
+      error = err instanceof Error ? err.message : "Chart failed to load";
+      markChartError(err instanceof Error ? err : "Chart failed to load");
     }
   });
 

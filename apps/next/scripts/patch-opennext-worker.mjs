@@ -61,7 +61,7 @@ source = source.replace(
 
 source = source.replace(
   "            return handler(reqOrResp, env, ctx, request.signal);\n",
-  "            const response = await handler(reqOrResp, env, ctx, request.signal);\n            return applyBenchHtmlHeaders(response, request, benchStart);\n"
+  "            const benchResponse = await handler(reqOrResp, env, ctx, request.signal);\n            return applyBenchHtmlHeaders(benchResponse, request, benchStart);\n"
 );
 
 await fs.writeFile(workerPath, source);

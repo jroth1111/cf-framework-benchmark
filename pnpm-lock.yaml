@@ -124,9 +124,9 @@ importers:
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
-      '@cf-bench/bench-control':
+      '@cf-bench/dataset':
         specifier: workspace:*
-        version: link:../../packages/bench-control
+        version: link:../../packages/dataset
       hono:
         specifier: ^4.12.5
         version: 4.12.5

@@ -13,6 +13,7 @@
     "test:dataset": "node scripts/test-dataset.mjs",
     "test:contracts": "node scripts/contract-tests.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "verify:static": "node scripts/verify-static.mjs",
     "verify:live": "node scripts/verify-live.mjs",
     "bench": "pnpm -C bench exec node src/run-v3.mjs --suite mpa_airbnb",
     "bench:spa": "pnpm -C bench exec node src/run-v3.mjs --suite spa_trading_media",

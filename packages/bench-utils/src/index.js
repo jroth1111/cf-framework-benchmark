@@ -14,7 +14,7 @@ export function toUrl(input) {
   return new URL("https://cf-bench.local");
 }
 
-function getIsolateId() {
+export function getIsolateId() {
   const g = globalThis;
   if (!g.__CF_BENCH_ISOLATE_ID) {
     g.__CF_BENCH_ISOLATE_ID = crypto.randomUUID();

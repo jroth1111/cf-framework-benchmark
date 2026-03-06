@@ -8,6 +8,8 @@ export declare function toUrl(
   input: URL | Request | string | { url: string } | null | undefined
 ): URL;
 
+export declare function getIsolateId(): string;
+
 export declare function withServerTiming(
   headers?: HeadersInit | null,
   start?: number | null

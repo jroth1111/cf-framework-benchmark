@@ -7,6 +7,7 @@ import {
 } from "@cf-bench/dataset";
 import {
   CACHE,
+  getIsolateId,
   parseIntParam,
   toUrl,
   withServerTiming,

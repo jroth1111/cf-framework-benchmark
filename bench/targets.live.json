@@ -72,6 +72,11 @@
       "framework": "vue",
       "platform": "workers",
       "url": "https://cf-bench-vue.gwizz.workers.dev"
+    },
+    {
+      "framework": "waku",
+      "platform": "workers",
+      "url": "https://cf-bench-waku.gwizz.workers.dev"
     }
   ]
 }

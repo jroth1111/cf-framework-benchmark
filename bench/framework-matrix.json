@@ -149,8 +149,8 @@
     },
     {
       "name": "waku",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/waku",
       "deploy": {
         "type": "workers",

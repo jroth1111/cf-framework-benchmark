@@ -10,6 +10,10 @@ export function loader({ params }: Route.LoaderArgs) {
   return { post };
 }
 
+export function shouldRevalidate() {
+  return false;
+}
+
 export default function BlogPostRoute({ loaderData }: Route.ComponentProps) {
   const { post } = loaderData;
   return (

@@ -10,7 +10,7 @@ export default function HomeRoute() {
           <h2>MPA stays flow</h2>
           <p className="muted">Listing index and detail routes rendered by React Router on Workers.</p>
           <p>
-            <Link className="pill" to="/stays">
+            <Link className="pill" prefetch="intent" to="/stays">
               Open stays
             </Link>
           </p>
@@ -38,7 +38,7 @@ export default function HomeRoute() {
       <h2 style={{ marginTop: 24 }}>Featured stays</h2>
       <div className="grid cols-3">
         {listings.slice(0, 6).map((listing) => (
-          <Link key={listing.id} className="card" to={`/stays/${listing.id}`}>
+          <Link key={listing.id} className="card" prefetch="intent" to={`/stays/${listing.id}`}>
             <div style={{ fontWeight: 700 }}>{listing.title}</div>
             <div className="small muted">
               {listing.city}, {listing.country}

@@ -13,6 +13,10 @@ export function loader() {
   return queryMedia({ pageSize: 30 });
 }
 
+export function shouldRevalidate() {
+  return false;
+}
+
 export default function MediaRoute({ loaderData }: Route.ComponentProps) {
   const [items] = useState(loaderData.results);
   const [selectedIndex, setSelectedIndex] = useState(0);

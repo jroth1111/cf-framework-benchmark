@@ -35,7 +35,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             CF Bench
           </Link>
           <nav className="links">
-            <Link className="pill" to="/stays">
+            <Link className="pill" prefetch="intent" to="/stays">
               Stays
             </Link>
             <Link className="pill" to="/chart">
@@ -44,7 +44,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Link className="pill" to="/media">
               Media
             </Link>
-            <Link className="pill" to="/blog">
+            <Link className="pill" prefetch="intent" to="/blog">
               Blog
             </Link>
           </nav>

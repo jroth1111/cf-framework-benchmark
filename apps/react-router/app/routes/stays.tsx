@@ -8,6 +8,13 @@ export function loader({ request }: Route.LoaderArgs) {
   return queryListings({ page, pageSize: 12 });
 }
 
+export function shouldRevalidate({
+  currentUrl,
+  nextUrl,
+}: Route.ShouldRevalidateArgs) {
+  return currentUrl.search !== nextUrl.search;
+}
+
 export default function StaysRoute({ loaderData }: Route.ComponentProps) {
   return (
     <>
@@ -15,7 +22,13 @@ export default function StaysRoute({ loaderData }: Route.ComponentProps) {
       <p className="muted">Airbnb-style listing index served by route loaders on Workers.</p>
       <div className="grid cols-3" style={{ marginTop: 12 }}>
         {loaderData.results.map((listing) => (
-          <Link key={listing.id} to={`/stays/${listing.id}`} data-testid="stay-card" className="card">
+          <Link
+            key={listing.id}
+            prefetch="intent"
+            to={`/stays/${listing.id}`}
+            data-testid="stay-card"
+            className="card"
+          >
             <div style={{ fontWeight: 700 }}>{listing.title}</div>
             <div className="small muted">
               {listing.city}, {listing.country} • {listing.bedrooms} bd • {listing.baths} ba

@@ -83,12 +83,19 @@ async function fetchJson(label, url, expectedStatus) {
 async function fetchHtml(label, url) {
   let res;
   try {
-    res = await fetchWithTimeout(url, { headers: { accept: "text/html" } });
+    res = await fetchWithTimeout(url, {
+      headers: {
+        accept: "text/html",
+        "x-cf-bench-profile": "idiomatic",
+      },
+    });
   } catch (err) {
     fail(`${label} request failed: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
   expect(res.status >= 200 && res.status < 400, `${label} status expected 2xx/3xx, got ${res.status}`);
+  expectHeaderIncludes(res, "content-type", "text/html", label);
+  expectHeaderIncludes(res, "server-timing", "cf_bench", label);
   const text = await res.text();
   return { res, text };
 }
@@ -117,6 +124,23 @@ function requiredTestIdsForRoute(route) {
       return ["media-card", "media-player", "media-next"];
     default:
       return [];
+  }
+}
+
+function expectedHtmlCache(route) {
+  switch (route) {
+    case "/stays":
+    case "/blog":
+      return "s-maxage=60";
+    case "/stays/:id":
+    case "/blog/:slug":
+      return "s-maxage=300";
+    case "/":
+    case "/chart":
+    case "/media":
+      return "no-store";
+    default:
+      return null;
   }
 }
 
@@ -197,6 +221,11 @@ async function runFramework(framework, requiredRoutes) {
     const sample = routeSample(route);
     const page = await fetchHtml(`${framework.name} ${sample}`, `${baseUrl}${sample}`);
     if (!page) continue;
+
+    const expectedCache = expectedHtmlCache(route);
+    if (expectedCache) {
+      expectHeaderIncludes(page.res, "cache-control", expectedCache, `${framework.name} ${sample}`);
+    }
 
     for (const marker of requiredTestIdsForRoute(route)) {
       expect(hasTestId(page.text, marker), `${framework.name} ${sample} missing data-testid=${marker}`);

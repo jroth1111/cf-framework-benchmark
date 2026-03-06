@@ -17,6 +17,9 @@
 	"packageManager": "pnpm@10.26.1",
 	"dependencies": {
 		"@cf-bench/bench-contract": "workspace:*",
+		"@cf-bench/bench-types": "workspace:*",
+		"@cf-bench/chart-core": "workspace:*",
+		"@cf-bench/dataset": "workspace:*",
 		"@angular/common": "^21.2.0",
 		"@angular/compiler": "^21.2.0",
 		"@angular/core": "^21.2.0",

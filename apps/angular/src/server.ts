@@ -1,5 +1,6 @@
 import { AngularAppEngine, createRequestHandler } from '@angular/ssr';
-import { handleBenchmarkRequest } from '@cf-bench/bench-contract';
+import { handleContractApi } from '@cf-bench/bench-contract';
+import { applyHtmlHeaders } from './app/bench-worker';
 
 const angularApp = new AngularAppEngine({
 	// It is safe to set allow `localhost`, so that SSR can run in local development,
@@ -11,12 +12,20 @@ const angularApp = new AngularAppEngine({
  * This is a request handler used by the Angular CLI (dev-server and during build).
  */
 export const reqHandler = createRequestHandler(async (req) => {
-	const bench = handleBenchmarkRequest('angular', req);
-	if (bench) return bench;
+	const api = handleContractApi('angular', req);
+	if (api) return api;
 
+	const start = performance.now();
 	const res = await angularApp.handle(req);
 
-	return res ?? new Response('Page not found.', { status: 404 });
+	if (!res) return new Response('Page not found.', { status: 404 });
+
+	return applyHtmlHeaders(
+		res,
+		new URL(req.url).pathname,
+		req.headers.get('x-cf-bench-profile'),
+		start
+	);
 });
 
 

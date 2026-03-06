@@ -13,7 +13,13 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@cf-bench/bench-types": ["../../packages/bench-types/src/index.ts"],
+      "@cf-bench/chart-core": ["../../packages/chart-core/src/index.js"],
+      "@cf-bench/dataset": ["../../packages/dataset/src/index.js"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

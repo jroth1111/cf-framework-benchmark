@@ -8,7 +8,11 @@
 
     // Path mapping for cleaner imports.
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@cf-bench/dataset": ["../../packages/dataset/src/index.d.ts"],
+      "@cf-bench/chart-core": ["../../packages/chart-core/src/index.d.ts"],
+      "@cf-bench/bench-types": ["../../packages/bench-types/src/index.ts"],
+      "@cf-bench/ui/styles.css": ["../../packages/ui/src/styles.css"]
     },
 
     // `vue-tsc --build` produces a .tsbuildinfo file for incremental type-checking.

@@ -1,23 +1,28 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { createRouter, type RouteRecordRaw, type RouterHistory } from "vue-router";
+import HomePage from "@/views/HomePage";
+import StaysPage from "@/views/StaysPage";
+import StayDetailPage from "@/views/StayDetailPage";
+import BlogPage from "@/views/BlogPage";
+import BlogPostPage from "@/views/BlogPostPage";
+import ChartPage from "@/views/ChartPage";
+import MediaPage from "@/views/MediaPage";
 
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
-    },
-  ],
-})
+const routes: RouteRecordRaw[] = [
+	{ path: "/", name: "home", component: HomePage },
+	{ path: "/stays", name: "stays", component: StaysPage },
+	{ path: "/stays/:id", name: "stay-detail", component: StayDetailPage },
+	{ path: "/blog", name: "blog", component: BlogPage },
+	{ path: "/blog/:slug", name: "blog-post", component: BlogPostPage },
+	{ path: "/chart", name: "chart", component: ChartPage },
+	{ path: "/media", name: "media", component: MediaPage },
+];
 
-export default router
+export function createBenchRouter(history: RouterHistory) {
+	return createRouter({
+		history,
+		routes,
+		scrollBehavior() {
+			return { top: 0 };
+		},
+	});
+}

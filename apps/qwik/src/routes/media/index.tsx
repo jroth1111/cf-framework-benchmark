@@ -6,6 +6,13 @@ export const useMediaItems = routeLoader$(() => {
   return queryMedia({ pageSize: 30 }).results;
 });
 
+function getBenchMedia() {
+  const w = window as any;
+  w.__CF_BENCH__ = w.__CF_BENCH__ || {};
+  w.__CF_BENCH__.media = w.__CF_BENCH__.media || { ready: false };
+  return w.__CF_BENCH__.media;
+}
+
 export default component$(() => {
   const initialItems = useMediaItems();
   const items = useSignal<MediaItem[]>(initialItems.value);
@@ -14,16 +21,9 @@ export default component$(() => {
     initialItems.value.length ? "ready" : "loading"
   );
 
-  const ensureBenchMedia = () => {
-    const w = window as any;
-    w.__CF_BENCH__ = w.__CF_BENCH__ || {};
-    w.__CF_BENCH__.media = w.__CF_BENCH__.media || { ready: false };
-    return w.__CF_BENCH__.media;
-  };
-
   useVisibleTask$(() => {
     status.value = items.value.length ? "ready" : "error";
-    const media = ensureBenchMedia();
+    const media = getBenchMedia();
     media.ready = true;
     media.currentId = items.value[0]?.id || null;
     if (!items.value.length) {
@@ -35,7 +35,7 @@ export default component$(() => {
   const openByIndex$ = $((idx: number) => {
     const start = performance.now();
     selectedIndex.value = idx;
-    const media = ensureBenchMedia();
+    const media = getBenchMedia();
     media.openDurationMs = performance.now() - start;
     media.ready = true;
     media.currentId = items.value[idx]?.id || null;
@@ -45,7 +45,7 @@ export default component$(() => {
     if (!items.value.length) return;
     const start = performance.now();
     selectedIndex.value = (selectedIndex.value + 1) % items.value.length;
-    const media = ensureBenchMedia();
+    const media = getBenchMedia();
     media.nextDurationMs = performance.now() - start;
     media.ready = true;
     media.currentId = items.value[selectedIndex.value]?.id || null;

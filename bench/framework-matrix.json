@@ -137,8 +137,8 @@
         "backend": "hono",
         "frontend": "svelte"
       },
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
       "appDir": "apps/hono-svelte",
       "deploy": {
         "type": "workers",
@@ -324,8 +324,8 @@
       "name": "vue-c3",
       "c3Template": "vue",
       "benchmarkVariantOf": "vue",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/vue-c3",
       "deploy": {
         "type": "workers",

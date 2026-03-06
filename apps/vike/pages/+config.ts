@@ -6,9 +6,9 @@ import vikeReact from "vike-react/config";
 // https://vike.dev/config
 
 export default {
-  // https://vike.dev/head-tags
-  title: "My Vike App",
-  description: "Demo showcasing Vike",
+  title: "CF Bench | Vike",
+  description: "Cloudflare Workers benchmark implementation built with Vike.",
+  prerender: true,
 
   extends: [vikeReact, vikePhoton],
 } satisfies Config;

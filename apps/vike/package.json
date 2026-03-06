@@ -1,9 +1,9 @@
 {
 	"scripts": {
 		"dev": "wrangler dev",
-		"build": "tsc --noEmit",
+		"build": "vite build",
 		"preview": "wrangler dev",
-		"deploy": "wrangler deploy --minify",
+		"deploy": "pnpm run build && wrangler deploy --minify",
 		"generate-types": "wrangler types",
 		"cf-typegen": "wrangler types"
 	},

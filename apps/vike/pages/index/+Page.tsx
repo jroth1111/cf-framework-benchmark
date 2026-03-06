@@ -1,16 +1,25 @@
-import { Counter } from "./Counter.js";
-
 export default function Page() {
   return (
     <>
-      <h1>My Vike app</h1>
-      <p>This page is:</p>
-      <ul>
-        <li>Rendered to HTML.</li>
-        <li>
-          Interactive. <Counter />
-        </li>
-      </ul>
+      <h1 className="h1">Framework benchmark harness</h1>
+      <p className="muted">Vike-native benchmark pages pre-rendered for Cloudflare Workers assets.</p>
+      <div className="grid cols-3 hero-grid">
+        <a className="card listing-card" href="/stays">
+          <h2>MPA listing flow</h2>
+          <p className="muted">Listing index + detail routes with SSR markers in raw HTML.</p>
+          <span className="pill">Open stays</span>
+        </a>
+        <a className="card listing-card" href="/chart">
+          <h2>SPA chart flow</h2>
+          <p className="muted">Interactive chart controls rendered by Vike and hydrated on the client.</p>
+          <span className="pill">Open chart</span>
+        </a>
+        <a className="card listing-card" href="/media">
+          <h2>Media feed flow</h2>
+          <p className="muted">Raw HTML selectors plus client-side open/next benchmark markers.</p>
+          <span className="pill">Open media</span>
+        </a>
+      </div>
     </>
   );
 }

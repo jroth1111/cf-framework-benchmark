@@ -1,6 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { listings, formatUsd } from "@cf-bench/dataset";
-import { useState, useEffect, useTransition } from "react";
 
 export const Route = createFileRoute("/stays/")({
   loader: ({ request, location }) => {
@@ -27,15 +26,6 @@ export const Route = createFileRoute("/stays/")({
 function Stays() {
   const data = Route.useLoaderData();
   const { city, maxRaw, cities, filtered } = data;
-  const [mounted, setMounted] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
-  // Defer rendering to next frame for smoother appearance
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      setMounted(true);
-    });
-  }, []);
 
   return (
     <>
@@ -64,37 +54,25 @@ function Stays() {
         </div>
       </form>
 
-      {!mounted ? (
-        <div className="grid cols-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} data-testid={i === 1 ? "stay-card" : undefined} className="card" style={{ padding: 14, minHeight: 200 }}>
-              <div className="skeleton" style={{ height: 24, width: "60%", marginBottom: 12 }} />
-              <div className="skeleton" style={{ height: 16, width: "40%", marginBottom: 8 }} />
-              <div className="skeleton" style={{ height: 20, width: "30%" }} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid cols-2" style={{ opacity: isPending ? 0.7 : 1, transition: "opacity 0.2s" }}>
-          {filtered.map((l) => (
-            <Link key={l.id} data-testid="stay-card" className="card" to={`/stays/${l.id}`} style={{ padding: 14, display: "block" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <div>
-                  <div style={{ fontWeight: 700 }}>{l.title}</div>
-                  <div className="muted small">
-                    {l.city}, {l.country} • {l.bedrooms} bd • {l.baths} ba • up to {l.maxGuests} guests
-                  </div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontWeight: 700 }}>{formatUsd(l.pricePerNight)} <span className="muted small">/ night</span></div>
-                  <div className="muted small">★ {l.rating} ({l.reviews})</div>
+      <div className="grid cols-2">
+        {filtered.map((l) => (
+          <Link key={l.id} data-testid="stay-card" className="card" to={`/stays/${l.id}`} style={{ padding: 14, display: "block" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+              <div>
+                <div style={{ fontWeight: 700 }}>{l.title}</div>
+                <div className="muted small">
+                  {l.city}, {l.country} • {l.bedrooms} bd • {l.baths} ba • up to {l.maxGuests} guests
                 </div>
               </div>
-              <div className="muted small" style={{ marginTop: 10 }}>{l.summary}</div>
-            </Link>
-          ))}
-        </div>
-      )}
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontWeight: 700 }}>{formatUsd(l.pricePerNight)} <span className="muted small">/ night</span></div>
+                <div className="muted small">★ {l.rating} ({l.reviews})</div>
+              </div>
+            </div>
+            <div className="muted small" style={{ marginTop: 10 }}>{l.summary}</div>
+          </Link>
+        ))}
+      </div>
     </>
   );
 }

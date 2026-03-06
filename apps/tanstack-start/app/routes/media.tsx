@@ -1,18 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import type { MediaItem } from "@cf-bench/dataset";
+import { useMemo, useState } from "react";
+import { queryMedia } from "@cf-bench/dataset";
 
 export const Route = createFileRoute("/media")({
+  loader: () => queryMedia({ pageSize: 30 }),
   component: MediaPage,
 });
-
-type MediaResponse = {
-  total: number;
-  totalPages: number;
-  page: number;
-  pageSize: number;
-  results: MediaItem[];
-};
 
 function ensureBenchMedia() {
   const w = window as any;
@@ -22,40 +15,9 @@ function ensureBenchMedia() {
 }
 
 function MediaPage() {
-  const [items, setItems] = useState<MediaItem[]>([]);
+  const loaderData = Route.useLoaderData();
+  const [items] = useState(loaderData.results);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function run() {
-      setStatus("loading");
-      try {
-        const res = await fetch("/api/media?pageSize=30");
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const payload = (await res.json()) as MediaResponse;
-        if (cancelled) return;
-        setItems(payload.results || []);
-        setSelectedIndex(0);
-        setStatus("ready");
-        const media = ensureBenchMedia();
-        media.ready = true;
-      } catch (err) {
-        if (cancelled) return;
-        setStatus("error");
-        const media = ensureBenchMedia();
-        media.ready = true;
-        media.error = true;
-        media.errorMessage = err instanceof Error ? err.message : String(err);
-      }
-    }
-
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const selected = useMemo(() => items[selectedIndex] ?? null, [items, selectedIndex]);
 
@@ -91,14 +53,7 @@ function MediaPage() {
       <div className="grid cols-2" style={{ gap: 16 }}>
         <div className="card" style={{ padding: 14 }}>
           <h2 style={{ marginTop: 0 }}>Feed</h2>
-          {status === "loading" && <p className="muted">Loading media…</p>}
-          {status === "error" && <p className="muted">Failed to load media.</p>}
           <div style={{ display: "grid", gap: 10, maxHeight: 560, overflow: "auto" }}>
-            {!items.length && (
-              <button data-testid="media-card" className="card" style={{ padding: 10, textAlign: "left", opacity: 0.7 }} disabled>
-                Loading media...
-              </button>
-            )}
             {items.map((item, idx) => (
               <button
                 key={item.id}

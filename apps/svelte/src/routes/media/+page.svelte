@@ -1,18 +1,12 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import type { MediaItem } from "@cf-bench/dataset";
+  import type { PageData } from "./$types";
 
-  type MediaResponse = {
-    total: number;
-    totalPages: number;
-    page: number;
-    pageSize: number;
-    results: MediaItem[];
-  };
+  export let data: PageData;
 
-  let items: MediaItem[] = [];
+  let items: MediaItem[] = data.items;
   let selectedIndex = 0;
-  let status: "loading" | "ready" | "error" = "loading";
+  let status: "loading" | "ready" | "error" = data.items.length ? "ready" : "loading";
 
   function ensureBenchMedia() {
     const w = window as any;
@@ -21,26 +15,13 @@
     return w.__CF_BENCH__.media;
   }
 
-  onMount(async () => {
-    status = "loading";
-    try {
-      const res = await fetch("/api/media?pageSize=30");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = (await res.json()) as MediaResponse;
-      items = data.results || [];
-      selectedIndex = 0;
-      status = "ready";
+  if (typeof window !== "undefined") {
+    queueMicrotask(() => {
       const media = ensureBenchMedia();
       media.ready = true;
       media.currentId = items[0]?.id || null;
-    } catch (err) {
-      status = "error";
-      const media = ensureBenchMedia();
-      media.ready = true;
-      media.error = true;
-      media.errorMessage = err instanceof Error ? err.message : String(err);
-    }
-  });
+    });
+  }
 
   function openByIndex(index: number) {
     const start = performance.now();
@@ -92,6 +73,9 @@
           <div class="muted small">{item.channel} • {item.publishedISO}</div>
         </button>
       {/each}
+      {#if !items.length}
+        <div class="muted">No media available.</div>
+      {/if}
     </div>
   </div>
 

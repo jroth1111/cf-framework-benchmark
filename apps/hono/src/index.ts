@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { handleBenchmarkRequest } from "@cf-bench/bench-contract";
+import { handleControlRequest } from "@cf-bench/bench-control";
+import { handleContractApi } from "@cf-bench/bench-contract";
 
 type Bindings = CloudflareBindings & {
   ASSETS?: Fetcher;
@@ -23,20 +24,23 @@ function benchmarkPageCache(profile: string | null, kind: "list" | "detail" | nu
 }
 
 app.all("*", async (c) => {
-  const bench = handleBenchmarkRequest("hono", c.req.raw);
-  if (bench) {
-    const contentType = bench.headers.get("content-type") || "";
-    if (!contentType.includes("text/html")) return bench;
+  const contract = handleContractApi("hono", c.req.raw);
+  if (contract) return contract;
+
+  const control = handleControlRequest("hono", c.req.raw);
+  if (control) {
+    const contentType = control.headers.get("content-type") || "";
+    if (!contentType.includes("text/html")) return control;
 
     const url = new URL(c.req.raw.url);
-    const headers = new Headers(bench.headers);
+    const headers = new Headers(control.headers);
     headers.set(
       "cache-control",
       benchmarkPageCache(c.req.header("x-cf-bench-profile") ?? null, benchmarkPageKind(url.pathname))
     );
-    return new Response(bench.body, {
-      status: bench.status,
-      statusText: bench.statusText,
+    return new Response(control.body, {
+      status: control.status,
+      statusText: control.statusText,
       headers,
     });
   }

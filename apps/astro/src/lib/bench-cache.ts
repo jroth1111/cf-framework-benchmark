@@ -3,12 +3,13 @@ const CACHE_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=60
 
 export type BenchCacheKind = "list" | "detail";
 
-export function applyBenchCache(headers: Headers, profile: string | null | undefined, kind: BenchCacheKind) {
+export function benchCacheHeader(profile: string | null | undefined, kind: BenchCacheKind) {
   if (profile === "idiomatic" || profile === "mobile-cold") {
-    headers.set("cache-control", kind === "detail" ? CACHE_DETAIL : CACHE_LIST);
-    return;
+    return kind === "detail" ? CACHE_DETAIL : CACHE_LIST;
   }
-  if (profile === "parity") {
-    headers.set("cache-control", "no-store");
-  }
+  return "no-store";
+}
+
+export function applyBenchCache(headers: Headers, profile: string | null | undefined, kind: BenchCacheKind) {
+  headers.set("cache-control", benchCacheHeader(profile, kind));
 }

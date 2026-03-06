@@ -1,13 +1,8 @@
 ---
-export const prerender = true;
 import Base from "../../layouts/Base.astro";
-import { blogPosts, getPost } from "@cf-bench/dataset";
+import { getPost } from "@cf-bench/dataset";
 
-export function getStaticPaths() {
-  return blogPosts.map((post) => ({
-    params: { slug: post.slug },
-  }));
-}
+export const prerender = false;
 
 const post = getPost(Astro.params.slug ?? "");
 ---

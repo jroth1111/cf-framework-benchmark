@@ -1,5 +1,5 @@
 import { defineMiddleware } from "astro:middleware";
-import { applyBenchCache } from "./lib/bench-cache";
+import { benchCacheHeader } from "./lib/bench-cache";
 
 function benchmarkPageKind(pathname: string) {
   if (pathname === "/stays" || pathname === "/blog") return "list";
@@ -8,6 +8,7 @@ function benchmarkPageKind(pathname: string) {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  const start = performance.now();
   const response = await next();
   if (context.url.pathname.startsWith("/api/")) return response;
 
@@ -20,9 +21,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const kind = benchmarkPageKind(context.url.pathname);
 
   if (kind) {
-    applyBenchCache(headers, context.request.headers.get("x-cf-bench-profile"), kind);
+    headers.set(
+      "cache-control",
+      benchCacheHeader(context.request.headers.get("x-cf-bench-profile"), kind)
+    );
   } else {
     headers.set("cache-control", "no-store");
+  }
+  if (!headers.has("server-timing")) {
+    headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
   }
 
   return new Response(response.body, {

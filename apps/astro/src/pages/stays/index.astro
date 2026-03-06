@@ -1,12 +1,8 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { listings, formatUsd } from "@cf-bench/dataset";
-import { applyBenchCache } from "../../lib/bench-cache";
 
 export const prerender = false;
-
-const profile = Astro.request.headers.get("x-cf-bench-profile");
-applyBenchCache(Astro.response.headers, profile, "list");
 
 const city = Astro.url.searchParams.get("city") ?? "";
 const max = Astro.url.searchParams.get("max") ?? "";

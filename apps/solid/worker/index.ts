@@ -1,8 +1,18 @@
 import { handleContractApi } from "@cf-bench/bench-contract";
+import { renderRoute } from "./render";
 
 type Env = {
-  ASSETS: Fetcher;
+  ASSETS: {
+    fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
+  };
 };
+
+type ManifestEntry = {
+  file: string;
+  css?: string[];
+};
+
+let clientManifestPromise: Promise<ManifestEntry> | null = null;
 
 function cacheKind(pathname: string) {
   if (pathname === "/stays" || pathname === "/blog") return "list";
@@ -19,14 +29,6 @@ function cacheHeader(pathname: string, profile: string | null) {
   return "no-store";
 }
 
-function resolvePagePath(url: URL) {
-  if (url.pathname.startsWith("/api/")) return null;
-  if (url.pathname.includes(".")) return null;
-  const base = url.pathname.endsWith("/") ? url.pathname.slice(0, -1) : url.pathname;
-  if (!base) return "/pages/index.html";
-  return `/pages${base}/index.html`;
-}
-
 function assetRequestFor(url: URL, request: Request) {
   const headers = new Headers(request.headers);
   headers.delete("sec-fetch-mode");
@@ -39,15 +41,84 @@ function assetRequestFor(url: URL, request: Request) {
   });
 }
 
-function applyHtmlHeaders(response: Response, pathname: string, profile: string | null, start: number) {
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.includes("text/html")) return response;
-  const headers = new Headers(response.headers);
+function applyHtmlHeaders(headersInit: HeadersInit | null, pathname: string, profile: string | null, start: number) {
+  const headers = new Headers(headersInit ?? undefined);
+  headers.set("content-type", "text/html; charset=utf-8");
   headers.set("cache-control", cacheHeader(pathname, profile));
   if (!headers.has("server-timing")) {
     headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
   }
-  return new Response(response.body, { ...response, headers });
+  return headers;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function safeJson(value: unknown) {
+  return JSON.stringify(value).replaceAll("<", "\\u003c");
+}
+
+async function readAssetText(env: Env, pathname: string, request: Request) {
+  const url = new URL(pathname, request.url);
+  const response = await env.ASSETS.fetch(assetRequestFor(url, request));
+  if (!response.ok) {
+    throw new Error(`Missing asset ${pathname}: ${response.status}`);
+  }
+  return response.text();
+}
+
+async function getClientManifest(env: Env, request: Request) {
+  clientManifestPromise ??= (async () => {
+    const manifestText = await readAssetText(env, "/manifest.json", request);
+    const manifest = JSON.parse(manifestText) as Record<string, ManifestEntry>;
+    const entry = manifest["src/client.ts"];
+    if (!entry) {
+      throw new Error("Missing src/client.ts in Vite manifest");
+    }
+    return entry;
+  })();
+  return clientManifestPromise;
+}
+
+async function renderDocument(pathname: string, env: Env, request: Request) {
+  const route = renderRoute(pathname);
+  if (!route) return null;
+
+  const clientEntry = await getClientManifest(env, request);
+  const styleLinks = (clientEntry.css ?? [])
+    .map((href) => `    <link rel="stylesheet" href="/${href}" />`)
+    .join("\n");
+  const pagePropsScript = route.pageProps
+    ? `\n    <script>window.__PAGE_PROPS__=${safeJson(route.pageProps)};</script>`
+    : "";
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${escapeHtml(route.title)}</title>
+${styleLinks}
+    <script>
+      (function () {
+        var w = window;
+        w.__CF_BENCH__ = w.__CF_BENCH__ || {};
+        var h = (w.__CF_BENCH__.hydration = w.__CF_BENCH__.hydration || {});
+        if (h.startMs == null) h.startMs = performance.now();
+      })();
+    </script>
+  </head>
+  <body data-route="${route.route}">
+    <div id="app">${route.html}</div>${pagePropsScript}
+    <script type="module" src="/${clientEntry.file}"></script>
+  </body>
+</html>`;
 }
 
 export default {
@@ -57,13 +128,24 @@ export default {
     if (api) return api;
 
     const start = performance.now();
-    const pagePath = resolvePagePath(url);
-    if (pagePath) {
-      const next = new URL(pagePath, url);
-      const res = await env.ASSETS.fetch(assetRequestFor(next, request));
-      return applyHtmlHeaders(res, url.pathname, request.headers.get("x-cf-bench-profile"), start);
+    if (!url.pathname.includes(".")) {
+      const html = await renderDocument(url.pathname, env, request);
+      if (html) {
+        return new Response(html, {
+          status: 200,
+          headers: applyHtmlHeaders(null, url.pathname, request.headers.get("x-cf-bench-profile"), start),
+        });
+      }
     }
+
     const res = await env.ASSETS.fetch(assetRequestFor(url, request));
-    return applyHtmlHeaders(res, url.pathname, request.headers.get("x-cf-bench-profile"), start);
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("text/html")) return res;
+
+    return new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: applyHtmlHeaders(res.headers, url.pathname, request.headers.get("x-cf-bench-profile"), start),
+    });
   },
 };

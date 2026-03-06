@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js";
 import { render } from "solid-js/web";
+import "../main.css";
 
 export function mountPage(renderPage: () => JSX.Element) {
   const el = document.getElementById("app");

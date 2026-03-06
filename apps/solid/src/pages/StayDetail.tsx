@@ -3,7 +3,7 @@ import { Layout } from "../components/Layout";
 
 declare global {
   interface Window {
-    __PAGE_PROPS__?: { id?: string };
+    __PAGE_PROPS__?: { id?: string; slug?: string };
   }
 }
 

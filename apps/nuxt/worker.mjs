@@ -5,7 +5,8 @@ function applyHtmlTiming(response, start) {
   if (!contentType.includes("text/html")) return response;
 
   const headers = new Headers(response.headers);
-  headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
+  const duration = Math.max(0.1, performance.now() - start);
+  headers.set("server-timing", `cf_bench;dur=${duration.toFixed(1)}`);
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,

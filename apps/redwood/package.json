@@ -16,7 +16,7 @@
     "worker:run": "rw-scripts worker-run",
     "clean": "npm run clean:vite",
     "clean:vite": "rm -rf ./node_modules/.vite",
-    "release": "rw-scripts ensure-deploy-env && npm run clean && npm run build && wrangler deploy --minify",
+    "release": "rw-scripts ensure-deploy-env && npm run clean && npm run build && wrangler deploy",
     "generate": "rw-scripts ensure-env && wrangler types --include-runtime false",
     "check": "npm run generate && npm run types",
     "types": "tsc",
@@ -38,12 +38,5 @@
     "typescript": "5.9.3",
     "vite": "7.3.1",
     "wrangler": "4.70.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp",
-      "workerd"
-    ]
   }
 }

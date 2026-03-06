@@ -69,8 +69,8 @@
     },
     {
       "name": "react",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
       "appDir": "apps/react",
       "deploy": {
         "type": "workers",
@@ -99,8 +99,8 @@
     },
     {
       "name": "solid",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
       "appDir": "apps/solid",
       "deploy": {
         "type": "workers",

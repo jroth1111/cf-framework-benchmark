@@ -17,14 +17,55 @@ on:
         description: "Throttle profile (none, fast-4g, slow-3g)"
         required: false
         default: "none"
+      run_flamegraphs:
+        description: "Run flamegraphs for spa_trading_media after the main benchmark"
+        required: false
+        default: false
+        type: boolean
+      run_stability:
+        description: "Run repeated parity stability checks after the main benchmark"
+        required: false
+        default: false
+        type: boolean
+      stability_repeats:
+        description: "Number of stability repeats when run_stability is enabled"
+        required: false
+        default: "3"
 
 jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm -C bench exec playwright install --with-deps chromium
+
+      - name: Live preflight
+        run: pnpm verify:live
+
   bench:
+    needs: preflight
     runs-on: ubuntu-latest
     env:
       BENCH_ITERATIONS: ${{ github.event.inputs.iterations || '5' }}
       BENCH_PROFILE: ${{ github.event.inputs.profile || 'parity' }}
       BENCH_THROTTLE: ${{ github.event.inputs.throttle || 'none' }}
+      STABILITY_REPEATS: ${{ github.event.inputs.stability_repeats || '3' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -59,6 +100,32 @@ jobs:
             bench/results.v3.mpa_airbnb.md
             bench/results.v3.spa_trading_media.json
             bench/results.v3.spa_trading_media.md
+
+      - name: Run flamegraphs
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_flamegraphs }}
+        run: pnpm bench:flame
+
+      - name: Upload flame results
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_flamegraphs }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results-flame
+          path: |
+            bench/results.v3.spa_trading_media.flame.json
+            bench/results.v3.spa_trading_media.flame.md
+
+      - name: Run stability
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_stability }}
+        run: pnpm bench:stability --repeats $STABILITY_REPEATS
+
+      - name: Upload stability results
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_stability }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results-stability
+          path: |
+            bench/results.v3.stability.json
+            bench/results.v3.stability.md
 
       - name: Run WebPageTest (optional)
         if: ${{ secrets.WPT_API_KEY != '' && secrets.WPT_LOCATIONS != '' }}

@@ -64,6 +64,7 @@ export function json(data, options = {}) {
 }
 
 export function parseIntParam(value, fallback) {
+  if (value == null || value === "") return fallback;
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 }
@@ -95,18 +96,16 @@ export function handleListings(input) {
   const start = performance.now();
   const url = toUrl(input);
   const city = url.searchParams.get("city") || "";
-  const minPrice = parseIntParam(url.searchParams.get("minPrice"), undefined);
-  const maxPrice = parseIntParam(url.searchParams.get("maxPrice"), undefined);
-  const guests = parseIntParam(url.searchParams.get("guests"), undefined);
+  const max = parseIntParam(url.searchParams.get("max"), undefined);
+  const sort = url.searchParams.get("sort") || "relevance";
   const page = parseIntParam(url.searchParams.get("page"), 1);
   const pageSize = parseIntParam(url.searchParams.get("pageSize"), 20);
 
   return json(
     queryListings({
       city,
-      minPrice,
-      maxPrice,
-      guests,
+      max,
+      sort,
       page,
       pageSize,
     }),

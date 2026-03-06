@@ -20,7 +20,8 @@ export function GET({ request }: { request: Request }) {
   const url = new URL(request.url);
   const symbol = (url.searchParams.get("symbol") || "BTC").toUpperCase();
   const timeframe = url.searchParams.get("timeframe") || "1h";
-  const points = Number(url.searchParams.get("points") || "360");
+  const pointsRaw = url.searchParams.get("points");
+  const points = pointsRaw == null || pointsRaw === "" ? 360 : Number(pointsRaw);
 
   if (!chartSymbols.includes(symbol)) {
     return new Response(JSON.stringify({ error: "unknown_symbol" }), {
@@ -35,7 +36,7 @@ export function GET({ request }: { request: Request }) {
 
   const candles = generateCandles(symbol, {
     timeframe,
-    points: Number.isFinite(points) ? Math.max(60, Math.min(2000, points)) : 360,
+    points: Number.isFinite(points) ? points : 360,
   });
 
   return new Response(JSON.stringify({ symbol, timeframe, candles }), {

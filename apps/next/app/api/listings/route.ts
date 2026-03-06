@@ -1,4 +1,4 @@
-import { chartSymbols, generateCandles, getListing, queryListings } from "@cf-bench/dataset";
+import { queryListings } from "@cf-bench/dataset";
 
 function getIsolateId() {
   const globalAny = globalThis as any;
@@ -24,23 +24,31 @@ function json(data: unknown, init?: ResponseInit, timingStart?: number) {
   return new Response(JSON.stringify(data), { ...init, headers });
 }
 
+function parseIntParam(value: string | null, fallback: number): number;
+function parseIntParam(value: string | null, fallback: undefined): number | undefined;
+function parseIntParam(value: string | null, fallback: number | undefined) {
+  if (value == null || value === "") return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 export async function GET(req: Request) {
   const start = performance.now();
   const url = new URL(req.url);
-  const city = url.searchParams.get("city") || "";
-  const max = url.searchParams.get("max");
-  const sort = (url.searchParams.get("sort") || "relevance") as any;
-  const page = Number(url.searchParams.get("page") || "1");
-  const pageSize = Number(url.searchParams.get("pageSize") || "24");
-  const maxNum = max ? Number(max) : undefined;
+  const max = parseIntParam(url.searchParams.get("max"), undefined);
+  const sort = (url.searchParams.get("sort") || "relevance") as
+    | "relevance"
+    | "price_asc"
+    | "price_desc"
+    | "rating_desc";
 
   return json(
     queryListings({
-      city,
-      max: Number.isFinite(maxNum) ? maxNum : undefined,
+      city: url.searchParams.get("city") || "",
+      max,
       sort,
-      page: Number.isFinite(page) ? page : 1,
-      pageSize: Number.isFinite(pageSize) ? pageSize : 24,
+      page: parseIntParam(url.searchParams.get("page"), 1),
+      pageSize: parseIntParam(url.searchParams.get("pageSize"), 20),
     }),
     undefined,
     start

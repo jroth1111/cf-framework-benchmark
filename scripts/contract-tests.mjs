@@ -178,6 +178,16 @@ async function runFramework(framework, requiredRoutes) {
     expectHeaderIncludes(listingsRes.res, "cache-control", "s-maxage=60", `${framework.name} /api/listings`);
     expect(Array.isArray(listingsRes.body?.results), `${framework.name} /api/listings results missing`);
     expect(typeof listingsRes.body?.total === "number", `${framework.name} /api/listings total missing`);
+    expect(listingsRes.body?.pageSize === 1, `${framework.name} /api/listings pageSize mismatch for explicit query`);
+  }
+
+  const listingsDefault = await fetchJson(`${framework.name} /api/listings default`, `${baseUrl}/api/listings`, 200);
+  if (listingsDefault) {
+    expect(listingsDefault.body?.pageSize === 20, `${framework.name} /api/listings default pageSize mismatch`);
+    expect(
+      listingsDefault.body?.results?.length === 20,
+      `${framework.name} /api/listings default result count mismatch`
+    );
   }
 
   const listingOk = await fetchJson(`${framework.name} /api/listings/001`, `${baseUrl}/api/listings/001`, 200);
@@ -201,6 +211,12 @@ async function runFramework(framework, requiredRoutes) {
     expectHeaderIncludes(prices.res, "cache-control", "s-maxage=60", `${framework.name} /api/prices`);
     expect(prices.body?.symbol === "BTC", `${framework.name} /api/prices symbol mismatch`);
     expect(Array.isArray(prices.body?.candles), `${framework.name} /api/prices candles missing`);
+    expect(prices.body?.candles?.length === 120, `${framework.name} /api/prices candles length mismatch`);
+  }
+
+  const pricesDefault = await fetchJson(`${framework.name} /api/prices default`, `${baseUrl}/api/prices?symbol=BTC`, 200);
+  if (pricesDefault) {
+    expect(pricesDefault.body?.candles?.length === 360, `${framework.name} /api/prices default candles mismatch`);
   }
 
   const pricesBad = await fetchJson(`${framework.name} /api/prices bad`, `${baseUrl}/api/prices?symbol=BAD`, 400);
@@ -215,6 +231,16 @@ async function runFramework(framework, requiredRoutes) {
     expect(Array.isArray(media.body?.results), `${framework.name} /api/media results missing`);
     expect(typeof media.body?.total === "number", `${framework.name} /api/media total missing`);
     expect(typeof media.body?.page === "number", `${framework.name} /api/media page missing`);
+    expect(media.body?.pageSize === 3, `${framework.name} /api/media pageSize mismatch for explicit query`);
+  }
+
+  const mediaDefault = await fetchJson(`${framework.name} /api/media default`, `${baseUrl}/api/media`, 200);
+  if (mediaDefault) {
+    expect(mediaDefault.body?.pageSize === 20, `${framework.name} /api/media default pageSize mismatch`);
+    expect(
+      mediaDefault.body?.results?.length === 20,
+      `${framework.name} /api/media default result count mismatch`
+    );
   }
 
   for (const route of requiredRoutes) {

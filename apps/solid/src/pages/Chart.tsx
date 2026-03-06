@@ -1,11 +1,10 @@
 import { createEffect, onCleanup, onMount, createSignal, For, Show, ErrorBoundary } from "solid-js";
-import { createChart } from "@cf-bench/chart-core";
 import { useChart as useChartSolid } from "@cf-bench/chart-hooks/solid";
 import { markChartReady, markChartError, updateChartCoreMetrics } from "@cf-bench/bench-types";
 import { Layout } from "../components/Layout";
 
 export function Chart() {
-  const [error, setError] = createSignal<string | null>(null);
+  const [, setError] = createSignal<string | null>(null);
 
   return (
     <Layout title="Chart (SPA-like)">
@@ -39,85 +38,72 @@ function ChartInner(props: { onError: (error: string) => void }) {
 
   const [chartReady, setChartReady] = createSignal(false);
   let canvasRef: HTMLCanvasElement | undefined;
-  let chart: ReturnType<typeof createChart> | null = null;
-  let rafId: number | null = null;
+  let chart: { resize: () => void; destroy: () => void; setCandles: (candles: unknown[]) => void; setIndicators: (indicators: typeof indicators extends () => infer T ? T : never) => void; } | null = null;
+  let initFrame: number | null = null;
+  let readyFrame: number | null = null;
+  let cancelled = false;
 
-  // Optimize chart initialization with requestAnimationFrame
-  onMount(async () => {
+  onMount(() => {
     try {
-      console.log('[Solid Chart] Mounting...');
       if (!canvasRef) {
-        throw new Error('Canvas element not found');
+        throw new Error("Canvas element not found");
       }
 
-      // Use requestAnimationFrame to avoid blocking main thread
-      rafId = requestAnimationFrame(() => {
-        try {
-          chart = createChart(canvasRef, {
-            initialViewport: 180,
-            onStats: (stats) => {
-              updateChartCoreMetrics(stats);
-            },
-          });
+      initFrame = requestAnimationFrame(() => {
+        void (async () => {
+          try {
+            const { createChart } = await import("@cf-bench/chart-core");
+            if (cancelled || !canvasRef) return;
 
-          // Defer resize to next frame
-          requestAnimationFrame(() => {
-            try {
+            chart = createChart(canvasRef, {
+              initialViewport: 180,
+              onStats: (stats) => {
+                updateChartCoreMetrics(stats);
+              },
+            });
+            chart.setIndicators(indicators());
+            readyFrame = requestAnimationFrame(() => {
+              if (cancelled) return;
               chart?.resize();
               setChartReady(true);
               markChartReady(symbol(), timeframe());
-              console.log('[Solid Chart] Ready');
-            } catch (err) {
-              console.error('[Solid Chart] Error during chart setup:', err);
-              const errMsg = err instanceof Error ? err.message : 'Chart setup failed';
+            });
+          } catch (err) {
+            try {
+              const errMsg = err instanceof Error ? err.message : "Chart setup failed";
               props.onError(errMsg);
               markChartError(errMsg);
+            } catch (err) {
+              props.onError("Chart setup failed");
+              markChartError("Chart setup failed");
             }
-          });
-        } catch (err) {
-          console.error('[Solid Chart] Error creating chart:', err);
-          const errMsg = err instanceof Error ? err.message : 'Chart creation failed';
-          props.onError(errMsg);
-          markChartError(errMsg);
-        }
+          }
+        })();
       });
     } catch (err) {
-      console.error('[Solid Chart] Mount error:', err);
-      const errMsg = err instanceof Error ? err.message : 'Chart failed to load';
+      const errMsg = err instanceof Error ? err.message : "Chart failed to load";
       props.onError(errMsg);
       markChartError(errMsg);
     }
   });
 
   onCleanup(() => {
-    if (rafId !== null) {
-      cancelAnimationFrame(rafId);
-    }
+    cancelled = true;
+    if (initFrame !== null) cancelAnimationFrame(initFrame);
+    if (readyFrame !== null) cancelAnimationFrame(readyFrame);
     chart?.destroy();
   });
 
-  // Optimize candle updates - batch with indicators
   createEffect(() => {
     const candles = data();
-    const inds = indicators();
-    
+    const nextIndicators = indicators();
+
     if (candles && chart) {
-      // Use requestAnimationFrame for smoother updates
-      requestAnimationFrame(() => {
-        chart?.setIndicators(inds);
+      const updateFrame = requestAnimationFrame(() => {
+        chart?.setIndicators(nextIndicators);
         chart?.setCandles(candles.candles);
       });
-    }
-  });
-
-  // Debounce indicator updates
-  createEffect(() => {
-    const inds = indicators();
-    
-    if (chart) {
-      requestAnimationFrame(() => {
-        chart?.setIndicators(inds);
-      });
+      onCleanup(() => cancelAnimationFrame(updateFrame));
     }
   });
 

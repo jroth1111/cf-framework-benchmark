@@ -10,9 +10,10 @@ function ensureBenchMedia() {
 }
 
 export function Media(props: { initialItems?: MediaItem[] }) {
-  const initialItems = props.initialItems ?? queryMedia({ pageSize: 30 }).results;
+  const initialItems = props.initialItems ?? queryMedia({ pageSize: 20 }).results;
   const [items] = createSignal<MediaItem[]>(initialItems);
   const [selectedIndex, setSelectedIndex] = createSignal(0);
+  const [showPoster, setShowPoster] = createSignal(false);
   const [status] = createSignal<"ready" | "error">(initialItems.length ? "ready" : "error");
 
   onMount(() => {
@@ -26,6 +27,7 @@ export function Media(props: { initialItems?: MediaItem[] }) {
   const openByIndex = (idx: number) => {
     const start = performance.now();
     setSelectedIndex(idx);
+    setShowPoster(true);
     requestAnimationFrame(() => {
       const media = ensureBenchMedia();
       media.openDurationMs = performance.now() - start;
@@ -39,6 +41,7 @@ export function Media(props: { initialItems?: MediaItem[] }) {
     const start = performance.now();
     const next = (selectedIndex() + 1) % items().length;
     setSelectedIndex(next);
+    setShowPoster(true);
     requestAnimationFrame(() => {
       const media = ensureBenchMedia();
       media.nextDurationMs = performance.now() - start;
@@ -77,11 +80,16 @@ export function Media(props: { initialItems?: MediaItem[] }) {
             <Show when={selected()} fallback={<p class="muted">Select a media item.</p>}>
               {(item) => (
                 <>
-                  <img
-                    src={item().thumbnail}
-                    alt={item().title}
-                    style="width:100%;max-height:280px;object-fit:cover;border-radius:10px"
-                  />
+                  <Show when={showPoster()}>
+                    <img
+                      src={item().thumbnail}
+                      alt={item().title}
+                      loading="lazy"
+                      decoding="async"
+                      fetchpriority="low"
+                      style="width:100%;max-height:280px;object-fit:cover;border-radius:10px"
+                    />
+                  </Show>
                   <h3>{item().title}</h3>
                   <p class="muted small">{item().channel} • {item().views.toLocaleString()} views</p>
                   <p class="muted">{item().description}</p>

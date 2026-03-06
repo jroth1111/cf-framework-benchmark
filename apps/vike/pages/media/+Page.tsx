@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { queryMedia } from "../../src/bench";
+import { useData } from "vike-react/useData";
+import type { Data } from "./+data";
 
 function ensureBenchMedia() {
   const w = window as Window & {
@@ -18,7 +19,7 @@ function ensureBenchMedia() {
 }
 
 export default function Page() {
-  const [items] = useState(() => queryMedia({ pageSize: 30 }).results);
+  const { items } = useData<Data>();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selected = useMemo(() => items[selectedIndex] ?? null, [items, selectedIndex]);
 

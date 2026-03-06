@@ -1,5 +1,5 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@qwik.dev/core";
-import { queryMedia, type MediaItem } from "@cf-bench/dataset";
+import { queryMedia } from "@cf-bench/dataset";
 import { routeLoader$ } from "@qwik.dev/router";
 
 export const useMediaItems = routeLoader$(() => {
@@ -14,22 +14,13 @@ function getBenchMedia() {
 }
 
 export default component$(() => {
-  const initialItems = useMediaItems();
-  const items = useSignal<MediaItem[]>(initialItems.value);
+  const items = useMediaItems();
   const selectedIndex = useSignal(0);
-  const status = useSignal<"loading" | "ready" | "error">(
-    initialItems.value.length ? "ready" : "loading"
-  );
 
   useVisibleTask$(() => {
-    status.value = items.value.length ? "ready" : "error";
     const media = getBenchMedia();
     media.ready = true;
     media.currentId = items.value[0]?.id || null;
-    if (!items.value.length) {
-      media.error = true;
-      media.errorMessage = "No media items available";
-    }
   });
 
   const openByIndex$ = $((idx: number) => {
@@ -60,9 +51,6 @@ export default component$(() => {
       <div class="grid cols-2" style="gap:16px">
         <div class="card" style="padding:14px">
           <h2 style="margin-top:0">Feed</h2>
-          {status.value === "loading" && <p class="muted">Loading media…</p>}
-          {status.value === "error" && <p class="muted">Failed to load media.</p>}
-
           <div style="display:grid;gap:10px;max-height:560px;overflow:auto">
             {items.value.map((item, idx) => (
               <button

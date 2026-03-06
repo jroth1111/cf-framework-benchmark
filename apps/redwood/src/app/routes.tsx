@@ -269,6 +269,7 @@ chart.switchDurationMs = chart.switchDurationMs || 1;
 
 function MediaPage({ rw }: PageProps) {
   const mediaItems = queryMedia({ page: 1, pageSize: 18 }).results;
+  const initialItem = mediaItems[0] ?? null;
 
   const mediaScript = `
 const items = ${formatJson(mediaItems)};
@@ -282,6 +283,7 @@ function renderPlayer() {
   const item = items[selected];
   if (!item || !playerNode) return;
   playerNode.innerHTML =
+    '<img class="player-image" src="' + item.thumbnail + '" alt="' + item.title.replaceAll('"', '&quot;') + '">' +
     '<div><strong>' + item.title + '</strong></div>' +
     '<div class="muted small">' + item.channel + ' • ' + item.publishedISO + '</div>' +
     '<p class="muted">' + item.description + '</p>';
@@ -312,7 +314,7 @@ if (listNode) {
   }
 }
 nextNode && nextNode.addEventListener('click', nextItem);
-renderPlayer();
+media.currentId = items[0]?.id || null;
 media.ready = true;
 `;
 
@@ -339,7 +341,20 @@ media.ready = true;
         <div className="card stack">
           <h2>Player</h2>
           <div className="media-player" data-testid="media-player" id="media-player">
-            Select a media item.
+            {initialItem ? (
+              <>
+                <img className="player-image" src={initialItem.thumbnail} alt={initialItem.title} />
+                <div>
+                  <strong>{initialItem.title}</strong>
+                </div>
+                <div className="muted small">
+                  {initialItem.channel} • {initialItem.publishedISO}
+                </div>
+                <p className="muted">{initialItem.description}</p>
+              </>
+            ) : (
+              "Select a media item."
+            )}
           </div>
           <button className="pill action-pill" data-testid="media-next" id="media-next" type="button">
             Next

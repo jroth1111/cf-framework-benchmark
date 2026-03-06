@@ -1,27 +1,31 @@
 {
-	"name": "example-basic",
+	"name": "cf-bench-solidstart",
+	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "vite dev --port 5178",
 		"build": "vite build",
-		"start": "vite start",
-		"preview": "pnpm run build && npx wrangler dev",
-		"deploy": "pnpm run build && wrangler deploy",
+		"preview": "pnpm run build && wrangler dev",
+		"deploy": "pnpm run build && wrangler deploy --minify",
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
+		"@cf-bench/bench-contract": "workspace:*",
+		"@cf-bench/bench-types": "workspace:*",
+		"@cf-bench/chart-core": "workspace:*",
+		"@cf-bench/chart-hooks": "workspace:*",
+		"@cf-bench/dataset": "workspace:*",
+		"@cf-bench/ui": "workspace:*",
 		"@solidjs/meta": "^0.29.4",
 		"@solidjs/router": "^0.15.0",
 		"@solidjs/start": "2.0.0-alpha.2",
 		"nitro": "3.0.1-alpha.2",
-		"solid-js": "^1.9.5",
-		"vite": "^7.0.0"
-	},
-	"engines": {
-		"node": ">=22"
+		"solid-js": "^1.9.10"
 	},
 	"devDependencies": {
 		"@types/node": "^25.3.5",
+		"typescript": "^5.9.3",
+		"vite": "^7.3.0",
 		"wrangler": "^4.71.0"
 	}
 }

@@ -1,12 +1,6 @@
-import { defineConfig } from "vite";
-import { nitro } from "nitro/vite";
-
 import { solidStart } from "@solidjs/start/config";
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [solidStart(),
-    nitro({
-      preset: "cloudflare-module"
-    })
-  ]
+  plugins: [solidStart()],
 });

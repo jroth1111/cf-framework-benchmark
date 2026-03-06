@@ -366,7 +366,7 @@ export class ChartPageComponent implements OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private chart: ReturnType<(typeof import('@cf-bench/chart-core'))['createChart']> | null = null;
   private initFrame: number | null = null;
-  private readyFrame: number | null = null;
+  private updateFrame: number | null = null;
 
   @ViewChild('chartCanvas') canvasRef?: ElementRef<HTMLCanvasElement>;
 
@@ -383,6 +383,14 @@ export class ChartPageComponent implements OnDestroy {
   timeframe: (typeof chartTimeframes)[number] = '1h';
   status: 'idle' | 'loading' | 'ready' | 'error' = 'idle';
   chartReady = false;
+
+  private scheduleChartUpdate(update: () => void) {
+    if (this.updateFrame !== null) cancelAnimationFrame(this.updateFrame);
+    this.updateFrame = requestAnimationFrame(() => {
+      this.updateFrame = null;
+      update();
+    });
+  }
 
   get statusLabel() {
     if (this.status === 'loading') return 'Loading candles…';
@@ -402,7 +410,7 @@ export class ChartPageComponent implements OnDestroy {
           onStats: (stats: unknown) => updateAnalogChartCoreMetrics(stats as Record<string, unknown>),
         });
         this.chart.setIndicators(this.currentIndicators());
-        this.readyFrame = requestAnimationFrame(() => {
+        this.scheduleChartUpdate(() => {
           this.chart?.resize();
           this.chartReady = true;
         });
@@ -413,7 +421,7 @@ export class ChartPageComponent implements OnDestroy {
 
   ngOnDestroy() {
     if (this.initFrame !== null) cancelAnimationFrame(this.initFrame);
-    if (this.readyFrame !== null) cancelAnimationFrame(this.readyFrame);
+    if (this.updateFrame !== null) cancelAnimationFrame(this.updateFrame);
     this.chart?.destroy();
   }
 
@@ -429,7 +437,7 @@ export class ChartPageComponent implements OnDestroy {
 
   setIndicator(key: keyof typeof this.indicators, value: boolean) {
     this.indicators[key] = value;
-    this.chart?.setIndicators(this.currentIndicators());
+    this.scheduleChartUpdate(() => this.chart?.setIndicators(this.currentIndicators()));
   }
 
   private currentIndicators() {
@@ -462,7 +470,7 @@ export class ChartPageComponent implements OnDestroy {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = (await response.json()) as { candles: unknown[] };
-      requestAnimationFrame(() => {
+      this.scheduleChartUpdate(() => {
         this.chart?.setIndicators(this.currentIndicators());
         this.chart?.setCandles(data.candles as never[]);
       });
@@ -538,19 +546,19 @@ export class MediaPageComponent {
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly items: MediaItem[] = queryMedia({ pageSize: 20 }).results;
-  selectedIndex = 0;
+  selectedIndex: number | null = null;
   showPoster = false;
 
   constructor() {
-    if (isPlatformBrowser(this.platformId) && this.selected) {
+    if (isPlatformBrowser(this.platformId)) {
       const media = ensureBenchMedia();
-      media['ready'] = true;
-      media['currentId'] = this.selected.id;
+      media['ready'] = false;
+      media['currentId'] = null;
     }
   }
 
   get selected(): MediaItem | null {
-    return this.items[this.selectedIndex] ?? null;
+    return this.selectedIndex == null ? null : this.items[this.selectedIndex] ?? null;
   }
 
   formatViews(value: number) {
@@ -573,7 +581,7 @@ export class MediaPageComponent {
   nextItem() {
     if (!this.items.length) return;
     const start = performance.now();
-    const next = (this.selectedIndex + 1) % this.items.length;
+    const next = ((this.selectedIndex ?? -1) + 1) % this.items.length;
     this.selectedIndex = next;
     this.showPoster = true;
     requestAnimationFrame(() => {

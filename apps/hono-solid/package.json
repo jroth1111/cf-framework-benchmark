@@ -1,16 +1,29 @@
 {
-	"name": "app",
+	"name": "cf-bench-hono-solid",
+	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "wrangler dev",
-		"deploy": "wrangler deploy --minify",
-		"cf-typegen": "wrangler types --env-interface CloudflareBindings"
+		"dev": "vite build --watch",
+		"build": "vite build",
+		"preview": "pnpm run build && wrangler dev",
+		"deploy": "pnpm run build && wrangler deploy --minify",
+		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
-		"hono": "^4.12.5"
+		"@cf-bench/bench-contract": "workspace:*",
+		"@cf-bench/bench-types": "workspace:*",
+		"@cf-bench/chart-core": "workspace:*",
+		"@cf-bench/chart-hooks": "workspace:*",
+		"@cf-bench/dataset": "workspace:*",
+		"@cf-bench/ui": "workspace:*",
+		"hono": "^4.12.5",
+		"solid-js": "^1.9.10"
 	},
 	"devDependencies": {
 		"@types/node": "^25.3.5",
+		"typescript": "^5.9.3",
+		"vite": "^7.3.0",
+		"vite-plugin-solid": "^2.11.10",
 		"wrangler": "^4.71.0"
 	}
 }

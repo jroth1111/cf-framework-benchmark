@@ -1,15 +1,5 @@
 import { defineComponent, h } from "vue";
-import { RouterLink, RouterView } from "vue-router";
-
-function navLink(to: string, label: string) {
-	return h(
-		RouterLink,
-		{ class: "pill", to },
-		{
-			default: () => label,
-		},
-	);
-}
+import { RouterView } from "vue-router";
 
 export default defineComponent({
 	name: "RootApp",
@@ -17,18 +7,12 @@ export default defineComponent({
 		return () =>
 			h("div", [
 				h("header", { class: "container nav" }, [
-					h(
-						RouterLink,
-						{ class: "brand", to: "/" },
-						{
-							default: () => "CF Bench",
-						},
-					),
+					h("a", { class: "brand", href: "/" }, "CF Bench"),
 					h("nav", { class: "links" }, [
-						navLink("/stays", "Stays"),
-						navLink("/chart", "Chart"),
-						navLink("/media", "Media"),
-						navLink("/blog", "Blog"),
+						h("a", { class: "pill", href: "/stays" }, "Stays"),
+						h("a", { class: "pill", href: "/chart" }, "Chart"),
+						h("a", { class: "pill", href: "/media" }, "Media"),
+						h("a", { class: "pill", href: "/blog" }, "Blog"),
 					]),
 				]),
 				h("main", { class: "container" }, [

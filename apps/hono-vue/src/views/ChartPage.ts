@@ -25,6 +25,15 @@ export default defineComponent({
 		const chartReady = ref(false);
 		const canvasRef = ref<HTMLCanvasElement | null>(null);
 		let chart: ChartInstance | null = null;
+		let updateFrame: number | null = null;
+
+		function scheduleChartUpdate(update: () => void) {
+			if (updateFrame !== null) cancelAnimationFrame(updateFrame);
+			updateFrame = requestAnimationFrame(() => {
+				updateFrame = null;
+				update();
+			});
+		}
 
 		function currentIndicators() {
 			return {
@@ -52,7 +61,7 @@ export default defineComponent({
 			status.value = "loading";
 			try {
 				const data = await fetchCandles();
-				requestAnimationFrame(() => {
+				scheduleChartUpdate(() => {
 					chart?.setIndicators(currentIndicators());
 					chart?.setCandles(data.candles);
 				});
@@ -71,14 +80,16 @@ export default defineComponent({
 				initialViewport: 180,
 				onStats: (stats) => updateChartCoreMetrics(stats as never),
 			});
-			requestAnimationFrame(() => {
+			scheduleChartUpdate(() => {
 				chart?.resize();
+				chart?.setIndicators(currentIndicators());
 				chartReady.value = true;
 			});
 			await refreshChart();
 		});
 
 		onBeforeUnmount(() => {
+			if (updateFrame !== null) cancelAnimationFrame(updateFrame);
 			chart?.destroy();
 			chart = null;
 		});
@@ -91,9 +102,7 @@ export default defineComponent({
 		watch(
 			() => [indicators.sma20, indicators.sma50, indicators.ema20, indicators.volume] as const,
 			() => {
-				requestAnimationFrame(() => {
-					chart?.setIndicators(currentIndicators());
-				});
+				scheduleChartUpdate(() => chart?.setIndicators(currentIndicators()));
 			},
 		);
 

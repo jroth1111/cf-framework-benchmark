@@ -13,14 +13,17 @@ export default defineComponent({
 	name: "MediaPage",
 	setup() {
 		const items = queryMedia({ pageSize: 20 }).results;
-		const selectedIndex = ref(0);
+		const selectedIndex = ref<number | null>(null);
 		const showPoster = ref(false);
-		const selected = computed<MediaItem | null>(() => items[selectedIndex.value] ?? null);
+		const selected = computed<MediaItem | null>(() => {
+			const index = selectedIndex.value;
+			return index == null ? null : items[index] ?? null;
+		});
 
 		onMounted(() => {
 			const media = ensureBenchMedia();
-			media.ready = true;
-			media.currentId = items[0]?.id || null;
+			media.ready = false;
+			media.currentId = null;
 		});
 
 		function openByIndex(index: number) {
@@ -38,7 +41,7 @@ export default defineComponent({
 		function nextItem() {
 			if (!items.length) return;
 			const start = performance.now();
-			const next = (selectedIndex.value + 1) % items.length;
+			const next = ((selectedIndex.value ?? -1) + 1) % items.length;
 			selectedIndex.value = next;
 			showPoster.value = true;
 			requestAnimationFrame(() => {

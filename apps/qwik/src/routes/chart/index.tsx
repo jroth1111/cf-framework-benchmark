@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$, Slot } from "@qwik.dev/core";
+import { component$, useSignal, useVisibleTask$ } from "@qwik.dev/core";
 import { chartSymbols, chartTimeframes } from "@cf-bench/dataset";
 import { createChart } from "@cf-bench/chart-core";
 import { markChartReady, markChartError, updateChartCoreMetrics, startChartSwitch, getChartFetchOptions } from "@cf-bench/bench-types";
@@ -54,9 +54,8 @@ export default component$(() => {
     track(() => volume.value);
 
     try {
-      console.log('[Qwik Chart] Mounting...');
       if (!canvasRef.value) {
-        throw new Error('Canvas element not found');
+        throw new Error("Canvas element not found");
       }
 
       if (!chartRef.value) {
@@ -67,7 +66,6 @@ export default component$(() => {
           },
         });
         chartRef.value.resize();
-        console.log('[Qwik Chart] Chart created');
       }
 
       status.value = "loading";
@@ -88,9 +86,7 @@ export default component$(() => {
       markChartReady(symbol.value, timeframe.value);
       status.value = "ready";
       errorMessage.value = "";
-      console.log('[Qwik Chart] Ready');
     } catch (e) {
-      console.error('[Qwik Chart] Error:', e);
       const errMsg = e instanceof Error ? e.message : String(e);
       errorMessage.value = errMsg;
       status.value = "error";

@@ -8,7 +8,6 @@ export default component$(() => {
     const w = window as any;
     const root = (w.__CF_BENCH__ = w.__CF_BENCH__ || {});
     const hydration = (root.hydration = root.hydration || {});
-    if (hydration.startMs == null) hydration.startMs = performance.now();
     hydration.endMs = performance.now();
   });
 
@@ -17,6 +16,9 @@ export default component$(() => {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script
+          dangerouslySetInnerHTML={`(function(){var w=window;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{};if(h.startMs==null)h.startMs=performance.now();})();`}
+        />
         <RouterHead />
       </head>
       <body lang="en">

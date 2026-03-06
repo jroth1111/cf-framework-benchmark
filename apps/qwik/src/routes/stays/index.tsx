@@ -18,25 +18,12 @@ export const useStays = routeLoader$(({ url }) => {
 });
 
 export const StayCard = component$<{ listing: typeof listings[0] }>((props) => {
-  const handleNavigate$ = () => {
-    try {
-      console.log(`[Qwik] Navigating to /stays/${props.listing.id}`);
-      // Link component handles client navigation automatically
-      console.log(`[Qwik] Navigation initiated`);
-    } catch (err) {
-      console.error('[Qwik] Navigation error:', err);
-      // Fallback: use window.location
-      window.location.href = `/stays/${props.listing.id}`;
-    }
-  };
-
   return (
     <Link
       class="card"
       data-testid="stay-card"
       href={`/stays/${props.listing.id}`}
       style="padding:14px;display:block"
-      onClick$={handleNavigate$}
     >
       <div style="display:flex;justify-content:space-between;gap:12px">
         <div>

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { chartSymbols, chartTimeframes } from '@cf-bench/dataset';
-import { createChart } from '@cf-bench/chart-core';
 import {
   getChartFetchOptions,
   markChartError,
@@ -10,6 +9,9 @@ import {
   startChartSwitch,
   updateChartCoreMetrics,
 } from '@cf-bench/bench-types';
+
+type ChartModule = typeof import('@cf-bench/chart-core');
+type ChartInstance = ReturnType<ChartModule['createChart']>;
 
 async function fetchCandles(symbol: string, timeframe: string, points: number) {
   const response = await fetch(
@@ -30,20 +32,30 @@ export function ChartClient() {
   const [ready, setReady] = useState(false);
   const [isPending, startTransition] = useTransition();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
+  const chartRef = useRef<ChartInstance | null>(null);
   const symbols = useMemo(() => chartSymbols, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || chartRef.current) return;
-    const chart = createChart(canvas, {
-      initialViewport: 180,
-      onStats: (stats) => updateChartCoreMetrics(stats),
-    });
-    chartRef.current = chart;
-    chart.setIndicators(indicators);
-    chart.resize();
-    setReady(true);
+
+    let cancelled = false;
+    void (async () => {
+      const { createChart } = await import('@cf-bench/chart-core');
+      if (cancelled || chartRef.current) return;
+      const chart = createChart(canvas, {
+        initialViewport: 180,
+        onStats: (stats) => updateChartCoreMetrics(stats),
+      });
+      chartRef.current = chart;
+      chart.setIndicators(indicators);
+      chart.resize();
+      setReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

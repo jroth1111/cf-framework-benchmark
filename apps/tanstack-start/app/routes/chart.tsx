@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import React, { useEffect, useRef, useMemo, useTransition, useDeferredValue, useState } from "react";
-import { createChart } from "@cf-bench/chart-core";
 import { useChart } from "@cf-bench/chart-hooks";
 import { markChartReady, markChartError, updateChartCoreMetrics } from "@cf-bench/bench-types";
+
+type ChartModule = typeof import("@cf-bench/chart-core");
+type ChartInstance = ReturnType<ChartModule["createChart"]>;
 
 export const Route = createFileRoute("/chart")({
   component: ChartPage,
@@ -23,7 +25,7 @@ function ChartPage() {
   } = useChart();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
+  const chartRef = useRef<ChartInstance | null>(null);
   const [chartReady, setChartReady] = useState(false);
 
   const [isPending, startTransition] = useTransition();
@@ -45,22 +47,31 @@ function ChartPage() {
     const canvas = canvasRef.current;
     if (!canvas || chartRef.current) return;
 
+    let cancelled = false;
     requestAnimationFrame(() => {
-      try {
-        const chart = createChart(canvas, chartOptions);
-        chartRef.current = chart;
+      void (async () => {
+        try {
+          const { createChart } = await import("@cf-bench/chart-core");
+          if (cancelled || chartRef.current) return;
+          const chart = createChart(canvas, chartOptions);
+          chartRef.current = chart;
 
-        requestAnimationFrame(() => {
-          chart.setIndicators(deferredIndicators);
-          chart.resize();
-          setChartReady(true);
-          markChartReady(symbol, timeframe);
-        });
-      } catch (err) {
-        markChartError(err instanceof Error ? err : 'Chart initialization failed');
-      }
+          requestAnimationFrame(() => {
+            if (cancelled) return;
+            chart.setIndicators(deferredIndicators);
+            chart.resize();
+            setChartReady(true);
+            markChartReady(symbol, timeframe);
+          });
+        } catch (err) {
+          markChartError(err instanceof Error ? err : "Chart initialization failed");
+        }
+      })();
     });
-  }, [canvasRef, chartOptions]);
+    return () => {
+      cancelled = true;
+    };
+  }, [canvasRef, chartOptions, deferredIndicators, symbol, timeframe]);
 
   // Update candles when data changes (use requestAnimationFrame for smooth updates)
   useEffect(() => {

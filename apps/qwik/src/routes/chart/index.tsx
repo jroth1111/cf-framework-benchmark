@@ -1,7 +1,9 @@
 import { component$, useSignal, useVisibleTask$ } from "@qwik.dev/core";
 import { chartSymbols, chartTimeframes } from "@cf-bench/dataset";
-import { createChart } from "@cf-bench/chart-core";
 import { markChartReady, markChartError, updateChartCoreMetrics, startChartSwitch, getChartFetchOptions } from "@cf-bench/bench-types";
+
+type ChartModule = typeof import("@cf-bench/chart-core");
+type ChartInstance = ReturnType<ChartModule["createChart"]>;
 
 // Error boundary component for Qwik
 export const ChartErrorBoundary = component$<{ error: any }>((props) => {
@@ -42,7 +44,7 @@ export default component$(() => {
   const errorMessage = useSignal<string>("");
   const canvasRef = useSignal<HTMLCanvasElement>();
 
-  const chartRef = useSignal<ReturnType<typeof createChart>>();
+  const chartRef = useSignal<ChartInstance>();
 
   const currentIndicators = () => ({
     sma20: sma20.value,
@@ -62,6 +64,7 @@ export default component$(() => {
       }
 
       if (!chartRef.value) {
+        const { createChart } = await import("@cf-bench/chart-core");
         chartRef.value = createChart(canvasRef.value, {
           initialViewport: 180,
           onStats: (stats) => {

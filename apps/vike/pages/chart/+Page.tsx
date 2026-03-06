@@ -2,13 +2,15 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState, useTransition }
 import {
   chartSymbols,
   chartTimeframes,
-  createChart,
   getChartFetchOptions,
   markChartError,
   markChartReady,
   startChartSwitch,
   updateChartCoreMetrics,
 } from "../../src/bench";
+
+type ChartModule = typeof import("../../src/bench");
+type ChartInstance = ReturnType<ChartModule["createChart"]>;
 
 async function fetchCandles(symbol: string, timeframe: string, points: number) {
   const response = await fetch(
@@ -30,7 +32,7 @@ export default function Page() {
   const [isPending, startTransition] = useTransition();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
+  const chartRef = useRef<ChartInstance | null>(null);
   const deferredIndicators = useDeferredValue(indicators);
 
   const chartOptions = useMemo(
@@ -46,15 +48,24 @@ export default function Page() {
     if (!canvas) return;
 
     if (!chartRef.current) {
+      let cancelled = false;
       requestAnimationFrame(() => {
-        const chart = createChart(canvas, chartOptions);
-        chartRef.current = chart;
-        requestAnimationFrame(() => {
-          chart.setIndicators(deferredIndicators);
-          chart.resize();
-          setChartReady(true);
-        });
+        void (async () => {
+          const { createChart } = await import("../../src/bench");
+          if (cancelled || chartRef.current) return;
+          const chart = createChart(canvas, chartOptions);
+          chartRef.current = chart;
+          requestAnimationFrame(() => {
+            if (cancelled) return;
+            chart.setIndicators(deferredIndicators);
+            chart.resize();
+            setChartReady(true);
+          });
+        })();
       });
+      return () => {
+        cancelled = true;
+      };
       return;
     }
 

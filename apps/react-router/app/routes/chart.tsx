@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useTransition, useDeferredValue } from "react";
 import { chartSymbols, chartTimeframes } from "../lib/data";
-import { createChart } from "@cf-bench/chart-core";
 import {
   getChartFetchOptions,
   markChartError,
@@ -8,6 +7,9 @@ import {
   startChartSwitch,
   updateChartCoreMetrics,
 } from "@cf-bench/bench-types";
+
+type ChartModule = typeof import("@cf-bench/chart-core");
+type ChartInstance = ReturnType<ChartModule["createChart"]>;
 
 async function fetchCandles(symbol: string, timeframe: string, points: number) {
   const opts = getChartFetchOptions();
@@ -30,7 +32,7 @@ export default function ChartRoute() {
   const [isPending, startTransition] = useTransition();
   const deferredIndicators = useDeferredValue(indicators);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
+  const chartRef = useRef<ChartInstance | null>(null);
 
   const chartOptions = useMemo(
     () => ({
@@ -44,15 +46,24 @@ export default function ChartRoute() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     if (!chartRef.current) {
+      let cancelled = false;
       requestAnimationFrame(() => {
-        const chart = createChart(canvas, chartOptions);
-        chartRef.current = chart;
-        requestAnimationFrame(() => {
-          chart.setIndicators(deferredIndicators);
-          chart.resize();
-          setChartReady(true);
-        });
+        void (async () => {
+          const { createChart } = await import("@cf-bench/chart-core");
+          if (cancelled || chartRef.current) return;
+          const chart = createChart(canvas, chartOptions);
+          chartRef.current = chart;
+          requestAnimationFrame(() => {
+            if (cancelled) return;
+            chart.setIndicators(deferredIndicators);
+            chart.resize();
+            setChartReady(true);
+          });
+        })();
       });
+      return () => {
+        cancelled = true;
+      };
       return;
     }
     requestAnimationFrame(() => {

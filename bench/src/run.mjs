@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 
 const require = createRequire(import.meta.url);
@@ -447,9 +447,9 @@ function normalizeFrameworks(frameworks) {
   });
 }
 
-function fallbackScenarioContractForType(type) {
+export function fallbackScenarioContractForType(type) {
   if (type === 'spa') {
-    return { renderMode: 'spa', initialData: 'document', hydrationModel: 'framework' };
+    return { renderMode: 'spa', initialData: 'client-fetch', hydrationModel: 'framework' };
   }
   return { renderMode: 'ssr', initialData: 'document', hydrationModel: 'framework' };
 }
@@ -1598,6 +1598,7 @@ async function main() {
   }
 
   const frameworkMetaByName = new Map(frameworks.map((fw) => [fw.name, fw]));
+  const scenarioTypesByName = new Map(scenarios.map((sc) => [sc.name, sc.type]));
 
   const summary = [];
   for (const [key, rows] of byKey.entries()) {
@@ -1605,7 +1606,7 @@ async function main() {
     const meta = frameworkMetaByName.get(framework) || {};
     const delivery = meta.delivery ?? 'unknown';
     const implementationKind = meta.implementationKind ?? 'unknown';
-    const scenarioType = rows[0]?.scenarioType;
+    const scenarioType = rows[0]?.scenarioType ?? scenarioTypesByName.get(scenario);
     const scenarioContract = scenarioContractForFramework(meta, scenario, scenarioType);
     const bucketKeyScenario = scenarioContractBucketKey({
       delivery,
@@ -1716,7 +1717,6 @@ async function main() {
   const scenarioNames = [...new Set(summary.filter(s => s.scenarioType !== 'client-nav').map(s => s.scenario))];
   const clientNavScenarios = [...new Set(summary.filter(s => s.scenarioType === 'client-nav').map(s => s.scenario))];
   const phases = [...new Set(summary.map(s => s.phase))];
-  const scenarioTypesByName = new Map(scenarios.map((sc) => [sc.name, sc.type]));
 
   const metricWeights = { ttfb: 0.25, lcp: 0.4, tbt: 0.2, heap: 0.15 };
   const scenarioWeights = { home: 0.2, stays: 0.25, blog: 0.2, chart: 0.35, spa_nav: 0 };
@@ -2479,7 +2479,13 @@ async function main() {
   console.log(`📝 Markdown summary written to ${mdPath}`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+function isMain() {
+  return Boolean(process.argv[1]) && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
+}
+
+if (isMain()) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

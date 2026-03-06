@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   DEFAULT_MATRIX_PATH,
   DEFAULT_TARGETS_PATH,
@@ -12,7 +13,7 @@ import {
   toAbsolutePath,
 } from './config-v4.mjs';
 
-const BENCH_DIR = path.dirname(DEFAULT_TARGETS_PATH);
+const BENCH_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 function argValue(name, fallback = null) {
   const idx = process.argv.indexOf(name);
@@ -49,7 +50,7 @@ function mapScenario(sc) {
   return out;
 }
 
-function defaultScenarioContract(sc) {
+export function defaultScenarioContract(sc) {
   if (sc.type === 'spa') {
     return {
       renderMode: 'spa',
@@ -62,6 +63,10 @@ function defaultScenarioContract(sc) {
     initialData: 'document',
     hydrationModel: 'framework',
   };
+}
+
+export function defaultOutPathForSuite(suiteName) {
+  return path.join(BENCH_DIR, `results.v4.${suiteName}.json`);
 }
 
 async function runLegacyRunner({ configPath, outPath, passthroughArgs }) {
@@ -85,7 +90,7 @@ async function main() {
   const targetsPath = toAbsolutePath(argValue('--targets', null), DEFAULT_TARGETS_PATH);
   const matrixPath = toAbsolutePath(argValue('--matrix', null), DEFAULT_MATRIX_PATH);
   const suitesDir = toAbsolutePath(argValue('--suites-dir', null), DEFAULT_SUITES_DIR);
-  const outPath = toAbsolutePath(argValue('--out', null), path.join(BENCH_DIR, `results.v4.${suiteName}.json`));
+  const outPath = toAbsolutePath(argValue('--out', null), defaultOutPathForSuite(suiteName));
   const only = parseCsvSet(argValue('--only', ''));
 
   const [suite, targets] = await Promise.all([
@@ -185,7 +190,13 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err.message || err);
-  process.exit(1);
-});
+function isMain() {
+  return Boolean(process.argv[1]) && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
+}
+
+if (isMain()) {
+  main().catch((err) => {
+    console.error(err.message || err);
+    process.exit(1);
+  });
+}

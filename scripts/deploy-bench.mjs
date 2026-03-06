@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import fs from "node:fs/promises";
 import { spawn } from "node:child_process";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import {
   DEFAULT_MATRIX_PATH,
   DEFAULT_TARGETS_PATH,
@@ -58,16 +60,42 @@ function extractDeployUrl(output) {
   return urls[urls.length - 1] || null;
 }
 
-async function updateTargets(targetsPath, frameworks, deployedMap) {
+async function loadExistingTargets(targetsPath) {
+  try {
+    const text = await fs.readFile(targetsPath, "utf8");
+    const doc = JSON.parse(text);
+    return Array.isArray(doc?.targets) ? doc.targets : [];
+  } catch (err) {
+    if (err?.code === "ENOENT") return [];
+    throw err;
+  }
+}
+
+export async function updateTargets(targetsPath, frameworks, deployedMap) {
+  const existingTargets = await loadExistingTargets(targetsPath);
+  const existingByFramework = new Map(
+    existingTargets
+      .map((row) => [String(row?.framework || ""), String(row?.url || "").replace(/\/$/, "")])
+      .filter(([name, url]) => name && url)
+  );
+
   const doc = {
     schemaVersion: "1.0.0",
     generatedAt: new Date().toISOString(),
     source: "bench/framework-matrix.json",
-    targets: frameworks.map((framework) => ({
-      framework: framework.name,
-      platform: "workers",
-      url: deployedMap.get(framework.name),
-    })),
+    targets: frameworks.map((framework) => {
+      const url = (deployedMap.get(framework.name) ?? existingByFramework.get(framework.name) ?? "").replace(/\/$/, "");
+      if (!url) {
+        throw new Error(
+          `Missing live target URL for ${framework.name}. Deploy it first or seed ${path.relative(process.cwd(), targetsPath) || targetsPath}.`
+        );
+      }
+      return {
+        framework: framework.name,
+        platform: "workers",
+        url,
+      };
+    }),
   };
 
   await fs.writeFile(targetsPath, `${JSON.stringify(doc, null, 2)}\n`);
@@ -80,19 +108,22 @@ async function main() {
   const noWrite = process.argv.includes("--no-write");
 
   const matrix = await loadMatrix(matrixPath);
-  const frameworks = matrix.frameworks.filter((framework) => {
+  const workerFrameworks = matrix.frameworks.filter((framework) => {
     if (!framework?.benchmarkEnabled) return false;
     if (String(framework?.deploy?.type || "") !== "workers") return false;
+    return true;
+  });
+  const selectedFrameworks = workerFrameworks.filter((framework) => {
     if (only.size && !only.has(framework.name)) return false;
     return true;
   });
 
-  if (!frameworks.length) {
+  if (!selectedFrameworks.length) {
     throw new Error("No benchmark-enabled Workers frameworks selected for deployment.");
   }
 
   const deployed = new Map();
-  for (const framework of frameworks) {
+  for (const framework of selectedFrameworks) {
     const meta = matrix.byName.get(framework.name);
     const command = String(meta?.deploy?.command || "").trim();
     if (!command) {
@@ -114,7 +145,7 @@ async function main() {
   }
 
   if (!noWrite) {
-    await updateTargets(targetsPath, frameworks, deployed);
+    await updateTargets(targetsPath, workerFrameworks, deployed);
     console.log(`\nUpdated ${targetsPath}`);
   }
 
@@ -124,7 +155,13 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err.message || err);
-  process.exit(1);
-});
+function isMain() {
+  return Boolean(process.argv[1]) && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
+}
+
+if (isMain()) {
+  main().catch((err) => {
+    console.error(err.message || err);
+    process.exit(1);
+  });
+}

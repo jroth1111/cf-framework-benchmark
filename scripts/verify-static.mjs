@@ -39,6 +39,7 @@ pushPair(targetsArgs, "--targets");
 await run("check:matrix", "pnpm", ["check:matrix", ...matrixArgs]);
 await run("check:targets", "pnpm", ["check:targets", ...targetsArgs]);
 await run("test:dataset", "pnpm", ["test:dataset"]);
+await run("test:deploy-bench", "pnpm", ["test:deploy-bench"]);
 await run("build", "pnpm", ["build"]);
 
 console.log("\nStatic verification passed.");

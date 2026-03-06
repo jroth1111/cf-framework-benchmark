@@ -12,6 +12,7 @@
     "check:matrix": "node scripts/check-matrix-drift.mjs",
     "check:targets": "node scripts/verify-workers-targets.mjs",
     "test:dataset": "node scripts/test-dataset.mjs",
+    "test:deploy-bench": "node scripts/test-deploy-bench.mjs",
     "test:contracts": "node scripts/contract-tests.mjs",
     "smoke": "node scripts/smoke.mjs",
     "verify:static": "node scripts/verify-static.mjs",

@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cf-bench-control",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-03-05",
+  "observability": {
+    "enabled": true
+  }
+}

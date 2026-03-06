@@ -119,6 +119,22 @@ importers:
         specifier: ^4.56.0
         version: 4.56.0(@cloudflare/workers-types@4.20251221.0)
 
+  apps/control:
+    dependencies:
+      '@cf-bench/bench-contract':
+        specifier: workspace:*
+        version: link:../../packages/bench-contract
+      '@cf-bench/bench-control':
+        specifier: workspace:*
+        version: link:../../packages/bench-control
+    devDependencies:
+      '@types/node':
+        specifier: ^25.3.3
+        version: 25.3.3
+      wrangler:
+        specifier: ^4.70.0
+        version: 4.70.0
+
   apps/hono:
     dependencies:
       '@cf-bench/bench-contract':

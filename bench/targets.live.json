@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-03-06T00:00:00.000Z",
+  "generatedAt": "2026-03-06T14:29:43.157Z",
   "source": "bench/framework-matrix.json",
   "targets": [
     {
-      "framework": "astro",
+      "framework": "analog",
       "platform": "workers",
-      "url": "https://cf-bench-astro.gwizz.workers.dev"
+      "url": "https://cf-bench-analog.gwizz.workers.dev"
     },
     {
       "framework": "angular",
@@ -14,9 +14,24 @@
       "url": "https://cf-bench-angular.gwizz.workers.dev"
     },
     {
+      "framework": "astro",
+      "platform": "workers",
+      "url": "https://cf-bench-astro.gwizz.workers.dev"
+    },
+    {
       "framework": "hono",
       "platform": "workers",
       "url": "https://cf-bench-hono.gwizz.workers.dev"
+    },
+    {
+      "framework": "hono-solid",
+      "platform": "workers",
+      "url": "https://cf-bench-hono-solid.gwizz.workers.dev"
+    },
+    {
+      "framework": "hono-vue",
+      "platform": "workers",
+      "url": "https://cf-bench-hono-vue.gwizz.workers.dev"
     },
     {
       "framework": "next",
@@ -54,6 +69,11 @@
       "url": "https://cf-bench-solid.gwizz.workers.dev"
     },
     {
+      "framework": "solidstart",
+      "platform": "workers",
+      "url": "https://cf-bench-solidstart.gwizz.workers.dev"
+    },
+    {
       "framework": "svelte",
       "platform": "workers",
       "url": "https://cf-bench-svelte.gwizz.workers.dev"
@@ -64,6 +84,11 @@
       "url": "https://cf-bench-tanstack-start.gwizz.workers.dev"
     },
     {
+      "framework": "tanstack-start-solid",
+      "platform": "workers",
+      "url": "https://cf-bench-tanstack-start-solid.gwizz.workers.dev"
+    },
+    {
       "framework": "vike",
       "platform": "workers",
       "url": "https://cf-bench-vike.gwizz.workers.dev"
@@ -72,6 +97,11 @@
       "framework": "vue",
       "platform": "workers",
       "url": "https://cf-bench-vue.gwizz.workers.dev"
+    },
+    {
+      "framework": "vue-c3",
+      "platform": "workers",
+      "url": "https://cf-bench-vue-c3.gwizz.workers.dev"
     },
     {
       "framework": "waku",

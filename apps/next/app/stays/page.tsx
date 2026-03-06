@@ -44,7 +44,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
 
       <div className="grid cols-2">
         {filtered.map((l) => (
-          <Link key={l.id} data-testid="stay-card" className="card" href={`/stays/${l.id}`} style={{ padding: 14, display: "block" }}>
+          <Link
+            key={l.id}
+            data-testid="stay-card"
+            className="card"
+            href={`/stays/${l.id}`}
+            prefetch={false}
+            style={{ padding: 14, display: "block" }}
+          >
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
               <div>
                 <div style={{ fontWeight: 700 }}>{l.title}</div>

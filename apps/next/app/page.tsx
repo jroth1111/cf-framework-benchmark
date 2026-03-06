@@ -8,22 +8,22 @@ export default function Page() {
         <div className="card" style={{ padding: 16 }}>
           <h2>SPA-like</h2>
           <p className="muted">Interactive chart with symbol switching.</p>
-          <Link className="btn" href="/chart">Open chart</Link>
+          <Link className="btn" href="/chart" prefetch={false}>Open chart</Link>
         </div>
         <div className="card" style={{ padding: 16 }}>
           <h2>App pages</h2>
           <p className="muted">Listings index + detail pages.</p>
-          <Link className="btn" href="/stays">Browse stays</Link>
+          <Link className="btn" href="/stays" prefetch={false}>Browse stays</Link>
         </div>
         <div className="card" style={{ padding: 16 }}>
           <h2>SSG blog</h2>
           <p className="muted">Prerendered at build time.</p>
-          <Link className="btn" href="/blog">Read blog</Link>
+          <Link className="btn" href="/blog" prefetch={false}>Read blog</Link>
         </div>
         <div className="card" style={{ padding: 16 }}>
           <h2>Media feed</h2>
           <p className="muted">YouTube-like browse and player interactions.</p>
-          <Link className="btn" href="/media">Open media</Link>
+          <Link className="btn" href="/media" prefetch={false}>Open media</Link>
         </div>
       </div>
     </>

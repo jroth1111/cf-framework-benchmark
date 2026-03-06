@@ -11,12 +11,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <header className="container nav">
-          <Link className="brand" href="/">CF Bench</Link>
+          <Link className="brand" href="/" prefetch={false}>CF Bench</Link>
           <nav className="links">
-            <Link className="pill" href="/stays">Stays</Link>
-            <Link className="pill" href="/chart">Chart</Link>
-            <Link className="pill" href="/media">Media</Link>
-            <Link className="pill" href="/blog">Blog</Link>
+            <Link className="pill" href="/stays" prefetch={false}>Stays</Link>
+            <Link className="pill" href="/chart" prefetch={false}>Chart</Link>
+            <Link className="pill" href="/media" prefetch={false}>Media</Link>
+            <Link className="pill" href="/blog" prefetch={false}>Blog</Link>
           </nav>
         </header>
 

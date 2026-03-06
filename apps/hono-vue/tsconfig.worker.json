@@ -5,5 +5,5 @@
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "types": [ "./worker-configuration.d.ts","vite/client"],
   },
-  "include": ["server"],
+  "include": ["src/index.ts"],
 }

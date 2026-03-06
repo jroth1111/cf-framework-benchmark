@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition, useDeferredValue } from "react";
 import { chartSymbols, chartTimeframes } from "@cf-bench/dataset";
 import { createChart } from "@cf-bench/chart-core";
+import type { ChartStats } from "@cf-bench/chart-core";
 import { markChartReady, markChartError, updateChartCoreMetrics, startChartSwitch, getChartFetchOptions } from "@cf-bench/bench-types";
 
 async function fetchCandles(symbol: string, timeframe: string, points: number) {
@@ -22,7 +23,7 @@ export function Chart() {
     const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
     const [chartReady, setChartReady] = useState(false);
 
-    const [isPending, startTransition] = useTransition();
+    const [, startTransition] = useTransition();
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
@@ -34,7 +35,7 @@ export function Chart() {
     // useMemo for chart options
     const chartOptions = useMemo(() => ({
         initialViewport: 180,
-        onStats: (stats) => {
+        onStats: (stats: ChartStats) => {
             updateChartCoreMetrics(stats);
         },
     }), []);

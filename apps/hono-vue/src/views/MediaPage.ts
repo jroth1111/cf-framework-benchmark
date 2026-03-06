@@ -12,7 +12,7 @@ function ensureBenchMedia() {
 export default defineComponent({
 	name: "MediaPage",
 	setup() {
-		const items = queryMedia({ pageSize: 20 }).results;
+		const items = queryMedia({ pageSize: 12 }).results;
 		const selectedIndex = ref<number | null>(null);
 		const showPoster = ref(false);
 		const selected = computed<MediaItem | null>(() => {

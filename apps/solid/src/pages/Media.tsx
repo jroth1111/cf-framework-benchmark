@@ -10,7 +10,7 @@ function ensureBenchMedia() {
 }
 
 export function Media(props: { initialItems?: MediaItem[] }) {
-  const initialItems = props.initialItems ?? queryMedia({ pageSize: 20 }).results;
+  const initialItems = props.initialItems ?? queryMedia({ pageSize: 12 }).results;
   const [items] = createSignal<MediaItem[]>(initialItems);
   const [selectedIndex, setSelectedIndex] = createSignal<number | null>(null);
   const [showPoster, setShowPoster] = createSignal(false);

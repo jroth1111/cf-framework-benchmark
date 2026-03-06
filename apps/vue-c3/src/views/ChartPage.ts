@@ -26,6 +26,7 @@ export default defineComponent({
 		const canvasRef = ref<HTMLCanvasElement | null>(null);
 		let chart: ChartInstance | null = null;
 		let updateFrame: number | null = null;
+		let fetchArmed = false;
 
 		function scheduleChartUpdate(update: () => void) {
 			if (updateFrame !== null) cancelAnimationFrame(updateFrame);
@@ -85,7 +86,6 @@ export default defineComponent({
 				chart?.setIndicators(currentIndicators());
 				chartReady.value = true;
 			});
-			await refreshChart();
 		});
 
 		onBeforeUnmount(() => {
@@ -95,7 +95,7 @@ export default defineComponent({
 		});
 
 		watch([symbol, timeframe], async () => {
-			if (!chart) return;
+			if (!chart || !fetchArmed) return;
 			await refreshChart();
 		});
 
@@ -121,6 +121,7 @@ export default defineComponent({
 									style: { width: "140px" },
 									value: symbol.value,
 									onChange: (event: Event) => {
+										fetchArmed = true;
 										symbol.value = (event.target as HTMLSelectElement).value;
 									},
 								},
@@ -137,6 +138,7 @@ export default defineComponent({
 									style: { width: "120px" },
 									value: timeframe.value,
 									onChange: (event: Event) => {
+										fetchArmed = true;
 										timeframe.value = (event.target as HTMLSelectElement).value as (typeof chartTimeframes)[number];
 									},
 								},
@@ -157,7 +159,7 @@ export default defineComponent({
 								]),
 							),
 						]),
-						h("div", { class: "muted small" }, status.value === "loading" ? "Loading candles…" : status.value === "error" ? "Error" : "Ready"),
+						h("div", { class: "muted small" }, status.value === "loading" ? "Loading candles…" : status.value === "error" ? "Error" : status.value === "idle" ? "Select a market" : "Ready"),
 					]),
 					h("div", { class: "muted small", style: { marginTop: "10px" } }, "Pan: drag • Zoom: mousewheel/trackpad • Crosshair: move cursor"),
 					h("div", { style: { height: "420px", marginTop: "12px", position: "relative" } }, [

@@ -42,15 +42,18 @@ export function useChart(options: {
   initialSymbol?: string;
   initialTimeframe?: (typeof chartTimeframes)[number];
   initialIndicators?: Partial<ChartIndicators>;
+  deferInitialFetch?: boolean;
 } = {}): UseChartReturn {
   const {
     initialSymbol = DEFAULT_CHART_CONFIG.initialSymbol,
     initialTimeframe = DEFAULT_CHART_CONFIG.initialTimeframe,
     initialIndicators = DEFAULT_CHART_CONFIG.indicators,
+    deferInitialFetch = false,
   } = options;
 
   const [symbol, setSymbol] = createSignal(initialSymbol);
   const [timeframe, setTimeframe] = createSignal(initialTimeframe);
+  const [fetchArmed, setFetchArmed] = createSignal(!deferInitialFetch);
   const [indicators, setIndicators] = createSignal<ChartIndicators>({
     sma20: true,
     sma50: false,
@@ -70,7 +73,7 @@ export function useChart(options: {
     const sym = symbol();
     const tf = timeframe();
 
-    if (!sym || !tf) return;
+    if (!sym || !tf || !fetchArmed()) return;
 
     setStatus("loading");
     setError(null);
@@ -93,9 +96,15 @@ export function useChart(options: {
 
   return {
     symbol,
-    setSymbol,
+    setSymbol: (next) => {
+      setFetchArmed(true);
+      setSymbol(next);
+    },
     timeframe,
-    setTimeframe,
+    setTimeframe: (next) => {
+      setFetchArmed(true);
+      setTimeframe(next);
+    },
     indicators,
     setIndicators: (i) => {
       if (typeof i === "function") {

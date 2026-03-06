@@ -37,7 +37,7 @@ function ChartInner(props: { onError: (error: string) => void }) {
     data,
     symbols,
     timeframes,
-  } = useChartSolid();
+  } = useChartSolid({ deferInitialFetch: true });
 
   const [chartReady, setChartReady] = createSignal(false);
   let canvasRef: HTMLCanvasElement | undefined;
@@ -193,7 +193,7 @@ function ChartInner(props: { onError: (error: string) => void }) {
           </div>
 
           <div class="muted small">
-            {status() === "loading" ? "Loading…" : status() === "error" ? "Error" : "Ready"}
+            {status() === "loading" ? "Loading…" : status() === "error" ? "Error" : status() === "idle" ? "Select a market" : "Ready"}
           </div>
         </div>
 

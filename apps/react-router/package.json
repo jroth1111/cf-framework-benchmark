@@ -13,6 +13,10 @@
 	},
 	"dependencies": {
 		"@cf-bench/bench-contract": "workspace:*",
+		"@cf-bench/bench-types": "workspace:*",
+		"@cf-bench/chart-core": "workspace:*",
+		"@cf-bench/dataset": "workspace:*",
+		"@cf-bench/ui": "workspace:*",
 		"isbot": "^5.1.31",
 		"react": "^19.1.1",
 		"react-dom": "^19.1.1",

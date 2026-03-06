@@ -79,8 +79,8 @@
     },
     {
       "name": "react-router",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/react-router",
       "deploy": {
         "type": "workers",

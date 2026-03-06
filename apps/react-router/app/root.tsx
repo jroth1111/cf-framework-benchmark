@@ -1,5 +1,6 @@
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
@@ -8,19 +9,9 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import "./app.css";
+import "@cf-bench/ui/styles.css";
 
 export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -31,11 +22,45 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(function(){var w=window;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{};if(h.startMs==null)h.startMs=performance.now();})();',
+          }}
+        />
       </head>
       <body>
-        {children}
+        <header className="container nav">
+          <Link className="brand" to="/">
+            CF Bench
+          </Link>
+          <nav className="links">
+            <Link className="pill" to="/stays">
+              Stays
+            </Link>
+            <Link className="pill" to="/chart">
+              Chart
+            </Link>
+            <Link className="pill" to="/media">
+              Media
+            </Link>
+            <Link className="pill" to="/blog">
+              Blog
+            </Link>
+          </nav>
+        </header>
+        <main className="container">
+          {children}
+          <div className="footer">React Router variant • Workers SSR route modules for the benchmark contract.</div>
+        </main>
         <ScrollRestoration />
         <Scripts />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(function(){var w=window;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{};h.endMs=performance.now();})();',
+          }}
+        />
       </body>
     </html>
   );

@@ -34,6 +34,7 @@ function ChartInner(props: { onError: (error: string) => void }) {
     indicators,
     setIndicators,
     status,
+    armFetch,
     data,
     symbols,
     timeframes,
@@ -44,6 +45,7 @@ function ChartInner(props: { onError: (error: string) => void }) {
   let chart: ChartInstance | null = null;
   let initFrame: number | null = null;
   let updateFrame: number | null = null;
+  let fallbackFetchTimer: number | null = null;
   let cancelled = false;
 
   const scheduleChartUpdate = (fn: () => void) => {
@@ -55,6 +57,9 @@ function ChartInner(props: { onError: (error: string) => void }) {
   };
 
   onMount(() => {
+    fallbackFetchTimer = window.setTimeout(() => {
+      if (!cancelled) armFetch();
+    }, 250);
     try {
       if (!canvasRef) {
         throw new Error("Canvas element not found");
@@ -97,6 +102,7 @@ function ChartInner(props: { onError: (error: string) => void }) {
 
   onCleanup(() => {
     cancelled = true;
+    if (fallbackFetchTimer !== null) clearTimeout(fallbackFetchTimer);
     if (initFrame !== null) cancelAnimationFrame(initFrame);
     if (updateFrame !== null) cancelAnimationFrame(updateFrame);
     chart?.destroy();

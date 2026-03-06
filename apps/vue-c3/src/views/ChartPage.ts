@@ -27,6 +27,7 @@ export default defineComponent({
 		let chart: ChartInstance | null = null;
 		let updateFrame: number | null = null;
 		let fetchArmed = false;
+		let fallbackFetchTimer: number | null = null;
 
 		function scheduleChartUpdate(update: () => void) {
 			if (updateFrame !== null) cancelAnimationFrame(updateFrame);
@@ -75,6 +76,12 @@ export default defineComponent({
 		}
 
 		onMounted(async () => {
+			fallbackFetchTimer = window.setTimeout(() => {
+				if (!fetchArmed) {
+					fetchArmed = true;
+					void refreshChart();
+				}
+			}, 250);
 			if (!canvasRef.value) return;
 			const { createChart } = await import("@cf-bench/chart-core");
 			chart = createChart(canvasRef.value, {
@@ -89,6 +96,7 @@ export default defineComponent({
 		});
 
 		onBeforeUnmount(() => {
+			if (fallbackFetchTimer !== null) clearTimeout(fallbackFetchTimer);
 			if (updateFrame !== null) cancelAnimationFrame(updateFrame);
 			chart?.destroy();
 			chart = null;

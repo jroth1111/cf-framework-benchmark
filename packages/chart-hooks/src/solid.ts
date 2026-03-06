@@ -29,6 +29,7 @@ export interface UseChartReturn {
   setData: (d: ChartData | null) => void;
   error: () => Error | null;
   setError: (e: Error | null) => void;
+  armFetch: () => void;
   symbols: readonly string[];
   timeframes: readonly string[];
 }
@@ -119,6 +120,7 @@ export function useChart(options: {
     setData,
     error,
     setError,
+    armFetch: () => setFetchArmed(true),
     symbols,
     timeframes,
   };

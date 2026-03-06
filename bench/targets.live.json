@@ -4,11 +4,6 @@
   "source": "bench/framework-matrix.json",
   "targets": [
     {
-      "framework": "angular",
-      "platform": "workers",
-      "url": "https://cf-bench-angular.gwizz.workers.dev"
-    },
-    {
       "framework": "astro",
       "platform": "workers",
       "url": "https://cf-bench-astro.gwizz.workers.dev"
@@ -24,11 +19,6 @@
       "url": "https://cf-bench-next.gwizz.workers.dev"
     },
     {
-      "framework": "nuxt",
-      "platform": "workers",
-      "url": "https://cf-bench-nuxt.gwizz.workers.dev"
-    },
-    {
       "framework": "qwik",
       "platform": "workers",
       "url": "https://cf-bench-qwik.gwizz.workers.dev"
@@ -37,16 +27,6 @@
       "framework": "react",
       "platform": "workers",
       "url": "https://cf-bench-react.gwizz.workers.dev"
-    },
-    {
-      "framework": "react-router",
-      "platform": "workers",
-      "url": "https://cf-bench-react-router.gwizz.workers.dev"
-    },
-    {
-      "framework": "redwood",
-      "platform": "workers",
-      "url": "https://cf-bench-redwood.gwizz.workers.dev"
     },
     {
       "framework": "solid",
@@ -62,21 +42,6 @@
       "framework": "tanstack-start",
       "platform": "workers",
       "url": "https://cf-bench-tanstack-start.gwizz.workers.dev"
-    },
-    {
-      "framework": "vike",
-      "platform": "workers",
-      "url": "https://cf-bench-vike.gwizz.workers.dev"
-    },
-    {
-      "framework": "vue",
-      "platform": "workers",
-      "url": "https://cf-bench-vue.gwizz.workers.dev"
-    },
-    {
-      "framework": "waku",
-      "platform": "workers",
-      "url": "https://cf-bench-waku.gwizz.workers.dev"
     }
   ]
 }

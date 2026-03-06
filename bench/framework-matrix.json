@@ -9,8 +9,8 @@
   "frameworks": [
     {
       "name": "angular",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
       "appDir": "apps/angular",
       "deploy": {
         "type": "workers",
@@ -49,8 +49,8 @@
     },
     {
       "name": "nuxt",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
       "appDir": "apps/nuxt",
       "deploy": {
         "type": "workers",
@@ -79,8 +79,8 @@
     },
     {
       "name": "react-router",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
       "appDir": "apps/react-router",
       "deploy": {
         "type": "workers",
@@ -89,8 +89,8 @@
     },
     {
       "name": "redwood",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
       "appDir": "apps/redwood",
       "deploy": {
         "type": "workers",
@@ -129,8 +129,8 @@
     },
     {
       "name": "vike",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
       "appDir": "apps/vike",
       "deploy": {
         "type": "workers",
@@ -139,8 +139,8 @@
     },
     {
       "name": "vue",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
       "appDir": "apps/vue",
       "deploy": {
         "type": "workers",
@@ -149,8 +149,8 @@
     },
     {
       "name": "waku",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "scaffolded",
+      "benchmarkEnabled": false,
       "appDir": "apps/waku",
       "deploy": {
         "type": "workers",

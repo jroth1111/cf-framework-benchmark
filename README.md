@@ -2,14 +2,26 @@
 
 This repository contains **the same demo site** implemented in multiple frameworks and deployed to **Cloudflare (free plan)**.
 
-Framework implementations included:
+Benchmark-enabled framework implementations:
 
-- React
 - Astro
+- Hono
 - Next.js (OpenNext on Workers)
-- SvelteKit
 - Qwik (Qwik City)
+- React
 - Solid (SolidJS + Vite)
+- SvelteKit
+- TanStack Start
+
+Tracked but not benchmark-enabled yet:
+
+- Angular
+- Nuxt
+- React Router
+- RedwoodSDK
+- Vike
+- Vue
+- Waku
 
 ## What this demo site contains
 

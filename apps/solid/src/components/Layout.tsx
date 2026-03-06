@@ -1,5 +1,4 @@
 import { JSX } from "solid-js";
-import "../main.css";
 
 export function Layout(props: { title: string; children: JSX.Element }) {
   return (

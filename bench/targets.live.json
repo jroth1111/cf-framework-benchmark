@@ -39,6 +39,11 @@
       "url": "https://cf-bench-react-router.gwizz.workers.dev"
     },
     {
+      "framework": "solid",
+      "platform": "workers",
+      "url": "https://cf-bench-solid.gwizz.workers.dev"
+    },
+    {
       "framework": "svelte",
       "platform": "workers",
       "url": "https://cf-bench-svelte.gwizz.workers.dev"

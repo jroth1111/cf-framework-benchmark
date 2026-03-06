@@ -7,8 +7,8 @@ declare global {
   }
 }
 
-export function BlogPost() {
-  const slug = window.__PAGE_PROPS__?.slug ?? "";
+export function BlogPost(props: { slug?: string }) {
+  const slug = props.slug ?? window.__PAGE_PROPS__?.slug ?? "";
   const p = getPost(slug);
 
   if (!p) {

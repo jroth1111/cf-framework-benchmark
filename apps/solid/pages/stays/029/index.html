@@ -4,10 +4,56 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Minimalist flat in Logan Square — Solid</title>
-    
+    <link rel="stylesheet" href="/src/main.css" />
+    <script>
+      (function () {
+        var w = window;
+        w.__CF_BENCH__ = w.__CF_BENCH__ || {};
+        var h = (w.__CF_BENCH__.hydration = w.__CF_BENCH__.hydration || {});
+        if (h.startMs == null) h.startMs = performance.now();
+      })();
+    </script>
   </head>
-  <body>
-    <div id="app"></div>
+  <body data-route="/stays/029">
+    <div id="app"><div>
+      <header class="container nav">
+        <a class="brand" href="/">CF Bench</a>
+        <nav class="links">
+          <a class="pill" href="/stays">Stays</a>
+          <a class="pill" href="/chart">Chart</a>
+          <a class="pill" href="/media">Media</a>
+          <a class="pill" href="/blog">Blog</a>
+        </nav>
+      </header>
+
+      <main class="container">
+        <h1 class="h1">Minimalist flat in Logan Square</h1>
+        
+      <div class="card" style="padding:16px">
+        <div class="muted small">
+          Chicago, United States • 3 bd • 1 ba • up to 8 guests
+        </div>
+        <div style="margin-top:10px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap">
+          <div class="pill">★ 4.8 <span class="muted">(137)</span></div>
+          <div class="pill"><strong>$257</strong> <span class="muted">/ night</span></div>
+          <a class="pill" href="/stays">← Back to results</a>
+        </div>
+        <div data-testid="stay-description" style="margin-top:14px"><p>A 3-bed / 1-bath stay for up to 8 guests. Great for work + weekend exploring.</p>
+      <p><strong>Neighborhood:</strong> Logan Square, Chicago.</p>
+      <p><strong>Highlights:</strong> Kitchen, Hot tub, Dryer.</p>
+      <h3>Amenities</h3>
+      <ul>
+        <li>Free parking</li><li>Heating</li><li>High chair</li><li>Coffee maker</li><li>Air conditioning</li><li>Dedicated workspace</li><li>Fast wifi</li><li>Gym</li><li>Crib</li><li>Self check-in</li><li>Pool</li>
+      </ul>
+      <h3>Benchmark note</h3>
+      <p>This content is intentionally consistent across frameworks so rendering + hydration differences are easier to spot.</p></div>
+      </div>
+    
+        <div class="footer">
+          SolidJS + Vite variant • <span class="kbd">/chart</span> is SPA-like, blog is SSG pages, stays are multi-page routes.
+        </div>
+      </main>
+    </div></div>
     <script>window.__PAGE_PROPS__={"id":"029"};</script>
     <script type="module" src="/src/entries/stay.tsx"></script>
   </body>

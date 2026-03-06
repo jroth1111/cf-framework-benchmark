@@ -1,6 +1,4 @@
-import { render } from "solid-js/web";
 import { Stays } from "../pages/Stays";
+import { mountPage } from "./mount";
 
-const el = document.getElementById("app");
-if (!el) throw new Error("Missing #app");
-render(() => <Stays />, el);
+mountPage(() => <Stays />);

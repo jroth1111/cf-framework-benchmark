@@ -1,0 +1,331 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Media — Solid</title>
+    <link rel="stylesheet" href="/src/main.css" />
+    <script>
+      (function () {
+        var w = window;
+        w.__CF_BENCH__ = w.__CF_BENCH__ || {};
+        var h = (w.__CF_BENCH__.hydration = w.__CF_BENCH__.hydration || {});
+        if (h.startMs == null) h.startMs = performance.now();
+      })();
+    </script>
+  </head>
+  <body data-route="/media">
+    <div id="app"><div>
+      <header class="container nav">
+        <a class="brand" href="/">CF Bench</a>
+        <nav class="links">
+          <a class="pill" href="/stays">Stays</a>
+          <a class="pill" href="/chart">Chart</a>
+          <a class="pill" href="/media">Media</a>
+          <a class="pill" href="/blog">Blog</a>
+        </nav>
+      </header>
+
+      <main class="container">
+        <h1 class="h1">Media Feed (SPA-like)</h1>
+        
+      <div class="grid cols-2" style="gap:16px">
+        <div class="card" style="padding:14px">
+          <h2 style="margin-top:0">Feed</h2>
+          <div style="display:grid;gap:10px;max-height:560px;overflow:auto">
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--text)"
+        >
+          <div style="font-weight:600">Designing for Latency #2</div>
+          <div class="muted small">Frontend Signals • 2025-05-07</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Production Observability #13</div>
+          <div class="muted small">Realtime Systems • 2025-04-23</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Framework SSR Reality Check #17</div>
+          <div class="muted small">Cloud Native Notes • 2025-04-20</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Designing for Latency #23</div>
+          <div class="muted small">Data at the Edge • 2025-04-15</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Framework SSR Reality Check #118</div>
+          <div class="muted small">Cloud Native Notes • 2025-04-09</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Streaming Response Patterns #86</div>
+          <div class="muted small">Workers Weekly • 2025-04-09</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Streaming Response Patterns #39</div>
+          <div class="muted small">Cloud Native Notes • 2025-04-09</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Production Observability #102</div>
+          <div class="muted small">Edge Lab • 2025-04-08</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Streaming Response Patterns #45</div>
+          <div class="muted small">Data at the Edge • 2025-04-06</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Framework SSR Reality Check #14</div>
+          <div class="muted small">Frontend Signals • 2025-04-06</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Streaming Response Patterns #40</div>
+          <div class="muted small">Cloud Native Notes • 2025-04-05</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Caching Under Load #101</div>
+          <div class="muted small">Workers Weekly • 2025-03-25</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Streaming Response Patterns #60</div>
+          <div class="muted small">Workers Weekly • 2025-03-16</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Production Observability #15</div>
+          <div class="muted small">Edge Lab • 2025-03-14</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Building Fast Search #94</div>
+          <div class="muted small">Edge Lab • 2025-03-13</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Designing for Latency #63</div>
+          <div class="muted small">Realtime Systems • 2025-03-08</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">UI Rendering Tradeoffs #7</div>
+          <div class="muted small">Realtime Systems • 2025-03-08</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Building Fast Search #44</div>
+          <div class="muted small">Data at the Edge • 2025-03-07</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Routing at Planet Scale #105</div>
+          <div class="muted small">Cloud Native Notes • 2025-03-06</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Streaming Response Patterns #16</div>
+          <div class="muted small">Data at the Edge • 2025-02-28</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Production Observability #10</div>
+          <div class="muted small">Cloud Native Notes • 2025-02-25</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Production Observability #112</div>
+          <div class="muted small">Edge Lab • 2025-02-18</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Routing at Planet Scale #107</div>
+          <div class="muted small">Cloud Native Notes • 2025-02-18</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Streaming Response Patterns #4</div>
+          <div class="muted small">Frontend Signals • 2025-02-18</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">UI Rendering Tradeoffs #20</div>
+          <div class="muted small">Frontend Signals • 2025-02-16</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Data Fetching Patterns #46</div>
+          <div class="muted small">Realtime Systems • 2025-02-10</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Framework SSR Reality Check #95</div>
+          <div class="muted small">Frontend Signals • 2025-02-09</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Designing for Latency #75</div>
+          <div class="muted small">Realtime Systems • 2025-02-02</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Framework SSR Reality Check #116</div>
+          <div class="muted small">Frontend Signals • 2025-01-31</div>
+        </button>
+      
+        <button
+          data-testid="media-card"
+          class="card"
+          style="padding:10px;text-align:left;background:var(--panel);cursor:pointer;border:1px solid var(--border)"
+        >
+          <div style="font-weight:600">Data Fetching Patterns #76</div>
+          <div class="muted small">Edge Lab • 2025-01-31</div>
+        </button>
+      </div>
+        </div>
+        <div class="card" style="padding:14px">
+          <h2 style="margin-top:0">Player</h2>
+          <div data-testid="media-player" style="min-height:260px">
+            <img
+              src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&amp;fit=crop&amp;w=960&amp;q=80&amp;sig=2"
+              alt="Designing for Latency #2"
+              style="width:100%;max-height:280px;object-fit:cover;border-radius:10px"
+            />
+            <h3>Designing for Latency #2</h3>
+            <p class="muted small">Frontend Signals • 2,422,182 views</p>
+            <p class="muted">Episode 2 covering edge runtime design, practical performance, and framework behavior under real constraints.</p>
+          </div>
+          <button data-testid="media-next" class="btn">Next</button>
+        </div>
+      </div>
+    
+        <div class="footer">
+          SolidJS + Vite variant • <span class="kbd">/chart</span> is SPA-like, blog is SSG pages, stays are multi-page routes.
+        </div>
+      </main>
+    </div></div>
+    
+    <script type="module" src="/src/entries/media.tsx"></script>
+  </body>
+</html>

@@ -99,8 +99,8 @@
     },
     {
       "name": "solid",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/solid",
       "deploy": {
         "type": "workers",

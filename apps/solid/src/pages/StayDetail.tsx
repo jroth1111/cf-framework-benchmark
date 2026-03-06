@@ -7,8 +7,8 @@ declare global {
   }
 }
 
-export function StayDetail() {
-  const id = window.__PAGE_PROPS__?.id ?? "";
+export function StayDetail(props: { id?: string }) {
+  const id = props.id ?? window.__PAGE_PROPS__?.id ?? "";
   const l = getListing(id);
 
   if (!l) {

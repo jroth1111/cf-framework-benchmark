@@ -1,14 +1,6 @@
 import { createMemo, createSignal, For, onMount, Show } from "solid-js";
-import type { MediaItem } from "@cf-bench/dataset";
+import { queryMedia, type MediaItem } from "@cf-bench/dataset";
 import { Layout } from "../components/Layout";
-
-type MediaResponse = {
-  total: number;
-  totalPages: number;
-  page: number;
-  pageSize: number;
-  results: MediaItem[];
-};
 
 function ensureBenchMedia() {
   const w = window as any;
@@ -17,30 +9,16 @@ function ensureBenchMedia() {
   return w.__CF_BENCH__.media;
 }
 
-export function Media() {
-  const [items, setItems] = createSignal<MediaItem[]>([]);
+export function Media(props: { initialItems?: MediaItem[] }) {
+  const initialItems = props.initialItems ?? queryMedia({ pageSize: 30 }).results;
+  const [items] = createSignal<MediaItem[]>(initialItems);
   const [selectedIndex, setSelectedIndex] = createSignal(0);
-  const [status, setStatus] = createSignal<"loading" | "ready" | "error">("loading");
+  const [status] = createSignal<"ready" | "error">(initialItems.length ? "ready" : "error");
 
-  onMount(async () => {
-    setStatus("loading");
-    try {
-      const res = await fetch("/api/media?pageSize=30");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const payload = (await res.json()) as MediaResponse;
-      setItems(payload.results || []);
-      setSelectedIndex(0);
-      setStatus("ready");
-      const media = ensureBenchMedia();
-      media.ready = true;
-      media.currentId = payload.results?.[0]?.id || null;
-    } catch (err) {
-      setStatus("error");
-      const media = ensureBenchMedia();
-      media.ready = true;
-      media.error = true;
-      media.errorMessage = err instanceof Error ? err.message : String(err);
-    }
+  onMount(() => {
+    const media = ensureBenchMedia();
+    media.ready = true;
+    media.currentId = items()[0]?.id || null;
   });
 
   const selected = createMemo(() => items()[selectedIndex()] ?? null);
@@ -74,7 +52,6 @@ export function Media() {
       <div class="grid cols-2" style="gap:16px">
         <div class="card" style="padding:14px">
           <h2 style="margin-top:0">Feed</h2>
-          <Show when={status() === "loading"}><p class="muted">Loading media…</p></Show>
           <Show when={status() === "error"}><p class="muted">Failed to load media.</p></Show>
 
           <div style="display:grid;gap:10px;max-height:560px;overflow:auto">

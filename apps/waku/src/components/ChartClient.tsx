@@ -61,7 +61,6 @@ export function ChartClient() {
       try {
         const data = await fetchCandles(symbol, timeframe, points);
         if (cancelled) return;
-        chartRef.current?.setIndicators(indicators);
         chartRef.current?.setCandles(data.candles as never[]);
         markChartReady(symbol, timeframe);
         setStatus('ready');
@@ -75,7 +74,7 @@ export function ChartClient() {
     return () => {
       cancelled = true;
     };
-  }, [symbol, timeframe, indicators]);
+  }, [symbol, timeframe]);
 
   return (
     <div className="card">

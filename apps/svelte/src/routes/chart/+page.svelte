@@ -22,19 +22,7 @@
   let chart: ReturnType<typeof createChart> | null = null;
   let chartReady = false;
   let rafId: number | null = null;
-  let timeoutId: number | null = null;
   let error: string | null = null;
-
-  // Debounce expensive chart updates
-  function debouncedUpdate(fn: () => void) {
-    if (timeoutId !== null) {
-      clearTimeout(timeoutId);
-    }
-    timeoutId = setTimeout(() => {
-      fn();
-      timeoutId = null;
-    }, 100);
-  }
 
   onMount(async () => {
     try {
@@ -83,29 +71,21 @@
     if (rafId !== null) {
       cancelAnimationFrame(rafId);
     }
-    if (timeoutId !== null) {
-      clearTimeout(timeoutId);
-    }
     destroy();
     chart?.destroy?.();
   });
 
   // Update candles when data changes (with rAF)
   $: if ($data && chart && chartReady) {
-    debouncedUpdate(() => {
-      requestAnimationFrame(() => {
-        chart?.setIndicators($indicators);
-        chart?.setCandles($data.candles);
-      });
+    requestAnimationFrame(() => {
+      chart?.setCandles($data.candles);
     });
   }
 
   // Update indicators when changed (with rAF)
   $: if (chart && chartReady) {
-    debouncedUpdate(() => {
-      requestAnimationFrame(() => {
-        chart?.setIndicators($indicators);
-      });
+    requestAnimationFrame(() => {
+      chart?.setIndicators($indicators);
     });
   }
 

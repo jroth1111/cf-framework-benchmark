@@ -75,7 +75,6 @@ export default function Page() {
         const data = await fetchCandles(symbol, timeframe, points);
         if (cancelled) return;
         requestAnimationFrame(() => {
-          chartRef.current?.setIndicators(deferredIndicators);
           chartRef.current?.setCandles(data.candles);
         });
         markChartReady(symbol, timeframe);
@@ -90,7 +89,7 @@ export default function Page() {
     return () => {
       cancelled = true;
     };
-  }, [deferredIndicators, symbol, timeframe]);
+  }, [symbol, timeframe]);
 
   const setIndicator = (key: keyof typeof indicators, value: boolean) => {
     startTransition(() => {

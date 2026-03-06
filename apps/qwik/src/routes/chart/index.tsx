@@ -44,14 +44,17 @@ export default component$(() => {
 
   const chartRef = useSignal<ReturnType<typeof createChart>>();
 
+  const currentIndicators = () => ({
+    sma20: sma20.value,
+    sma50: sma50.value,
+    ema20: ema20.value,
+    volume: volume.value,
+  });
+
   useVisibleTask$(async ({ track }) => {
     track(() => canvasRef.value);
     track(() => symbol.value);
     track(() => timeframe.value);
-    track(() => sma20.value);
-    track(() => sma50.value);
-    track(() => ema20.value);
-    track(() => volume.value);
 
     try {
       if (!canvasRef.value) {
@@ -66,6 +69,7 @@ export default component$(() => {
           },
         });
         chartRef.value.resize();
+        chartRef.value.setIndicators(currentIndicators());
       }
 
       status.value = "loading";
@@ -75,12 +79,6 @@ export default component$(() => {
       startChartSwitch();
 
       const data = await fetchCandles(symbol.value, timeframe.value, points);
-      chartRef.value?.setIndicators({
-        sma20: sma20.value,
-        sma50: sma50.value,
-        ema20: ema20.value,
-        volume: volume.value,
-      });
       chartRef.value?.setCandles(data.candles);
 
       markChartReady(symbol.value, timeframe.value);
@@ -92,6 +90,15 @@ export default component$(() => {
       status.value = "error";
       markChartError(errMsg);
     }
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(() => sma20.value);
+    track(() => sma50.value);
+    track(() => ema20.value);
+    track(() => volume.value);
+
+    chartRef.value?.setIndicators(currentIndicators());
   });
 
   return (

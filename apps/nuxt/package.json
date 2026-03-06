@@ -26,6 +26,6 @@
 		"h3": "2.0.1-rc.14",
 		"nitro-cloudflare-dev": "^0.2.2",
 		"nitropack": "^2.13.1",
-		"wrangler": "^4.70.0"
+		"wrangler": "^4.71.0"
 	}
 }

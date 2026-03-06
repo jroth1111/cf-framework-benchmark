@@ -33,6 +33,6 @@
 		"miniflare": "^4.20260305.0",
 		"tailwindcss": "^4.2.1",
 		"typescript": "^5.9.3",
-		"wrangler": "^4.70.0"
+		"wrangler": "^4.71.0"
 	}
 }

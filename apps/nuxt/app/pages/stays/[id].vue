@@ -13,7 +13,7 @@ if (!listing) {
 
 <template>
   <div>
-    <NuxtLink class="pill" to="/stays">← Back to stays</NuxtLink>
+    <NuxtLink class="pill" no-prefetch to="/stays">← Back to stays</NuxtLink>
     <h1 class="h1">{{ listing.title }}</h1>
     <div class="small muted">{{ listing.city }}, {{ listing.country }} • {{ listing.neighborhood }}</div>
     <div class="card" style="margin-top: 12px">

@@ -1,24 +1,8 @@
 <script lang="ts">
   import { formatUsd, type Listing } from "@cf-bench/dataset";
-  import { goto } from "$app/navigation";
   import type { PageData } from "./$types";
 
   export let data: PageData;
-
-  async function navigateToStay(id: string) {
-    try {
-      console.log(`[SvelteKit] Navigating to /stays/${id}`);
-      await goto(`/stays/${id}`, {
-        noScroll: true,
-        keepFocus: true,
-      });
-      console.log(`[SvelteKit] Navigation successful`);
-    } catch (err) {
-      console.error('[SvelteKit] Navigation error:', err);
-      // Fallback: use anchor tag navigation
-      window.location.href = `/stays/${id}`;
-    }
-  }
 
   let city = data.city;
   let maxRaw = data.maxRaw;
@@ -53,14 +37,11 @@
 
 <div class="grid cols-2">
   {#each filtered as l (l.id)}
-    <div
+    <a
       class="card"
       data-testid="stay-card"
-      style="padding:14px;cursor:pointer;user-select:none;"
-      role="button"
-      tabindex="0"
-      on:click={() => navigateToStay(l.id)}
-      on:keydown={(e) => e.key === 'Enter' && navigateToStay(l.id)}
+      href={`/stays/${l.id}`}
+      style="padding:14px;display:block"
     >
       <div style="display:flex;justify-content:space-between;gap:12px">
         <div>
@@ -75,6 +56,6 @@
         </div>
       </div>
       <div class="muted small" style="margin-top:10px">{l.summary}</div>
-    </div>
+    </a>
   {/each}
 </div>

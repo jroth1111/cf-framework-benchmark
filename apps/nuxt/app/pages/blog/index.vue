@@ -14,6 +14,7 @@ useBenchPage("list");
         :to="`/blog/${post.slug}`"
         data-testid="blog-post-card"
         class="card"
+        no-prefetch
       >
         <div style="font-weight: 700">{{ post.title }}</div>
         <div class="small muted">{{ post.dateISO }} • {{ post.readingMinutes }} min read</div>

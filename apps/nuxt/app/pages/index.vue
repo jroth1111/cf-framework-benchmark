@@ -13,23 +13,23 @@ const featured = listings.slice(0, 6);
       <div class="card">
         <h2>MPA stays flow</h2>
         <p class="muted">Listing index and detail routes rendered by Nuxt on Workers.</p>
-        <p><NuxtLink class="pill" to="/stays">Open stays</NuxtLink></p>
+        <p><NuxtLink class="pill" no-prefetch to="/stays">Open stays</NuxtLink></p>
       </div>
       <div class="card">
         <h2>SPA chart flow</h2>
         <p class="muted">Interactive chart controls and canvas measurements.</p>
-        <p><NuxtLink class="pill" to="/chart">Open chart</NuxtLink></p>
+        <p><NuxtLink class="pill" no-prefetch to="/chart">Open chart</NuxtLink></p>
       </div>
       <div class="card">
         <h2>Media flow</h2>
         <p class="muted">Open and next interactions with benchmark markers.</p>
-        <p><NuxtLink class="pill" to="/media">Open media</NuxtLink></p>
+        <p><NuxtLink class="pill" no-prefetch to="/media">Open media</NuxtLink></p>
       </div>
     </div>
 
     <h2 style="margin-top: 24px">Featured stays</h2>
     <div class="grid cols-3">
-      <NuxtLink v-for="listing in featured" :key="listing.id" class="card" :to="`/stays/${listing.id}`">
+      <NuxtLink v-for="listing in featured" :key="listing.id" class="card" no-prefetch :to="`/stays/${listing.id}`">
         <div style="font-weight: 700">{{ listing.title }}</div>
         <div class="small muted">{{ listing.city }}, {{ listing.country }}</div>
         <div style="margin-top: 8px">

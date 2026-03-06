@@ -20,6 +20,7 @@ const data = queryListings({ page, pageSize: 12 });
         :to="`/stays/${listing.id}`"
         data-testid="stay-card"
         class="card"
+        no-prefetch
       >
         <div style="font-weight: 700">{{ listing.title }}</div>
         <div class="small muted">

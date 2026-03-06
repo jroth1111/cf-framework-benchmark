@@ -1,12 +1,12 @@
 <template>
   <div>
     <header class="container nav">
-      <NuxtLink class="brand" to="/">CF Bench</NuxtLink>
+      <NuxtLink class="brand" no-prefetch to="/">CF Bench</NuxtLink>
       <nav class="links">
-        <NuxtLink class="pill" to="/stays">Stays</NuxtLink>
-        <NuxtLink class="pill" to="/chart">Chart</NuxtLink>
-        <NuxtLink class="pill" to="/media">Media</NuxtLink>
-        <NuxtLink class="pill" to="/blog">Blog</NuxtLink>
+        <NuxtLink class="pill" no-prefetch to="/stays">Stays</NuxtLink>
+        <NuxtLink class="pill" no-prefetch to="/chart">Chart</NuxtLink>
+        <NuxtLink class="pill" no-prefetch to="/media">Media</NuxtLink>
+        <NuxtLink class="pill" no-prefetch to="/blog">Blog</NuxtLink>
       </nav>
     </header>
     <main class="container">

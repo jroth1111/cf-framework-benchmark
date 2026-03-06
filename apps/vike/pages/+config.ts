@@ -9,6 +9,7 @@ export default {
   title: "CF Bench | Vike",
   description: "Cloudflare Workers benchmark implementation built with Vike.",
   prerender: true,
+  prefetchStaticAssets: false,
 
   extends: [vikeReact, vikePhoton],
 } satisfies Config;

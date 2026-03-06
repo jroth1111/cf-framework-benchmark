@@ -13,7 +13,7 @@ if (!post) {
 
 <template>
   <div>
-    <NuxtLink class="pill" to="/blog">← Back to blog</NuxtLink>
+    <NuxtLink class="pill" no-prefetch to="/blog">← Back to blog</NuxtLink>
     <h1 class="h1">{{ post.title }}</h1>
     <div class="small muted">{{ post.dateISO }} • {{ post.readingMinutes }} min read</div>
     <div class="card" style="margin-top: 12px">

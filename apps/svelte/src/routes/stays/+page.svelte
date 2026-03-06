@@ -71,9 +71,9 @@
   <div class="grid cols-2">
     {#each [1, 2, 3, 4, 5, 6] as i}
       <div class="card" style="padding: 14px; min-height: 200px;">
-        <div class="skeleton" style="height: 24px; width: 60%; margin-bottom: 12px;" />
-        <div class="skeleton" style="height: 16px; width: 40%; margin-bottom: 8px;" />
-        <div class="skeleton" style="height: 20px; width: 30%;" />
+        <div class="skeleton" style="height: 24px; width: 60%; margin-bottom: 12px;"></div>
+        <div class="skeleton" style="height: 16px; width: 40%; margin-bottom: 8px;"></div>
+        <div class="skeleton" style="height: 20px; width: 30%;"></div>
       </div>
     {/each}
   </div>

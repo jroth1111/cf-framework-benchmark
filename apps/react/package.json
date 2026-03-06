@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "dev": "vite --port 5179",
-        "build": "vite build",
+        "generate": "tsx ./scripts/generate-pages.mjs",
+        "build": "pnpm run generate && vite build",
         "preview": "pnpm run build && wrangler dev --port 8794 --inspector-port 9237",
         "deploy": "pnpm run build && wrangler deploy --minify"
     },

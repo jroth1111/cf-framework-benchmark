@@ -1,30 +1,21 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Layout } from "./components/Layout";
-import { Home } from "./pages/Home";
-import { Stays } from "./pages/Stays";
-import { StayDetail } from "./pages/StayDetail";
-import { Chart } from "./pages/Chart";
-import { Media } from "./pages/Media";
-import { Blog } from "./pages/Blog";
-import { BlogPost } from "./pages/BlogPost";
+import { hydrateRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { App } from "./App";
 import "./main.css";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+hydrateRoot(
+    document.getElementById("root")!,
     <React.StrictMode>
         <BrowserRouter>
-            <Layout>
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/stays" element={<Stays />} />
-                    <Route path="/stays/:id" element={<StayDetail />} />
-                    <Route path="/chart" element={<Chart />} />
-                    <Route path="/media" element={<Media />} />
-                    <Route path="/blog" element={<Blog />} />
-                    <Route path="/blog/:slug" element={<BlogPost />} />
-                </Routes>
-            </Layout>
+            <App />
         </BrowserRouter>
     </React.StrictMode>
 );
+
+requestAnimationFrame(() => {
+    const w = window as any;
+    w.__CF_BENCH__ = w.__CF_BENCH__ || {};
+    const hydration = (w.__CF_BENCH__.hydration = w.__CF_BENCH__.hydration || {});
+    hydration.endMs = performance.now();
+});

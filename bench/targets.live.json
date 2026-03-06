@@ -29,6 +29,11 @@
       "url": "https://cf-bench-qwik.gwizz.workers.dev"
     },
     {
+      "framework": "react",
+      "platform": "workers",
+      "url": "https://cf-bench-react.gwizz.workers.dev"
+    },
+    {
       "framework": "react-router",
       "platform": "workers",
       "url": "https://cf-bench-react-router.gwizz.workers.dev"

@@ -1,13 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import type { MediaItem } from "@cf-bench/dataset";
-
-type MediaResponse = {
-  total: number;
-  totalPages: number;
-  page: number;
-  pageSize: number;
-  results: MediaItem[];
-};
+import { useMemo, useState } from "react";
+import { queryMedia } from "@cf-bench/dataset";
 
 function ensureBenchMedia() {
   const w = window as any;
@@ -17,41 +9,10 @@ function ensureBenchMedia() {
 }
 
 export function Media() {
-  const [items, setItems] = useState<MediaItem[]>([]);
+  const initialItems = queryMedia({ pageSize: 30 }).results;
+  const [items] = useState(initialItems);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function run() {
-      setStatus("loading");
-      try {
-        const res = await fetch("/api/media?pageSize=30");
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = (await res.json()) as MediaResponse;
-        if (cancelled) return;
-        setItems(data.results || []);
-        setSelectedIndex(0);
-        setStatus("ready");
-
-        const media = ensureBenchMedia();
-        media.ready = true;
-      } catch (err) {
-        if (cancelled) return;
-        setStatus("error");
-        const media = ensureBenchMedia();
-        media.ready = true;
-        media.error = true;
-        media.errorMessage = err instanceof Error ? err.message : String(err);
-      }
-    }
-
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const status = items.length ? "ready" : "error";
 
   const selected = useMemo(() => items[selectedIndex] ?? null, [items, selectedIndex]);
 
@@ -86,7 +47,6 @@ export function Media() {
       <div className="grid cols-2" style={{ gap: 16 }}>
         <div className="card" style={{ padding: 14 }}>
           <h2 style={{ marginTop: 0 }}>Feed</h2>
-          {status === "loading" && <p className="muted">Loading media…</p>}
           {status === "error" && <p className="muted">Failed to load media.</p>}
           <div style={{ display: "grid", gap: 10, maxHeight: 560, overflow: "auto" }}>
             {items.map((item, idx) => (

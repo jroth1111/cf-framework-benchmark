@@ -1,53 +1,9 @@
-import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { formatUsd } from "@cf-bench/dataset";
-
-interface Listing {
-    id: string;
-    title: string;
-    city: string;
-    country: string;
-    neighborhood: string;
-    pricePerNight: number;
-    cleaningFee: number;
-    serviceFee: number;
-    rating: number;
-    reviews: number;
-    maxGuests: number;
-    bedrooms: number;
-    baths: number;
-    tags: string[];
-    amenities: string[];
-    hostName: string;
-    hostSinceISO: string;
-    superhost: boolean;
-    summary: string;
-    descriptionHtml: string;
-    reviewSamples: { name: string; dateISO: string; rating: number; text: string }[];
-}
+import { formatUsd, getListing } from "@cf-bench/dataset";
 
 export function StayDetail() {
     const { id } = useParams<{ id: string }>();
-    const [listing, setListing] = useState<Listing | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if (!id) return;
-        const controller = new AbortController();
-        setLoading(true);
-        fetch(`/api/listings/${id}`, { signal: controller.signal })
-            .then((r) => r.json() as Promise<{ listing: Listing }>)
-            .then((d) => {
-                setListing(d.listing);
-                setLoading(false);
-            })
-            .catch((e) => {
-                if (e.name !== "AbortError") setLoading(false);
-            });
-        return () => controller.abort();
-    }, [id]);
-
-    if (loading) return <p>Loading...</p>;
+    const listing = id ? getListing(id) : null;
     if (!listing) return <p>Listing not found</p>;
 
     return (
@@ -91,16 +47,6 @@ export function StayDetail() {
 
                 <h3 style={{ marginTop: 24 }}>About this place</h3>
                 <div data-testid="stay-description" dangerouslySetInnerHTML={{ __html: listing.descriptionHtml }} />
-
-                <h3 style={{ marginTop: 24 }}>Reviews</h3>
-                <div style={{ display: "grid", gap: 12 }}>
-                    {listing.reviewSamples.map((r, i) => (
-                        <div key={i} className="review">
-                            <strong>{r.name}</strong> <span className="muted small">{r.rating} ★ • {r.dateISO}</span>
-                            <p className="muted">{r.text}</p>
-                        </div>
-                    ))}
-                </div>
             </div>
         </>
     );

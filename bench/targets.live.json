@@ -62,6 +62,11 @@
       "framework": "vike",
       "platform": "workers",
       "url": "https://cf-bench-vike.gwizz.workers.dev"
+    },
+    {
+      "framework": "vue",
+      "platform": "workers",
+      "url": "https://cf-bench-vue.gwizz.workers.dev"
     }
   ]
 }

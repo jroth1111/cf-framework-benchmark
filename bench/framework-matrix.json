@@ -139,8 +139,8 @@
     },
     {
       "name": "vue",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/vue",
       "deploy": {
         "type": "workers",

@@ -6,7 +6,6 @@ import {
   DEFAULT_TARGETS_PATH,
   loadMatrix,
   parseCsvSet,
-  resolveLiveTargets,
   toAbsolutePath,
 } from "../bench/src/config-v3.mjs";
 
@@ -59,14 +58,17 @@ function extractDeployUrl(output) {
   return urls[urls.length - 1] || null;
 }
 
-async function updateTargets(targetsPath, deployedMap) {
-  const doc = JSON.parse(await fs.readFile(targetsPath, "utf8"));
-  const rows = Array.isArray(doc.targets) ? doc.targets : [];
-
-  for (const row of rows) {
-    const nextUrl = deployedMap.get(row.framework);
-    if (nextUrl) row.url = nextUrl;
-  }
+async function updateTargets(targetsPath, frameworks, deployedMap) {
+  const doc = {
+    schemaVersion: "1.0.0",
+    generatedAt: new Date().toISOString(),
+    source: "bench/framework-matrix.json",
+    targets: frameworks.map((framework) => ({
+      framework: framework.name,
+      platform: "workers",
+      url: deployedMap.get(framework.name),
+    })),
+  };
 
   await fs.writeFile(targetsPath, `${JSON.stringify(doc, null, 2)}\n`);
 }
@@ -77,41 +79,42 @@ async function main() {
   const targetsPath = toAbsolutePath(argValue("--targets", null), DEFAULT_TARGETS_PATH);
   const noWrite = process.argv.includes("--no-write");
 
-  const [liveTargets, matrix] = await Promise.all([
-    resolveLiveTargets({
-      matrixPath,
-      targetsPath,
-      only,
-      requireWorkers: true,
-      requireEnabled: true,
-    }),
-    loadMatrix(matrixPath),
-  ]);
+  const matrix = await loadMatrix(matrixPath);
+  const frameworks = matrix.frameworks.filter((framework) => {
+    if (!framework?.benchmarkEnabled) return false;
+    if (String(framework?.deploy?.type || "") !== "workers") return false;
+    if (only.size && !only.has(framework.name)) return false;
+    return true;
+  });
+
+  if (!frameworks.length) {
+    throw new Error("No benchmark-enabled Workers frameworks selected for deployment.");
+  }
 
   const deployed = new Map();
-  for (const target of liveTargets) {
-    const meta = matrix.byName.get(target.name);
+  for (const framework of frameworks) {
+    const meta = matrix.byName.get(framework.name);
     const command = String(meta?.deploy?.command || "").trim();
     if (!command) {
-      throw new Error(`Missing deploy.command for framework ${target.name} in matrix.`);
+      throw new Error(`Missing deploy.command for framework ${framework.name} in matrix.`);
     }
 
-    console.log(`\n==> Deploying ${target.name}`);
+    console.log(`\n==> Deploying ${framework.name}`);
     const result = await runAndCollect(command);
     const url = extractDeployUrl(result.combined);
     if (!url) {
-      throw new Error(`Failed to detect deploy URL for ${target.name}.`);
+      throw new Error(`Failed to detect deploy URL for ${framework.name}.`);
     }
     if (/\.pages\.dev\b/i.test(url)) {
-      throw new Error(`Deploy for ${target.name} returned pages.dev URL (${url}).`);
+      throw new Error(`Deploy for ${framework.name} returned pages.dev URL (${url}).`);
     }
 
-    deployed.set(target.name, url.replace(/\/$/, ""));
-    console.log(`✓ ${target.name} -> ${url}`);
+    deployed.set(framework.name, url.replace(/\/$/, ""));
+    console.log(`✓ ${framework.name} -> ${url}`);
   }
 
   if (!noWrite) {
-    await updateTargets(targetsPath, deployed);
+    await updateTargets(targetsPath, frameworks, deployed);
     console.log(`\nUpdated ${targetsPath}`);
   }
 

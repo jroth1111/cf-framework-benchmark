@@ -18,6 +18,10 @@ async function main() {
   const targets = Array.isArray(targetsDoc.targets) ? targetsDoc.targets : [];
   const matrix = Array.isArray(matrixDoc.frameworks) ? matrixDoc.frameworks : [];
   const matrixByName = new Map(matrix.map((fw) => [fw.name, fw]));
+  const expectedWorkers = matrix
+    .filter((fw) => fw?.benchmarkEnabled && String(fw?.deploy?.type || '') === 'workers')
+    .map((fw) => fw.name);
+  const actualWorkers = targets.map((target) => target.framework).filter(Boolean);
 
   const failures = [];
   const seen = new Set();
@@ -60,6 +64,18 @@ async function main() {
     if (!fwMeta?.benchmarkEnabled) {
       failures.push(`Framework ${framework} is targeted live but benchmarkEnabled is false in matrix.`);
     }
+  }
+
+  const expectedSet = new Set(expectedWorkers);
+  const actualSet = new Set(actualWorkers);
+  const missing = expectedWorkers.filter((framework) => !actualSet.has(framework));
+  const extra = actualWorkers.filter((framework) => !expectedSet.has(framework));
+
+  if (missing.length) {
+    failures.push(`Missing workers targets for enabled frameworks: ${missing.join(', ')}`);
+  }
+  if (extra.length) {
+    failures.push(`Targets exist for non-enabled or non-workers frameworks: ${extra.join(', ')}`);
   }
 
   if (failures.length) {

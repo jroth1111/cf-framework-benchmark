@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-03-05T00:00:00.000Z",
+  "generatedAt": "2026-03-06T00:00:00.000Z",
   "source": "bench/framework-matrix.json",
   "targets": [
     {
@@ -22,16 +22,6 @@
       "framework": "qwik",
       "platform": "workers",
       "url": "https://cf-bench-qwik.gwizz.workers.dev"
-    },
-    {
-      "framework": "react",
-      "platform": "workers",
-      "url": "https://cf-bench-react.gwizz.workers.dev"
-    },
-    {
-      "framework": "solid",
-      "platform": "workers",
-      "url": "https://cf-bench-solid.gwizz.workers.dev"
     },
     {
       "framework": "svelte",

@@ -7,6 +7,5 @@ export function benchCacheHeader(profile: string | null | undefined, kind: Bench
   if (profile === "idiomatic" || profile === "mobile-cold") {
     return kind === "detail" ? CACHE_DETAIL : CACHE_LIST;
   }
-  if (profile === "parity") return "no-store";
-  return null;
+  return "no-store";
 }

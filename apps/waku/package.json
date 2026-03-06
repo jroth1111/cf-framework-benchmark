@@ -9,7 +9,7 @@
 		"build": "CLOUDFLARE=1 pnpm exec waku build",
 		"start": "wrangler dev",
 		"deploy": "pnpm run build && wrangler deploy --config wrangler.jsonc",
-		"preview": "wrangler dev --config wrangler.jsonc"
+		"preview": "pnpm run build && wrangler dev --config wrangler.jsonc"
 	},
 	"dependencies": {
 		"@cf-bench/bench-contract": "workspace:*",

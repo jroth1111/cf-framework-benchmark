@@ -1,7 +1,7 @@
 {
-  "name": "@redwoodjs/starter",
+  "name": "cf-bench-redwood",
   "version": "1.0.0",
-  "description": "A bare-bones RedwoodSDK starter",
+  "description": "Cloudflare Workers benchmark app for RedwoodSDK",
   "main": "index.js",
   "type": "module",
   "keywords": [],

@@ -8,7 +8,7 @@
 		"deploy": "pnpm run build && wrangler deploy",
 		"dev": "react-router dev",
 		"postinstall": "npm run cf-typegen",
-		"preview": "pnpm run build && vite preview",
+		"preview": "pnpm run build && wrangler dev",
 		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b"
 	},
 	"dependencies": {

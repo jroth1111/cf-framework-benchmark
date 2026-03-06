@@ -1,45 +1,16 @@
-/**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
- */
 {
-	// Schema reference for wrangler configuration
 	"$schema": "node_modules/wrangler/config-schema.json",
-	// Name of your worker
 	"name": "cf-bench-redwood",
-	// Entry point for your worker
 	"main": "src/worker.tsx",
-	// Compatibility settings
 	"compatibility_date": "2026-03-05",
 	"compatibility_flags": [
 		"nodejs_compat"
 	],
-	// Assets configuration
 	"assets": {
-		"binding": "ASSETS"
+		"binding": "ASSETS",
+		"directory": "./dist/client"
 	},
-	// Observability settings
 	"observability": {
 		"enabled": true
-	},
-	// Environment variables
-	"vars": {
-		// Add your environment variables here
 	}
-	/**
-	 * Smart Placement
-	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
-	// "placement": {  "mode": "smart" }
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
 }

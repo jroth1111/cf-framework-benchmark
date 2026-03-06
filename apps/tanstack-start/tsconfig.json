@@ -10,6 +10,7 @@
   "include": [
     "app",
     "app.config.ts",
-    "vite.config.ts"
+    "vite.config.ts",
+    "worker"
   ]
 }

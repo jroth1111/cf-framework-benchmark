@@ -1,10 +1,9 @@
-import { createFileRoute } from '@tanstack/solid-router'
-import { Blog } from '../../../solid/src/pages/Blog'
+import { Outlet, createFileRoute } from '@tanstack/solid-router'
 
 export const Route = createFileRoute('/blog')({
-  component: BlogPage,
+  component: BlogLayout,
 })
 
-function BlogPage() {
-  return <Blog />
+function BlogLayout() {
+  return <Outlet />
 }

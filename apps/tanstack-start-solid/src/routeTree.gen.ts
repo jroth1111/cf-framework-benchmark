@@ -14,6 +14,8 @@ import { Route as MediaRouteImport } from './routes/media'
 import { Route as ChartRouteImport } from './routes/chart'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as StaysIndexRouteImport } from './routes/stays.index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as StaysIdRouteImport } from './routes/stays.$id'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiPricesRouteImport } from './routes/api.prices'
@@ -47,6 +49,16 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const StaysIndexRoute = StaysIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StaysRoute,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BlogRoute,
 } as any)
 const StaysIdRoute = StaysIdRouteImport.update({
   id: '/$id',
@@ -102,14 +114,14 @@ export interface FileRoutesByFullPath {
   '/api/prices': typeof ApiPricesRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/stays/$id': typeof StaysIdRoute
+  '/blog/': typeof BlogIndexRoute
+  '/stays/': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/blog': typeof BlogRouteWithChildren
   '/chart': typeof ChartRoute
   '/media': typeof MediaRoute
-  '/stays': typeof StaysRouteWithChildren
   '/api/bench': typeof ApiBenchRoute
   '/api/health': typeof ApiHealthRoute
   '/api/listings': typeof ApiListingsRouteWithChildren
@@ -117,6 +129,8 @@ export interface FileRoutesByTo {
   '/api/prices': typeof ApiPricesRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/stays/$id': typeof StaysIdRoute
+  '/blog': typeof BlogIndexRoute
+  '/stays': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
 }
 export interface FileRoutesById {
@@ -133,6 +147,8 @@ export interface FileRoutesById {
   '/api/prices': typeof ApiPricesRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/stays/$id': typeof StaysIdRoute
+  '/blog/': typeof BlogIndexRoute
+  '/stays/': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
 }
 export interface FileRouteTypes {
@@ -150,14 +166,14 @@ export interface FileRouteTypes {
     | '/api/prices'
     | '/blog/$slug'
     | '/stays/$id'
+    | '/blog/'
+    | '/stays/'
     | '/api/listings/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/blog'
     | '/chart'
     | '/media'
-    | '/stays'
     | '/api/bench'
     | '/api/health'
     | '/api/listings'
@@ -165,6 +181,8 @@ export interface FileRouteTypes {
     | '/api/prices'
     | '/blog/$slug'
     | '/stays/$id'
+    | '/blog'
+    | '/stays'
     | '/api/listings/$id'
   id:
     | '__root__'
@@ -180,6 +198,8 @@ export interface FileRouteTypes {
     | '/api/prices'
     | '/blog/$slug'
     | '/stays/$id'
+    | '/blog/'
+    | '/stays/'
     | '/api/listings/$id'
   fileRoutesById: FileRoutesById
 }
@@ -232,6 +252,20 @@ declare module '@tanstack/solid-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/stays/': {
+      id: '/stays/'
+      path: '/'
+      fullPath: '/stays/'
+      preLoaderRoute: typeof StaysIndexRouteImport
+      parentRoute: typeof StaysRoute
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof BlogRoute
     }
     '/stays/$id': {
       id: '/stays/$id'
@@ -294,20 +328,24 @@ declare module '@tanstack/solid-router' {
 
 interface BlogRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
 }
 
 const BlogRouteChildren: BlogRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
 }
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
 
 interface StaysRouteChildren {
   StaysIdRoute: typeof StaysIdRoute
+  StaysIndexRoute: typeof StaysIndexRoute
 }
 
 const StaysRouteChildren: StaysRouteChildren = {
   StaysIdRoute: StaysIdRoute,
+  StaysIndexRoute: StaysIndexRoute,
 }
 
 const StaysRouteWithChildren = StaysRoute._addFileChildren(StaysRouteChildren)

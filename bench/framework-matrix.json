@@ -89,8 +89,8 @@
     },
     {
       "name": "redwood",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/redwood",
       "deploy": {
         "type": "workers",

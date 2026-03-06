@@ -55,8 +55,8 @@
       "name": "analog",
       "c3Template": "analog",
       "benchmarkVariantOf": "analog",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/analog",
       "deploy": {
         "type": "workers",
@@ -121,8 +121,8 @@
         "backend": "hono",
         "frontend": "solid"
       },
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/hono-solid",
       "deploy": {
         "type": "workers",
@@ -137,8 +137,8 @@
         "backend": "hono",
         "frontend": "svelte"
       },
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/hono-svelte",
       "deploy": {
         "type": "workers",
@@ -153,8 +153,8 @@
         "backend": "hono",
         "frontend": "vue"
       },
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/hono-vue",
       "deploy": {
         "type": "workers",
@@ -247,8 +247,8 @@
       "name": "solidstart",
       "c3Template": "solid",
       "benchmarkVariantOf": "solid",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/solidstart",
       "deploy": {
         "type": "workers",
@@ -279,8 +279,8 @@
       "name": "tanstack-start-solid",
       "c3Template": "tanstack-start",
       "benchmarkVariantOf": "tanstack-start",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/tanstack-start-solid",
       "deploy": {
         "type": "workers",

@@ -1,7 +1,10 @@
 import { createEffect, onCleanup, onMount, createSignal, For, Show, ErrorBoundary } from "solid-js";
 import { useChart as useChartSolid } from "@cf-bench/chart-hooks/solid";
-import { markChartReady, markChartError, updateChartCoreMetrics } from "@cf-bench/bench-types";
+import { markChartError, updateChartCoreMetrics } from "@cf-bench/bench-types";
 import { Layout } from "../components/Layout";
+
+type ChartModule = typeof import("@cf-bench/chart-core");
+type ChartInstance = ReturnType<ChartModule["createChart"]>;
 
 export function Chart() {
   const [, setError] = createSignal<string | null>(null);
@@ -38,10 +41,18 @@ function ChartInner(props: { onError: (error: string) => void }) {
 
   const [chartReady, setChartReady] = createSignal(false);
   let canvasRef: HTMLCanvasElement | undefined;
-  let chart: { resize: () => void; destroy: () => void; setCandles: (candles: unknown[]) => void; setIndicators: (indicators: typeof indicators extends () => infer T ? T : never) => void; } | null = null;
+  let chart: ChartInstance | null = null;
   let initFrame: number | null = null;
-  let readyFrame: number | null = null;
+  let updateFrame: number | null = null;
   let cancelled = false;
+
+  const scheduleChartUpdate = (fn: () => void) => {
+    if (updateFrame !== null) cancelAnimationFrame(updateFrame);
+    updateFrame = requestAnimationFrame(() => {
+      updateFrame = null;
+      fn();
+    });
+  };
 
   onMount(() => {
     try {
@@ -57,16 +68,13 @@ function ChartInner(props: { onError: (error: string) => void }) {
 
             chart = createChart(canvasRef, {
               initialViewport: 180,
-              onStats: (stats) => {
-                updateChartCoreMetrics(stats);
-              },
+              onStats: (stats) => updateChartCoreMetrics(stats),
             });
             chart.setIndicators(indicators());
-            readyFrame = requestAnimationFrame(() => {
+            scheduleChartUpdate(() => {
               if (cancelled) return;
               chart?.resize();
               setChartReady(true);
-              markChartReady(symbol(), timeframe());
             });
           } catch (err) {
             try {
@@ -90,7 +98,7 @@ function ChartInner(props: { onError: (error: string) => void }) {
   onCleanup(() => {
     cancelled = true;
     if (initFrame !== null) cancelAnimationFrame(initFrame);
-    if (readyFrame !== null) cancelAnimationFrame(readyFrame);
+    if (updateFrame !== null) cancelAnimationFrame(updateFrame);
     chart?.destroy();
   });
 
@@ -99,11 +107,10 @@ function ChartInner(props: { onError: (error: string) => void }) {
     const nextIndicators = indicators();
 
     if (candles && chart) {
-      const updateFrame = requestAnimationFrame(() => {
+      scheduleChartUpdate(() => {
         chart?.setIndicators(nextIndicators);
         chart?.setCandles(candles.candles);
       });
-      onCleanup(() => cancelAnimationFrame(updateFrame));
     }
   });
 

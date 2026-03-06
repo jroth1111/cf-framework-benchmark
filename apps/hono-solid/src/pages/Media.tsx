@@ -12,20 +12,25 @@ function ensureBenchMedia() {
 export function Media(props: { initialItems?: MediaItem[] }) {
   const initialItems = props.initialItems ?? queryMedia({ pageSize: 30 }).results;
   const [items] = createSignal<MediaItem[]>(initialItems);
-  const [selectedIndex, setSelectedIndex] = createSignal(0);
+  const [selectedIndex, setSelectedIndex] = createSignal<number | null>(null);
+  const [showPoster, setShowPoster] = createSignal(false);
   const [status] = createSignal<"ready" | "error">(initialItems.length ? "ready" : "error");
 
   onMount(() => {
     const media = ensureBenchMedia();
-    media.ready = true;
-    media.currentId = items()[0]?.id || null;
+    media.ready = false;
+    media.currentId = null;
   });
 
-  const selected = createMemo(() => items()[selectedIndex()] ?? null);
+  const selected = createMemo(() => {
+    const index = selectedIndex();
+    return index == null ? null : items()[index] ?? null;
+  });
 
   const openByIndex = (idx: number) => {
     const start = performance.now();
     setSelectedIndex(idx);
+    setShowPoster(true);
     requestAnimationFrame(() => {
       const media = ensureBenchMedia();
       media.openDurationMs = performance.now() - start;
@@ -37,8 +42,9 @@ export function Media(props: { initialItems?: MediaItem[] }) {
   const nextItem = () => {
     if (!items().length) return;
     const start = performance.now();
-    const next = (selectedIndex() + 1) % items().length;
+    const next = ((selectedIndex() ?? -1) + 1) % items().length;
     setSelectedIndex(next);
+    setShowPoster(true);
     requestAnimationFrame(() => {
       const media = ensureBenchMedia();
       media.nextDurationMs = performance.now() - start;
@@ -77,11 +83,16 @@ export function Media(props: { initialItems?: MediaItem[] }) {
             <Show when={selected()} fallback={<p class="muted">Select a media item.</p>}>
               {(item) => (
                 <>
-                  <img
-                    src={item().thumbnail}
-                    alt={item().title}
-                    style="width:100%;max-height:280px;object-fit:cover;border-radius:10px"
-                  />
+                  <Show when={showPoster()}>
+                    <img
+                      src={item().thumbnail}
+                      alt={item().title}
+                      loading="lazy"
+                      decoding="async"
+                      fetchpriority="low"
+                      style="width:100%;max-height:280px;object-fit:cover;border-radius:10px"
+                    />
+                  </Show>
                   <h3>{item().title}</h3>
                   <p class="muted small">{item().channel} • {item().views.toLocaleString()} views</p>
                   <p class="muted">{item().description}</p>

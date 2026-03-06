@@ -7,7 +7,7 @@ import {
   parseCsvSet,
   resolveLiveTargets,
   toAbsolutePath,
-} from "./config-v3.mjs";
+} from "./config-v4.mjs";
 
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);

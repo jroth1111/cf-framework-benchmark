@@ -188,6 +188,7 @@ export async function resolveLiveTargets({
       framework: name,
       url,
       platform,
+      matrixDefaults: matrix.doc?.benchmarkDefaults ?? null,
       matrix: meta,
     });
   }

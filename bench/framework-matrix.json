@@ -44,7 +44,7 @@
         },
         "media": {
           "renderMode": "spa",
-          "initialData": "client-fetch",
+          "initialData": "document",
           "hydrationModel": "framework"
         }
       }

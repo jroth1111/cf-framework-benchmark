@@ -8,7 +8,7 @@ import {
   parseCsvSet,
   resolveLiveTargets,
   toAbsolutePath,
-} from "../bench/src/config-v3.mjs";
+} from "../bench/src/config-v4.mjs";
 
 const require = createRequire(new URL("../bench/package.json", import.meta.url));
 const { chromium } = require("playwright");

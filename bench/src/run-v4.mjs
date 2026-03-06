@@ -10,7 +10,7 @@ import {
   parseCsvSet,
   resolveLiveTargets,
   toAbsolutePath,
-} from './config-v3.mjs';
+} from './config-v4.mjs';
 
 const BENCH_DIR = path.dirname(DEFAULT_TARGETS_PATH);
 
@@ -49,8 +49,8 @@ function mapScenario(sc) {
   return out;
 }
 
-function defaultScenarioContract(scType) {
-  if (scType === 'spa') {
+function defaultScenarioContract(sc) {
+  if (sc.type === 'spa') {
     return {
       renderMode: 'spa',
       initialData: 'client-fetch',
@@ -85,7 +85,7 @@ async function main() {
   const targetsPath = toAbsolutePath(argValue('--targets', null), DEFAULT_TARGETS_PATH);
   const matrixPath = toAbsolutePath(argValue('--matrix', null), DEFAULT_MATRIX_PATH);
   const suitesDir = toAbsolutePath(argValue('--suites-dir', null), DEFAULT_SUITES_DIR);
-  const outPath = toAbsolutePath(argValue('--out', null), path.join(BENCH_DIR, `results.v3.${suiteName}.json`));
+  const outPath = toAbsolutePath(argValue('--out', null), path.join(BENCH_DIR, `results.v4.${suiteName}.json`));
   const only = parseCsvSet(argValue('--only', ''));
 
   const [suite, targets] = await Promise.all([
@@ -105,7 +105,7 @@ async function main() {
     const scenarioContracts = {};
     for (const sc of scenarios) {
       scenarioContracts[sc.name] = {
-        ...defaultScenarioContract(sc.type),
+        ...defaultScenarioContract(sc),
         ...(target.matrix?.scenarioContracts?.[suiteName]?.[sc.name] || {}),
       };
     }
@@ -117,6 +117,7 @@ async function main() {
       implementationKind: target.matrix?.implementationKind || 'native',
       features: { clientNav: false },
       scenarioContracts,
+      deploy: target.matrix?.deploy || null,
     });
   }
 
@@ -148,7 +149,7 @@ async function main() {
     scenarios,
   };
 
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cf-bench-v3-'));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cf-bench-v4-'));
   const tempConfigPath = path.join(tempDir, `config.${suiteName}.json`);
   await fs.writeFile(tempConfigPath, JSON.stringify(config, null, 2));
 

@@ -37,16 +37,16 @@ async function run(label, args) {
 }
 
 function jsonPath(baseDir, suite, repeat) {
-  return path.join(baseDir, `results.v3.${suite}.stability.run${repeat}.json`);
+  return path.join(baseDir, `results.v4.${suite}.stability.run${repeat}.json`);
 }
 
 const repeats = Math.max(1, Number(argValue("--repeats", "3")) || 3);
 const profile = argValue("--profile", "parity");
-const summaryPath = path.resolve(process.cwd(), argValue("--out", "bench/results.v3.stability.json"));
+const summaryPath = path.resolve(process.cwd(), argValue("--out", "bench/results.v4.stability.json"));
 const keepResults = hasFlag("--keep-results");
 const repoBenchDir = path.dirname(summaryPath);
 const rawBaseDir = keepResults
-  ? path.resolve(process.cwd(), argValue("--out-dir", path.join(repoBenchDir, "results.v3.stability.runs")))
+  ? path.resolve(process.cwd(), argValue("--out-dir", path.join(repoBenchDir, "results.v4.stability.runs")))
   : await fs.mkdtemp(path.join(os.tmpdir(), "cf-bench-stability-"));
 
 const passThroughPairs = ["--matrix", "--targets", "--suites-dir", "--only"];
@@ -80,7 +80,7 @@ try {
           "bench",
           "exec",
           "node",
-          "src/run-v3.mjs",
+          "src/run-v4.mjs",
           "--suite",
           suite,
           "--iterations",

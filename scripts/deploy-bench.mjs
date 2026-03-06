@@ -7,7 +7,7 @@ import {
   loadMatrix,
   parseCsvSet,
   toAbsolutePath,
-} from "../bench/src/config-v3.mjs";
+} from "../bench/src/config-v4.mjs";
 
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);

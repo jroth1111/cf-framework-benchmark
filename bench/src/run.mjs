@@ -10,7 +10,7 @@ const require = createRequire(import.meta.url);
 const BENCH_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const REPO_ROOT = path.resolve(BENCH_ROOT, '..');
 
-const DEFAULT_OUT = new URL('../results.v3.json', import.meta.url);
+const DEFAULT_OUT = new URL('../results.v4.json', import.meta.url);
 
 /**
  * Timing constants for benchmark measurements.
@@ -449,7 +449,7 @@ function normalizeFrameworks(frameworks) {
 
 function fallbackScenarioContractForType(type) {
   if (type === 'spa') {
-    return { renderMode: 'spa', initialData: 'client-fetch', hydrationModel: 'framework' };
+    return { renderMode: 'spa', initialData: 'document', hydrationModel: 'framework' };
   }
   return { renderMode: 'ssr', initialData: 'document', hydrationModel: 'framework' };
 }
@@ -1306,7 +1306,7 @@ async function main() {
   const runStartedAt = new Date().toISOString();
   const configPath = arg('--config', null);
   if (!configPath) {
-    throw new Error('Missing --config. Use bench/src/run-v3.mjs for standard v3 runs.');
+    throw new Error('Missing --config. Use bench/src/run-v4.mjs for standard v4 runs.');
   }
   const outPath = arg('--out', DEFAULT_OUT.pathname);
   const config = JSON.parse(await fs.readFile(configPath, 'utf8'));

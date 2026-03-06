@@ -24,7 +24,11 @@ The source of truth for supported frameworks is `pnpm create cloudflare@latest -
 
 ## Output policy
 
-- Produce suite-specific result files (`results.v3.<suite>.json/.md`).
+- Produce suite-specific result files (`results.v3.<suite>.json/.md`) for full benchmark runs.
+- Use suffixed artifacts for non-canonical modes:
+  - smoke: `results.v3.<suite>.smoke.json/.md`
+  - flame: `results.v3.spa_trading_media.flame.json/.md`
+  - stability summary: `results.v3.stability.json/.md`
 - Do not blend fundamentally different rendering contracts into one scoreboard.
 - Any framework that fails contracts is reported explicitly as blocked for that run.
 
@@ -32,4 +36,13 @@ The source of truth for supported frameworks is `pnpm create cloudflare@latest -
 
 - `scripts/check-matrix-drift.mjs`: blocks drift against current C3 framework list.
 - `scripts/verify-workers-targets.mjs`: blocks non-Workers targets.
+- `scripts/verify-live.mjs`: canonical live preflight (`check:matrix`, `check:targets`, `test:contracts`, `smoke`).
+- `scripts/bench-stability.mjs`: repeated live parity benchmark runs with summarized output and default cleanup of raw repeat files.
 
+## Operational commands
+
+- `pnpm verify:live`: PR-safe live preflight.
+- `pnpm bench:smoke`: parity benchmark smoke with suffixed outputs.
+- `pnpm bench:flame`: manual spa flamegraph run with dedicated flame outputs.
+- `pnpm bench:stability`: repeated parity smoke benchmark with `--repeats <n>` and optional `--keep-results`.
+- CI runs `pnpm verify:live`; scheduled/manual benchmark workflow runs full benchmarks after preflight and can optionally add flamegraphs and stability.

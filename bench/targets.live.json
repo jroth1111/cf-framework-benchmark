@@ -19,6 +19,11 @@
       "url": "https://cf-bench-next.gwizz.workers.dev"
     },
     {
+      "framework": "nuxt",
+      "platform": "workers",
+      "url": "https://cf-bench-nuxt.gwizz.workers.dev"
+    },
+    {
       "framework": "qwik",
       "platform": "workers",
       "url": "https://cf-bench-qwik.gwizz.workers.dev"

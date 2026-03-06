@@ -49,8 +49,8 @@
     },
     {
       "name": "nuxt",
-      "status": "scaffolded",
-      "benchmarkEnabled": false,
+      "status": "implemented",
+      "benchmarkEnabled": true,
       "appDir": "apps/nuxt",
       "deploy": {
         "type": "workers",

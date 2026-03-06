@@ -180,6 +180,18 @@ importers:
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
+      '@cf-bench/bench-types':
+        specifier: workspace:*
+        version: link:../../packages/bench-types
+      '@cf-bench/chart-core':
+        specifier: workspace:*
+        version: link:../../packages/chart-core
+      '@cf-bench/dataset':
+        specifier: workspace:*
+        version: link:../../packages/dataset
+      '@cf-bench/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       nuxt:
         specifier: ^4.3.1
         version: 4.3.1(@parcel/watcher@2.5.1)(@types/node@25.3.3)(@vue/compiler-sfc@3.5.29)(aws4fetch@1.0.20)(cac@6.7.14)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.31.1)(magicast@0.5.2)(rolldown@1.0.0-rc.4)(rollup@4.59.0)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(vite@7.3.1(@types/node@25.3.3)(jiti@2.6.1)(lightningcss@1.31.1)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vue-tsc@3.2.5(typescript@5.9.3))(yaml@2.8.2)

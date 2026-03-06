@@ -13,6 +13,10 @@
 	},
 	"dependencies": {
 		"@cf-bench/bench-contract": "workspace:*",
+		"@cf-bench/bench-types": "workspace:*",
+		"@cf-bench/chart-core": "workspace:*",
+		"@cf-bench/dataset": "workspace:*",
+		"@cf-bench/ui": "workspace:*",
 		"nuxt": "^4.3.1",
 		"vue": "^3.5.29",
 		"vue-router": "^4.6.4"

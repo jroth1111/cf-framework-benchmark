@@ -1,27 +1,26 @@
 # Cloudflare Framework Benchmark Harness (Monorepo)
 
-This repository contains **the same demo site** implemented in multiple frameworks and deployed to **Cloudflare (free plan)**.
+This repository contains the same benchmark app implemented across Cloudflare-supported frameworks and deployed to live Cloudflare Workers targets.
 
-Benchmark-enabled framework implementations:
+Framework implementations in the matrix:
 
+- Angular
 - Astro
 - Hono
 - Next.js (OpenNext on Workers)
+- Nuxt
 - Qwik (Qwik City)
 - React
+- React Router
+- RedwoodSDK
 - Solid (SolidJS + Vite)
 - SvelteKit
 - TanStack Start
-
-Tracked but not benchmark-enabled yet:
-
-- Angular
-- Nuxt
-- React Router
-- RedwoodSDK
 - Vike
 - Vue
 - Waku
+
+The standalone control implementation lives in `apps/control` and `bench/controls.json`. It is used for live verification and appendix baselines, not headline framework scoreboards.
 
 ## What this demo site contains
 
@@ -58,7 +57,7 @@ See `docs/metrics-glossary.md` for definitions and metric sources.
 > Notes:
 > - Browser-based “response time” includes network + TLS + CDN edge variance.
 > - To reduce noise, the runner runs multiple iterations and summarizes medians.
-> - v3 benchmarks are Workers-only and run against live `*.workers.dev` targets.
+> - v4 benchmarks are Workers-only and run against live `*.workers.dev` targets.
 
 ## Prerequisites
 
@@ -121,10 +120,10 @@ Profiles:
 
 This produces:
 
-- `bench/results.v3.mpa_airbnb.json`
-- `bench/results.v3.mpa_airbnb.md`
-- `bench/results.v3.spa_trading_media.json`
-- `bench/results.v3.spa_trading_media.md`
+- `bench/results.v4.mpa_airbnb.json`
+- `bench/results.v4.mpa_airbnb.md`
+- `bench/results.v4.spa_trading_media.json`
+- `bench/results.v4.spa_trading_media.md`
 
 Throughput (concurrency) check:
 
@@ -137,7 +136,7 @@ Flamegraph capture (CPU stacks for eval analysis):
 ```bash
 pnpm bench:flame
 # or target custom scope
-pnpm -C bench exec node src/run-v3.mjs --suite spa_trading_media --profile parity --iterations 1 \
+pnpm -C bench exec node src/run-v4.mjs --suite spa_trading_media --profile parity --iterations 1 \
   --flamegraphs \
   --flamegraph-frameworks react,next,nuxt \
   --flamegraph-scenarios chart,media \
@@ -145,7 +144,9 @@ pnpm -C bench exec node src/run-v3.mjs --suite spa_trading_media --profile parit
 ```
 
 This writes `.cpuprofile` artifacts under `bench/flamegraphs/<timestamp>/` and includes hotspot summaries in
-`bench/results.v3.<suite>.json` + `.md`.
+`bench/results.v4.<suite>.json` + `.md`.
+
+Static verification for pull requests runs `pnpm verify:static`. Live contract checks stay in `pnpm verify:live` and in the benchmark workflow preflight.
 
 ## Directory layout
 

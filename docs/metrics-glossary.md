@@ -1,7 +1,7 @@
 # Metrics Glossary
 
-This glossary defines the metrics reported in `bench/results.v3.<suite>.json` and
-`bench/results.v3.<suite>.md`. Summary tables use p50 (median) across iterations.
+This glossary defines the metrics reported in `bench/results.v4.<suite>.json` and
+`bench/results.v4.<suite>.md`. Summary tables use p50 (median) across iterations.
 
 ## Scope
 

@@ -1,5 +1,4 @@
 import { createQwikCity } from "@qwik.dev/router/middleware/cloudflare-pages";
-import { handleBenchmarkRequest } from "@cf-bench/bench-contract";
 import render from "./entry.ssr";
 
 const baseFetch = createQwikCity({ render });
@@ -15,17 +14,15 @@ function cacheKindForPath(pathname: string) {
 }
 
 function cacheHeaderFor(profile: string | null, kind: "list" | "detail" | null) {
-  if (!kind) return null;
   if (profile === "idiomatic" || profile === "mobile-cold") {
-    return kind === "detail" ? CACHE_DETAIL : CACHE_LIST;
+    if (kind === "detail") return CACHE_DETAIL;
+    if (kind === "list") return CACHE_LIST;
   }
   return "no-store";
 }
 
 const fetch: typeof baseFetch = async (request, env, ctx) => {
-  const bench = handleBenchmarkRequest("qwik", request);
-  if (bench) return bench;
-
+  const start = performance.now();
   const response = await baseFetch(request, env, ctx);
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/html")) return response;
@@ -33,10 +30,12 @@ const fetch: typeof baseFetch = async (request, env, ctx) => {
   const url = new URL(request.url);
   const kind = cacheKindForPath(url.pathname);
   const cacheHeader = cacheHeaderFor(request.headers.get(BENCH_PROFILE_HEADER), kind);
-  if (!cacheHeader) return response;
 
   const headers = new Headers(response.headers);
   headers.set("cache-control", cacheHeader);
+  if (!headers.has("server-timing")) {
+    headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
+  }
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,

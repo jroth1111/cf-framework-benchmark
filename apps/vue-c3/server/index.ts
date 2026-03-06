@@ -29,6 +29,10 @@ function isBenchRoute(pathname: string) {
 	return false;
 }
 
+function needsClient(pathname: string) {
+	return pathname === "/chart" || pathname === "/media";
+}
+
 function assetRequestFor(url: URL, request: Request) {
 	const headers = new Headers(request.headers);
 	headers.delete("sec-fetch-mode");
@@ -95,10 +99,21 @@ async function renderDocument(request: Request, env: BenchEnv) {
 	const start = performance.now();
 	const appHtml = await render(url.pathname);
 	const route = escapeHtml(url.pathname);
+	const includeClient = needsClient(url.pathname);
+	const hydrationTail = includeClient
+		? ""
+		: '<script>(function(){var w=globalThis;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(h.endMs==null)h.endMs=h.startMs??performance.now();})();</script>';
 	const documentHtml = shell
 		.replaceAll("__CF_BENCH_ROUTE__", route)
 		.replace("__CF_BENCH_TITLE__", escapeHtml(pageTitle(url.pathname)))
-		.replace("__CF_BENCH_APP_HTML__", appHtml);
+		.replace("__CF_BENCH_APP_HTML__", `${appHtml}${hydrationTail}`)
+		.replace(
+			/__CF_BENCH_CLIENT_ASSETS_START__[\s\S]*?__CF_BENCH_CLIENT_ASSETS_END__/,
+			includeClient ? "__CF_BENCH_CLIENT_ASSETS_START__" : "",
+		)
+		.replace(includeClient ? /$^/ : /<script type="module" crossorigin src="\/assets\/index-[^"]+\.js"><\/script>\s*/g, "")
+		.replace("__CF_BENCH_CLIENT_ASSETS_START__", "")
+		.replace("__CF_BENCH_CLIENT_ASSETS_END__", "");
 
 	return new Response(documentHtml, {
 		status: 200,

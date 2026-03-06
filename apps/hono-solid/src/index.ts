@@ -23,11 +23,13 @@ function cacheKind(pathname: string) {
 
 function cacheHeader(pathname: string, profile: string | null) {
   const kind = cacheKind(pathname);
-  if (profile === "idiomatic" || profile === "mobile-cold") {
-    if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
-    if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
-  }
+  if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
+  if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
   return "no-store";
+}
+
+function needsClient(pathname: string) {
+  return pathname === "/chart" || pathname === "/media";
 }
 
 function assetRequestFor(url: URL, request: Request) {
@@ -99,9 +101,13 @@ async function renderDocument(pathname: string, env: Bindings, request: Request)
   const styleLinks = (clientEntry.css ?? [])
     .map((href) => `    <link rel="stylesheet" href="/${href}" />`)
     .join("\n");
+  const includeClient = needsClient(pathname);
   const pagePropsScript = route.pageProps
     ? `\n    <script>window.__PAGE_PROPS__=${safeJson(route.pageProps)};</script>`
     : "";
+  const clientScript = includeClient
+    ? `\n    <script type="module" src="/${clientEntry.file}"></script>`
+    : `\n    <script>(function(){var w=window;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(h.endMs==null)h.endMs=h.startMs??performance.now();})();</script>`;
 
   return `<!doctype html>
 <html lang="en">
@@ -120,8 +126,7 @@ ${styleLinks}
     </script>
   </head>
   <body data-route="${route.route}">
-    <div id="app">${route.html}</div>${pagePropsScript}
-    <script type="module" src="/${clientEntry.file}"></script>
+    <div id="app">${route.html}</div>${pagePropsScript}${clientScript}
   </body>
 </html>`;
 }

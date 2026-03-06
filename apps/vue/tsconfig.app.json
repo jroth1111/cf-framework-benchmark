@@ -5,6 +5,8 @@
   "compilerOptions": {
     // Extra safety for array and object lookups, but may have false positives.
     "noUncheckedIndexedAccess": true,
+    "baseUrl": ".",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
 
     // Path mapping for cleaner imports.
     "paths": {

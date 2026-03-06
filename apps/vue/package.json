@@ -4,9 +4,8 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"generate": "node ./scripts/generate-pages.mjs",
-		"dev": "pnpm run generate && vite",
-		"build": "pnpm run generate && pnpm run type-check && vite build",
+		"dev": "vite",
+		"build": "pnpm run type-check && vite build",
 		"preview": "pnpm run build && wrangler dev",
 		"type-check": "vue-tsc --build",
 		"deploy": "pnpm run build && wrangler deploy",

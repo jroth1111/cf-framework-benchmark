@@ -1,13 +1,23 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="en">
   <head>
     <meta charset="UTF-8">
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
+    <meta name="cf-bench-route" content="__CF_BENCH_ROUTE__">
+    <title>__CF_BENCH_TITLE__</title>
+    <script>
+      (function () {
+        var w = globalThis;
+        w.__CF_BENCH__ = w.__CF_BENCH__ || {};
+        w.__CF_BENCH__.route = "__CF_BENCH_ROUTE__";
+        var hydration = (w.__CF_BENCH__.hydration = w.__CF_BENCH__.hydration || {});
+        if (hydration.startMs == null) hydration.startMs = performance.now();
+      })();
+    </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app" data-route="__CF_BENCH_ROUTE__">__CF_BENCH_APP_HTML__</div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

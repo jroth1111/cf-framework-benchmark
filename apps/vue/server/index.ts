@@ -1,4 +1,6 @@
 import { handleContractApi } from "@cf-bench/bench-contract";
+import { getListing, getPost } from "@cf-bench/dataset";
+import { render } from "../src/entry-server";
 
 type BenchEnv = Env & {
 	ASSETS?: Fetcher;
@@ -19,12 +21,12 @@ function cacheHeader(pathname: string, profile: string | null) {
 	return "no-store";
 }
 
-function resolvePagePath(url: URL) {
-	if (url.pathname.startsWith("/api/")) return null;
-	if (url.pathname.includes(".")) return null;
-	const base = url.pathname.endsWith("/") ? url.pathname.slice(0, -1) : url.pathname;
-	if (!base) return "/pages/index.html";
-	return `/pages${base}/index.html`;
+function isBenchRoute(pathname: string) {
+	if (pathname === "/" || pathname === "/stays" || pathname === "/blog" || pathname === "/chart" || pathname === "/media") {
+		return true;
+	}
+	if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return true;
+	return false;
 }
 
 function assetRequestFor(url: URL, request: Request) {
@@ -39,15 +41,69 @@ function assetRequestFor(url: URL, request: Request) {
 	});
 }
 
-function applyHtmlHeaders(response: Response, pathname: string, profile: string | null, start: number) {
-	const contentType = response.headers.get("content-type") || "";
-	if (!contentType.includes("text/html")) return response;
-	const headers = new Headers(response.headers);
-	headers.set("cache-control", cacheHeader(pathname, profile));
-	if (!headers.has("server-timing")) {
-		headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
+function escapeHtml(value: string) {
+	return value
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;")
+		.replaceAll("'", "&#39;");
+}
+
+function pageTitle(pathname: string) {
+	if (pathname === "/") return "Cloudflare Framework Benchmark";
+	if (pathname === "/stays") return "Stays";
+	if (pathname === "/blog") return "Blog";
+	if (pathname === "/chart") return "Chart";
+	if (pathname === "/media") return "Media";
+	const stayMatch = pathname.match(/^\/stays\/([^/]+)$/);
+	if (stayMatch) return getListing(stayMatch[1])?.title ?? "Listing not found";
+	const blogMatch = pathname.match(/^\/blog\/([^/]+)$/);
+	if (blogMatch) return getPost(blogMatch[1])?.title ?? "Post not found";
+	return "Vue Benchmark";
+}
+
+function htmlHeaders(pathname: string, profile: string | null, start: number) {
+	return new Headers({
+		"content-type": "text/html; charset=utf-8",
+		"cache-control": cacheHeader(pathname, profile),
+		"server-timing": `cf_bench;dur=${(performance.now() - start).toFixed(1)}`,
+	});
+}
+
+let shellPromise: Promise<string> | null = null;
+
+async function getShell(env: BenchEnv, request: Request) {
+	if (!env.ASSETS) return null;
+	if (!shellPromise) {
+		const shellUrl = new URL("/index.html", request.url);
+		shellPromise = env.ASSETS.fetch(assetRequestFor(shellUrl, request)).then(async (response) => {
+			if (!response.ok) {
+				throw new Error(`Failed to load Vue shell: ${response.status}`);
+			}
+			return response.text();
+		});
 	}
-	return new Response(response.body, { ...response, headers });
+	return shellPromise;
+}
+
+async function renderDocument(request: Request, env: BenchEnv) {
+	const shell = await getShell(env, request);
+	if (!shell) return new Response("Not found", { status: 404 });
+
+	const url = new URL(request.url);
+	const start = performance.now();
+	const appHtml = await render(url.pathname);
+	const route = escapeHtml(url.pathname);
+	const documentHtml = shell
+		.replaceAll("__CF_BENCH_ROUTE__", route)
+		.replace("__CF_BENCH_TITLE__", escapeHtml(pageTitle(url.pathname)))
+		.replace("__CF_BENCH_APP_HTML__", appHtml);
+
+	return new Response(documentHtml, {
+		status: 200,
+		headers: htmlHeaders(url.pathname, request.headers.get("x-cf-bench-profile"), start),
+	});
 }
 
 export default {
@@ -55,18 +111,12 @@ export default {
 		const api = handleContractApi("vue", request);
 		if (api) return api;
 
-		if (!env.ASSETS) return new Response("Not found", { status: 404 });
-
 		const url = new URL(request.url);
-		const start = performance.now();
-		const pagePath = resolvePagePath(url);
-		if (pagePath) {
-			const next = new URL(pagePath, url);
-			const res = await env.ASSETS.fetch(assetRequestFor(next, request));
-			return applyHtmlHeaders(res, url.pathname, request.headers.get("x-cf-bench-profile"), start);
+		if (isBenchRoute(url.pathname)) {
+			return renderDocument(request, env);
 		}
 
-		const res = await env.ASSETS.fetch(assetRequestFor(url, request));
-		return applyHtmlHeaders(res, url.pathname, request.headers.get("x-cf-bench-profile"), start);
+		if (!env.ASSETS) return new Response("Not found", { status: 404 });
+		return env.ASSETS.fetch(assetRequestFor(url, request));
 	},
 } satisfies ExportedHandler<Env>;

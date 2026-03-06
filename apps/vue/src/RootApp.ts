@@ -33,7 +33,7 @@ export default defineComponent({
 				]),
 				h("main", { class: "container" }, [
 					h(RouterView),
-					h("div", { class: "footer" }, "Vue variant. Prerendered benchmark pages hydrated on Cloudflare Workers."),
+					h("div", { class: "footer" }, "Vue variant. Request-time SSR on Cloudflare Workers with client hydration."),
 				]),
 			]);
 	},

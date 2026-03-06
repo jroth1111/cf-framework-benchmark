@@ -10,6 +10,7 @@
     }
   },
   "dependencies": {
+    "@cf-bench/bench-utils": "workspace:*",
     "@cf-bench/dataset": "workspace:*"
   }
 }

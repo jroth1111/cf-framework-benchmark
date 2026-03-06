@@ -5,58 +5,7 @@ import {
   getPost,
   queryListings,
 } from "@cf-bench/dataset";
-
-const CACHE = {
-  noStore: "no-store",
-  short: "public, max-age=0, s-maxage=60",
-  detail: "public, max-age=0, s-maxage=300",
-};
-
-function toUrl(input) {
-  if (input instanceof URL) return input;
-  if (input instanceof Request) return new URL(input.url);
-  if (input && typeof input === "object" && typeof input.url === "string") {
-    return new URL(input.url);
-  }
-  if (typeof input === "string") return new URL(input, "https://cf-bench.local");
-  return new URL("https://cf-bench.local");
-}
-
-function getIsolateId() {
-  const g = globalThis;
-  if (!g.__CF_BENCH_ISOLATE_ID) {
-    g.__CF_BENCH_ISOLATE_ID = crypto.randomUUID();
-  }
-  return g.__CF_BENCH_ISOLATE_ID;
-}
-
-function withServerTiming(headers, start) {
-  const h = new Headers(headers || {});
-  const dur = typeof start === "number" ? performance.now() - start : null;
-  if (!h.has("server-timing")) {
-    if (dur == null) {
-      h.set("server-timing", `cf_bench;desc="${getIsolateId()}"`);
-    } else {
-      h.set("server-timing", `cf_bench;dur=${dur.toFixed(1)};desc="${getIsolateId()}"`);
-    }
-  }
-  return h;
-}
-
-function parseIntParam(value, fallback) {
-  if (value == null || value === "") return fallback;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function esc(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
+import { CACHE, esc, parseIntParam, toUrl, withServerTiming } from "@cf-bench/bench-utils";
 
 function shell(framework, title, body, extraHead = "") {
   return `<!doctype html>
@@ -347,16 +296,38 @@ function mediaPage(framework) {
           var nextNode = document.getElementById('media-next');
           var items = [];
           var selected = 0;
+          function renderMediaSummary(node, item, showDescription) {
+            node.textContent = '';
+            var title = document.createElement('div');
+            var strong = document.createElement('strong');
+            strong.textContent = item && item.title ? item.title : '';
+            title.appendChild(strong);
+            node.appendChild(title);
+
+            var details = [];
+            if (item && item.channel) details.push(item.channel);
+            if (item && item.publishedISO) details.push(item.publishedISO);
+            if (details.length) {
+              var meta = document.createElement('div');
+              meta.className = 'small muted';
+              meta.textContent = details.join(' • ');
+              node.appendChild(meta);
+            }
+
+            if (showDescription) {
+              var desc = document.createElement('p');
+              desc.className = 'muted';
+              desc.textContent = item && item.description ? item.description : '';
+              node.appendChild(desc);
+            }
+          }
           function renderPlayer() {
             var item = items[selected];
             if (!item) {
               playerNode.textContent = 'Select a media item.';
               return;
             }
-            playerNode.innerHTML =
-              '<div><strong>' + item.title + '</strong></div>' +
-              '<div class="small muted">' + item.channel + ' • ' + item.publishedISO + '</div>' +
-              '<p class="muted">' + item.description + '</p>';
+            renderMediaSummary(playerNode, item, true);
             media.currentId = item.id;
           }
           function openAt(index) {
@@ -391,9 +362,7 @@ function mediaPage(framework) {
                   btn.className = 'btn';
                   btn.setAttribute('data-testid', 'media-card');
                   btn.style.textAlign = 'left';
-                  btn.innerHTML =
-                    '<div><strong>' + item.title + '</strong></div>' +
-                    '<div class="small muted">' + item.channel + '</div>';
+                  renderMediaSummary(btn, item, false);
                   btn.addEventListener('click', function () { openAt(idx); });
                   listNode.appendChild(btn);
                 })(i);
@@ -461,14 +430,14 @@ export function renderControlPage(framework, input) {
   }
 }
 
-export function handleControlRequest(framework, request) {
+export function handleControlRequest(framework, request, start) {
   const url = toUrl(request);
   if (request?.method && request.method.toUpperCase() !== "GET") return null;
 
   const html = renderControlPage(framework, url);
   if (!html) return null;
 
-  const headers = withServerTiming(null, performance.now());
+  const headers = withServerTiming(null, start);
   headers.set("content-type", "text/html; charset=utf-8");
   headers.set("cache-control", pageCacheControl(url.pathname));
   return new Response(html, { status: 200, headers });

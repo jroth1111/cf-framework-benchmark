@@ -1,5 +1,5 @@
 {
-  "name": "@cf-bench/bench-contract",
+  "name": "@cf-bench/bench-utils",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,9 +8,5 @@
       "types": "./src/index.d.ts",
       "default": "./src/index.js"
     }
-  },
-  "dependencies": {
-    "@cf-bench/bench-utils": "workspace:*",
-    "@cf-bench/dataset": "workspace:*"
   }
 }

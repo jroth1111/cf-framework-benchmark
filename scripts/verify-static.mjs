@@ -41,6 +41,7 @@ await run("check:targets", "pnpm", ["check:targets", ...targetsArgs]);
 await run("test:dataset", "pnpm", ["test:dataset"]);
 await run("test:deploy-bench", "pnpm", ["test:deploy-bench"]);
 await run("test:bench-runner", "pnpm", ["test:bench-runner"]);
+await run("test:control-package", "pnpm", ["test:control-package"]);
 await run("build", "pnpm", ["build"]);
 
 console.log("\nStatic verification passed.");

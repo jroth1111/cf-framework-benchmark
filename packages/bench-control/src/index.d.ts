@@ -9,4 +9,4 @@ export type BenchmarkPageMatch =
 
 export function matchBenchmarkPage(pathname: string): BenchmarkPageMatch | null;
 export function renderControlPage(framework: string, input: URL | Request | string): string | null;
-export function handleControlRequest(framework: string, request: Request): Response | null;
+export function handleControlRequest(framework: string, request: Request, start: number): Response | null;

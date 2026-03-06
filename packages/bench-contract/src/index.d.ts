@@ -9,6 +9,8 @@ export type JsonOptions = {
 
 export function json(data: unknown, options?: JsonOptions): Response;
 export function parseIntParam(value: string | null, fallback: number): number;
+export function parseIntParam(value: string | null, fallback: undefined): number | undefined;
+export function parseIntParam(value: string | null, fallback: number | undefined): number | undefined;
 
 export type BenchResponseV3 = {
   isolateId: string;

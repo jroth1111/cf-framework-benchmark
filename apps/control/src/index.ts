@@ -3,10 +3,11 @@ import { handleContractApi } from "@cf-bench/bench-contract";
 
 export default {
   async fetch(request: Request): Promise<Response> {
+    const start = performance.now();
     const api = handleContractApi("control", request);
     if (api) return api;
 
-    const page = handleControlRequest("control", request);
+    const page = handleControlRequest("control", request, start);
     if (page) return page;
 
     return new Response("Not found", { status: 404 });

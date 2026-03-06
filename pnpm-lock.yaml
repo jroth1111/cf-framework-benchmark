@@ -767,17 +767,25 @@ importers:
 
   packages/bench-contract:
     dependencies:
+      '@cf-bench/bench-utils':
+        specifier: workspace:*
+        version: link:../bench-utils
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../dataset
 
   packages/bench-control:
     dependencies:
+      '@cf-bench/bench-utils':
+        specifier: workspace:*
+        version: link:../bench-utils
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../dataset
 
   packages/bench-types: {}
+
+  packages/bench-utils: {}
 
   packages/chart-core: {}
 

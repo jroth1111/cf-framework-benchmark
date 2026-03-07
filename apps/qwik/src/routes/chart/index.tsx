@@ -46,13 +46,6 @@ export default component$(() => {
   const chartRef = useSignal<ChartInstance>();
   const requestSeq = useSignal(0);
 
-  const currentIndicators = () => ({
-    sma20: sma20.value,
-    sma50: sma50.value,
-    ema20: ema20.value,
-    volume: volume.value,
-  });
-
   useVisibleTask$(async ({ track }) => {
     const canvas = track(() => canvasRef.value);
     if (!canvas || chartRef.value) return;
@@ -107,12 +100,17 @@ export default component$(() => {
 
   useTask$(({ track }) => {
     const chart = track(() => chartRef.value);
-    track(() => sma20.value);
-    track(() => sma50.value);
-    track(() => ema20.value);
-    track(() => volume.value);
+    const sma20Enabled = track(() => sma20.value);
+    const sma50Enabled = track(() => sma50.value);
+    const ema20Enabled = track(() => ema20.value);
+    const volumeEnabled = track(() => volume.value);
     if (!chart) return;
-    chart.setIndicators(currentIndicators());
+    chart.setIndicators({
+      sma20: sma20Enabled,
+      sma50: sma50Enabled,
+      ema20: ema20Enabled,
+      volume: volumeEnabled,
+    });
   });
 
   return (

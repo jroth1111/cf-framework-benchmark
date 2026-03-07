@@ -65,11 +65,18 @@ export function ChartClient() {
   }, []);
 
   useEffect(() => {
-    chartRef.current?.setIndicators(indicators);
+    const frame = requestAnimationFrame(() => {
+      chartRef.current?.setIndicators(indicators);
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+    };
   }, [indicators]);
 
   useEffect(() => {
     let cancelled = false;
+    let updateFrame: number | null = null;
 
     async function run() {
       setStatus('loading');
@@ -79,7 +86,10 @@ export function ChartClient() {
       try {
         const data = await fetchCandles(symbol, timeframe, points);
         if (cancelled) return;
-        chartRef.current?.setCandles(data.candles as never[]);
+        updateFrame = requestAnimationFrame(() => {
+          if (cancelled) return;
+          chartRef.current?.setCandles(data.candles as never[]);
+        });
         markChartReady(symbol, timeframe);
         setStatus('ready');
       } catch (error) {
@@ -91,6 +101,7 @@ export function ChartClient() {
     run();
     return () => {
       cancelled = true;
+      if (updateFrame !== null) cancelAnimationFrame(updateFrame);
     };
   }, [symbol, timeframe]);
 

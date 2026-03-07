@@ -6,9 +6,14 @@ type BenchEnv = Env & {
 	ASSETS?: Fetcher;
 };
 
+function normalizeBenchPath(pathname: string) {
+	return pathname.replace(/\/+$/, "") || "/";
+}
+
 function cacheKind(pathname: string) {
-	if (pathname === "/stays" || pathname === "/blog") return "list";
-	if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
+	const normalizedPath = normalizeBenchPath(pathname);
+	if (normalizedPath === "/stays" || normalizedPath === "/blog") return "list";
+	if (/^\/stays\/[^/]+$/.test(normalizedPath) || /^\/blog\/[^/]+$/.test(normalizedPath)) return "detail";
 	return null;
 }
 
@@ -22,10 +27,17 @@ function cacheHeader(pathname: string, profile: string | null) {
 }
 
 function isBenchRoute(pathname: string) {
-	if (pathname === "/" || pathname === "/stays" || pathname === "/blog" || pathname === "/chart" || pathname === "/media") {
+	const normalizedPath = normalizeBenchPath(pathname);
+	if (
+		normalizedPath === "/" ||
+		normalizedPath === "/stays" ||
+		normalizedPath === "/blog" ||
+		normalizedPath === "/chart" ||
+		normalizedPath === "/media"
+	) {
 		return true;
 	}
-	if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return true;
+	if (/^\/stays\/[^/]+$/.test(normalizedPath) || /^\/blog\/[^/]+$/.test(normalizedPath)) return true;
 	return false;
 }
 
@@ -51,14 +63,15 @@ function escapeHtml(value: string) {
 }
 
 function pageTitle(pathname: string) {
-	if (pathname === "/") return "Cloudflare Framework Benchmark";
-	if (pathname === "/stays") return "Stays";
-	if (pathname === "/blog") return "Blog";
-	if (pathname === "/chart") return "Chart";
-	if (pathname === "/media") return "Media";
-	const stayMatch = pathname.match(/^\/stays\/([^/]+)$/);
+	const normalizedPath = normalizeBenchPath(pathname);
+	if (normalizedPath === "/") return "Cloudflare Framework Benchmark";
+	if (normalizedPath === "/stays") return "Stays";
+	if (normalizedPath === "/blog") return "Blog";
+	if (normalizedPath === "/chart") return "Chart";
+	if (normalizedPath === "/media") return "Media";
+	const stayMatch = normalizedPath.match(/^\/stays\/([^/]+)$/);
 	if (stayMatch) return getListing(stayMatch[1])?.title ?? "Listing not found";
-	const blogMatch = pathname.match(/^\/blog\/([^/]+)$/);
+	const blogMatch = normalizedPath.match(/^\/blog\/([^/]+)$/);
 	if (blogMatch) return getPost(blogMatch[1])?.title ?? "Post not found";
 	return "Vue Benchmark";
 }
@@ -92,17 +105,18 @@ async function renderDocument(request: Request, env: BenchEnv) {
 	if (!shell) return new Response("Not found", { status: 404 });
 
 	const url = new URL(request.url);
+	const pathname = normalizeBenchPath(url.pathname);
 	const start = performance.now();
-	const appHtml = await render(url.pathname);
-	const route = escapeHtml(url.pathname);
+	const appHtml = await render(pathname);
+	const route = escapeHtml(pathname);
 	const documentHtml = shell
 		.replaceAll("__CF_BENCH_ROUTE__", route)
-		.replace("__CF_BENCH_TITLE__", escapeHtml(pageTitle(url.pathname)))
+		.replace("__CF_BENCH_TITLE__", escapeHtml(pageTitle(pathname)))
 		.replace("__CF_BENCH_APP_HTML__", appHtml);
 
 	return new Response(documentHtml, {
 		status: 200,
-		headers: htmlHeaders(url.pathname, request.headers.get("x-cf-bench-profile"), start),
+		headers: htmlHeaders(pathname, request.headers.get("x-cf-bench-profile"), start),
 	});
 }
 

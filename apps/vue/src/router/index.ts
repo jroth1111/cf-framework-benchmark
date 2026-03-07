@@ -1,11 +1,12 @@
 import { createRouter, type RouteRecordRaw, type RouterHistory } from "vue-router";
-import HomePage from "../views/HomePage";
-import StaysPage from "../views/StaysPage";
-import StayDetailPage from "../views/StayDetailPage";
-import BlogPage from "../views/BlogPage";
-import BlogPostPage from "../views/BlogPostPage";
-import ChartPage from "../views/ChartPage";
-import MediaPage from "../views/MediaPage";
+
+const HomePage = () => import("../views/HomePage");
+const StaysPage = () => import("../views/StaysPage");
+const StayDetailPage = () => import("../views/StayDetailPage");
+const BlogPage = () => import("../views/BlogPage");
+const BlogPostPage = () => import("../views/BlogPostPage");
+const ChartPage = () => import("../views/ChartPage");
+const MediaPage = () => import("../views/MediaPage");
 
 const routes: RouteRecordRaw[] = [
 	{ path: "/", name: "home", component: HomePage },

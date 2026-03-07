@@ -1,4 +1,3 @@
-import { createChart } from "@cf-bench/chart-core";
 import { chartSymbols, chartTimeframes } from "@cf-bench/dataset";
 import {
 	getChartFetchOptions,
@@ -8,6 +7,9 @@ import {
 	updateChartCoreMetrics,
 } from "@cf-bench/bench-types";
 import { defineComponent, h, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+
+type ChartModule = typeof import("@cf-bench/chart-core");
+type ChartInstance = ReturnType<ChartModule["createChart"]>;
 
 export default defineComponent({
 	name: "ChartPage",
@@ -23,7 +25,7 @@ export default defineComponent({
 		const status = ref<"idle" | "loading" | "ready" | "error">("idle");
 		const chartReady = ref(false);
 		const canvasRef = ref<HTMLCanvasElement | null>(null);
-		let chart: ReturnType<typeof createChart> | null = null;
+		let chart: ChartInstance | null = null;
 
 		function currentIndicators() {
 			return {
@@ -65,6 +67,7 @@ export default defineComponent({
 
 		onMounted(async () => {
 			if (!canvasRef.value) return;
+			const { createChart } = await import("@cf-bench/chart-core");
 			chart = createChart(canvasRef.value, {
 				initialViewport: 180,
 				onStats: (stats) => updateChartCoreMetrics(stats as never),

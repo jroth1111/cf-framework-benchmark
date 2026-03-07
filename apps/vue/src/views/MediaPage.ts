@@ -12,7 +12,7 @@ function ensureBenchMedia() {
 export default defineComponent({
 	name: "MediaPage",
 	setup() {
-		const items = queryMedia({ pageSize: 30 }).results;
+		const items = queryMedia({ pageSize: 12 }).results;
 		const selectedIndex = ref(0);
 		const selected = computed<MediaItem | null>(() => items[selectedIndex.value] ?? null);
 
@@ -87,6 +87,9 @@ export default defineComponent({
 										h("img", {
 											src: selected.value.thumbnail,
 											alt: selected.value.title,
+											loading: "lazy",
+											decoding: "async",
+											fetchpriority: "low",
 											style: {
 												width: "100%",
 												maxHeight: "280px",

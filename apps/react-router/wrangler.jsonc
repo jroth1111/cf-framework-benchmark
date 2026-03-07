@@ -5,8 +5,5 @@
 	"main": "./workers/app.ts",
 	"observability": {
 		"enabled": true
-	},
-	"compatibility_flags": [
-		"nodejs_compat"
-	]
+	}
 }

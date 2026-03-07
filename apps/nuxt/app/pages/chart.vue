@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { chartSymbols, chartTimeframes } from "@cf-bench/dataset";
-import { createChart } from "@cf-bench/chart-core";
 import {
   getChartFetchOptions,
   markChartError,
@@ -10,6 +9,9 @@ import {
 } from "@cf-bench/bench-types";
 
 useBenchPage("chart");
+
+type ChartModule = typeof import("@cf-bench/chart-core");
+type ChartInstance = ReturnType<ChartModule["createChart"]>;
 
 const symbol = ref("BTC");
 const timeframe = ref<(typeof chartTimeframes)[number]>("1h");
@@ -22,7 +24,7 @@ const indicators = reactive({
 const status = ref<"idle" | "loading" | "ready" | "error">("idle");
 const chartReady = ref(false);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
-let chart: ReturnType<typeof createChart> | null = null;
+let chart: ChartInstance | null = null;
 
 async function fetchCandles() {
   const points = timeframe.value === "1m" ? 900 : timeframe.value === "5m" ? 700 : timeframe.value === "15m" ? 520 : 360;
@@ -61,6 +63,7 @@ async function refreshChart() {
 
 onMounted(async () => {
   if (!canvasRef.value) return;
+  const { createChart } = await import("@cf-bench/chart-core");
   chart = createChart(canvasRef.value, {
     initialViewport: 180,
     onStats: (stats) => updateChartCoreMetrics(stats as never),

@@ -3,6 +3,13 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-03-05',
   devtools: { enabled: false },
   css: ["@cf-bench/ui/styles.css"],
+  routeRules: {
+    "/": { noScripts: true },
+    "/stays": { noScripts: true },
+    "/stays/**": { noScripts: true },
+    "/blog": { noScripts: true },
+    "/blog/**": { noScripts: true },
+  },
 
   nitro: {
     preset: "cloudflare_module",

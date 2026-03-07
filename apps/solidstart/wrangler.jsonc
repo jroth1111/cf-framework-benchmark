@@ -7,11 +7,8 @@
 	"name": "cf-bench-solidstart",
 	"compatibility_date": "2026-03-06",
 	"compatibility_flags": ["nodejs_compat"],
-	"main": "./dist/server/entry-server.js",
+	"main": "./worker/index.ts",
 	"assets": {
 		"directory": "./dist/client"
-	},
-	"observability": {
-		"enabled": true
 	}
 }

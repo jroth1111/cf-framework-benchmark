@@ -3,12 +3,6 @@
 	"name": "cf-bench-vike",
 	"compatibility_date": "2026-03-05",
 	"main": "src/worker.ts",
-	"observability": {
-		"enabled": true
-	},
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
 	"assets": {
 		"directory": "./dist/client/",
 		"binding": "ASSETS",

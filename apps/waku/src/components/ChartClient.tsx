@@ -40,21 +40,27 @@ export function ChartClient() {
     if (!canvas || chartRef.current) return;
 
     let cancelled = false;
-    void (async () => {
-      const { createChart } = await import('@cf-bench/chart-core');
-      if (cancelled || chartRef.current) return;
-      const chart = createChart(canvas, {
-        initialViewport: 180,
-        onStats: (stats) => updateChartCoreMetrics(stats),
-      });
-      chartRef.current = chart;
-      chart.setIndicators(indicators);
-      chart.resize();
-      setReady(true);
-    })();
+    const initFrame = requestAnimationFrame(() => {
+      void (async () => {
+        const { createChart } = await import('@cf-bench/chart-core');
+        if (cancelled || chartRef.current) return;
+        const chart = createChart(canvas, {
+          initialViewport: 180,
+          onStats: (stats) => updateChartCoreMetrics(stats),
+        });
+        chartRef.current = chart;
+        requestAnimationFrame(() => {
+          if (cancelled) return;
+          chart.setIndicators(indicators);
+          chart.resize();
+          setReady(true);
+        });
+      })();
+    });
 
     return () => {
       cancelled = true;
+      cancelAnimationFrame(initFrame);
     };
   }, []);
 

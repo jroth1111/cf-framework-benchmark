@@ -9,7 +9,12 @@ type BenchGlobal = typeof globalThis & {
     __CF_BENCH_REACT_SHELL__?: Promise<string>;
 };
 
+function normalizeBenchPath(pathname: string) {
+    return pathname.replace(/\/+$/, "") || "/";
+}
+
 function cacheKind(pathname: string) {
+    pathname = normalizeBenchPath(pathname);
     if (pathname === "/stays" || pathname === "/blog") return "list";
     if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
     return null;
@@ -28,6 +33,11 @@ function isDocumentRequest(request: Request, url: URL) {
     if (request.method !== "GET") return false;
     if (url.pathname.startsWith("/api/")) return false;
     return !url.pathname.includes(".");
+}
+
+function needsClient(pathname: string) {
+    pathname = normalizeBenchPath(pathname);
+    return pathname === "/chart" || pathname === "/media";
 }
 
 function assetRequestFor(url: URL, request: Request) {
@@ -61,10 +71,11 @@ function escapeAttr(value: string) {
 }
 
 function renderBootstrap(url: URL) {
+    const pathname = normalizeBenchPath(url.pathname);
     const route = JSON.stringify({
-        pathname: url.pathname,
+        pathname,
         search: url.search,
-        href: `${url.pathname}${url.search}`,
+        href: `${pathname}${url.search}`,
     });
     return `<script>
       (function () {
@@ -77,39 +88,59 @@ function renderBootstrap(url: URL) {
     </script>`;
 }
 
+function stripClientAssets(shell: string) {
+    const withoutClientRegion = shell.replace(/__CF_BENCH_CLIENT_ASSETS_START__[\s\S]*?__CF_BENCH_CLIENT_ASSETS_END__/, "");
+    return withoutClientRegion
+        .replaceAll("__CF_BENCH_CLIENT_ASSETS_START__", "")
+        .replaceAll("__CF_BENCH_CLIENT_ASSETS_END__", "")
+        .replace(/\s*<link rel="modulepreload"[^>]*>/g, "")
+        .replace(/\s*<script type="module"[^>]*src="[^"]+"[^>]*><\/script>\s*/g, "");
+}
+
 function injectDocument(shell: string, url: URL, appHtml: string) {
-    const route = `${url.pathname}${url.search}`;
+    if (!shell.includes('<div id="root"></div>')) {
+        throw new Error("React shell missing root placeholder");
+    }
+    const pathname = normalizeBenchPath(url.pathname);
+    const route = `${pathname}${url.search}`;
+    const includeClient = needsClient(pathname);
     const root = `<div id="root" data-framework="react" data-route="${escapeAttr(route)}">${appHtml}</div>`;
-    return shell.replace('<div id="root"></div>', `${renderBootstrap(url)}\n    ${root}`);
+    const hydrationTail = includeClient
+        ? ""
+        : '<script>(function(){var w=globalThis;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(h.endMs==null)h.endMs=h.startMs??performance.now();})();</script>';
+    const documentShell = includeClient ? shell : stripClientAssets(shell);
+    return documentShell.replace('<div id="root"></div>', `${renderBootstrap(url)}\n    ${root}${hydrationTail}`);
 }
 
 async function loadShell(env: Env, request: Request, origin: URL) {
     const g = globalThis as BenchGlobal;
     if (!g.__CF_BENCH_REACT_SHELL__) {
         const assetUrl = new URL("/index.html", origin);
-        g.__CF_BENCH_REACT_SHELL__ = env.ASSETS.fetch(assetRequestFor(assetUrl, request)).then(async (response) => {
-            if (!response.ok) {
+        g.__CF_BENCH_REACT_SHELL__ = env.ASSETS.fetch(assetRequestFor(assetUrl, request))
+            .then(async (response) => {
+                if (!response.ok) {
+                    throw new Error(`Failed to load React shell: ${response.status}`);
+                }
+                const shell = await response.text();
+                if (!shell.includes('<div id="root"></div>')) {
+                    throw new Error("Failed to load React shell: missing root placeholder");
+                }
+                return shell;
+            })
+            .catch((error) => {
                 g.__CF_BENCH_REACT_SHELL__ = undefined;
-                throw new Error(`Failed to load React shell: ${response.status}`);
-            }
-            return response.text();
-        });
+                throw error;
+            });
     }
     return g.__CF_BENCH_REACT_SHELL__;
 }
 
 async function renderDocument(request: Request, env: Env, url: URL, start: number) {
+    const pathname = normalizeBenchPath(url.pathname);
     const shell = await loadShell(env, request, url);
-    const html = injectDocument(shell, url, renderApp(`${url.pathname}${url.search}`));
-    const headers = withHtmlHeaders(url.pathname, request.headers.get("x-cf-bench-profile"), start);
+    const html = injectDocument(shell, url, renderApp(`${pathname}${url.search}`));
+    const headers = withHtmlHeaders(pathname, request.headers.get("x-cf-bench-profile"), start);
     return new Response(html, { status: 200, headers });
-}
-
-function assetRequest(request: Request, url: URL) {
-    if (isDocumentRequest(request, url)) {
-        return assetRequestFor(new URL("/index.html", url), request);
-    }
-    return assetRequestFor(url, request);
 }
 
 function withDocumentFallback(response: Response, pathname: string, profile: string | null, start: number) {
@@ -135,10 +166,17 @@ export default {
                 return await renderDocument(request, env, url, start);
             } catch (error) {
                 console.error(error);
+                return new Response("React document render failed", {
+                    status: 500,
+                    headers: {
+                        "content-type": "text/plain; charset=utf-8",
+                        "cache-control": "no-store",
+                    },
+                });
             }
         }
 
-        const res = await env.ASSETS.fetch(assetRequest(request, url));
-        return withDocumentFallback(res, url.pathname, request.headers.get("x-cf-bench-profile"), start);
+        const res = await env.ASSETS.fetch(assetRequestFor(url, request));
+        return withDocumentFallback(res, normalizeBenchPath(url.pathname), request.headers.get("x-cf-bench-profile"), start);
     },
 };

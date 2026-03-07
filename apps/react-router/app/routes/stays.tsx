@@ -24,7 +24,6 @@ export default function StaysRoute({ loaderData }: Route.ComponentProps) {
         {loaderData.results.map((listing) => (
           <Link
             key={listing.id}
-            prefetch="intent"
             to={`/stays/${listing.id}`}
             data-testid="stay-card"
             className="card"

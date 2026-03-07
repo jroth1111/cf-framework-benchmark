@@ -13,7 +13,6 @@ export default function BlogRoute() {
         {blogPosts.map((post) => (
           <Link
             key={post.slug}
-            prefetch="intent"
             to={`/blog/${post.slug}`}
             data-testid="blog-post-card"
             className="card"

@@ -1,20 +1,17 @@
 import { Routes } from '@angular/router';
-import {
-  BlogPageComponent,
-  BlogPostPageComponent,
-  ChartPageComponent,
-  HomePageComponent,
-  MediaPageComponent,
-  StayDetailPageComponent,
-  StaysPageComponent,
-} from './bench-pages';
 
 export const routes: Routes = [
-  { path: '', component: HomePageComponent },
-  { path: 'stays', component: StaysPageComponent },
-  { path: 'stays/:id', component: StayDetailPageComponent },
-  { path: 'blog', component: BlogPageComponent },
-  { path: 'blog/:slug', component: BlogPostPageComponent },
-  { path: 'chart', component: ChartPageComponent },
-  { path: 'media', component: MediaPageComponent },
+  { path: '', loadComponent: () => import('./pages/home-page.component').then((m) => m.HomePageComponent) },
+  { path: 'stays', loadComponent: () => import('./pages/stays-page.component').then((m) => m.StaysPageComponent) },
+  {
+    path: 'stays/:id',
+    loadComponent: () => import('./pages/stay-detail-page.component').then((m) => m.StayDetailPageComponent),
+  },
+  { path: 'blog', loadComponent: () => import('./pages/blog-page.component').then((m) => m.BlogPageComponent) },
+  {
+    path: 'blog/:slug',
+    loadComponent: () => import('./pages/blog-post-page.component').then((m) => m.BlogPostPageComponent),
+  },
+  { path: 'chart', loadComponent: () => import('./pages/chart-page.component').then((m) => m.ChartPageComponent) },
+  { path: 'media', loadComponent: () => import('./pages/media-page.component').then((m) => m.MediaPageComponent) },
 ];

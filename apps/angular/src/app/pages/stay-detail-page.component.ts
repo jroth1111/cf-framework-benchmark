@@ -36,21 +36,25 @@ import { formatUsd, getListing, type Listing } from '@cf-bench/dataset';
           <h2>Host</h2>
           <p class="muted">{{ stay.hostName }} · Host since {{ stay.hostSinceISO }}</p>
 
-          <h2>Amenities</h2>
-          <ul class="detail-list">
-            <li *ngFor="let amenity of stay.amenities">{{ amenity }}</li>
-          </ul>
+          @defer (on viewport) {
+            <h2>Amenities</h2>
+            <ul class="detail-list">
+              <li *ngFor="let amenity of stay.amenities">{{ amenity }}</li>
+            </ul>
 
-          <h2>Review samples</h2>
-          <div class="review-list">
-            <article class="review-card" *ngFor="let review of stay.reviewSamples">
-              <div class="review-heading">
-                <strong>{{ review.name }}</strong>
-                <span class="muted small">{{ review.dateISO }} · {{ review.rating }} ★</span>
-              </div>
-              <p class="muted">{{ review.text }}</p>
-            </article>
-          </div>
+            <h2>Review samples</h2>
+            <div class="review-list">
+              <article class="review-card" *ngFor="let review of stay.reviewSamples">
+                <div class="review-heading">
+                  <strong>{{ review.name }}</strong>
+                  <span class="muted small">{{ review.dateISO }} · {{ review.rating }} ★</span>
+                </div>
+                <p class="muted">{{ review.text }}</p>
+              </article>
+            </div>
+          } @placeholder {
+            <div class="muted small">Scroll for amenities and review samples…</div>
+          }
         </aside>
       </section>
     </ng-container>

@@ -91,16 +91,33 @@ function htmlHeaders(pathname: string, profile: string | null, start: number) {
 
 let shellPromise: Promise<string> | null = null;
 
+function isValidShell(shell: string) {
+	return (
+		shell.includes("__CF_BENCH_ROUTE__") &&
+		shell.includes("__CF_BENCH_TITLE__") &&
+		shell.includes("__CF_BENCH_APP_HTML__")
+	);
+}
+
 async function getShell(env: BenchEnv, request: Request) {
 	if (!env.ASSETS) return null;
 	if (!shellPromise) {
 		const shellUrl = new URL("/index.html", request.url);
-		shellPromise = env.ASSETS.fetch(assetRequestFor(shellUrl, request)).then(async (response) => {
-			if (!response.ok) {
-				throw new Error(`Failed to load Vue shell: ${response.status}`);
-			}
-			return response.text();
-		});
+		shellPromise = env.ASSETS.fetch(assetRequestFor(shellUrl, request))
+			.then(async (response) => {
+				if (!response.ok) {
+					throw new Error(`Failed to load Vue shell: ${response.status}`);
+				}
+				const shell = await response.text();
+				if (!isValidShell(shell)) {
+					throw new Error("Failed to load Vue shell: missing benchmark placeholders");
+				}
+				return shell;
+			})
+			.catch((error) => {
+				shellPromise = null;
+				throw error;
+			});
 	}
 	return shellPromise;
 }
@@ -108,6 +125,9 @@ async function getShell(env: BenchEnv, request: Request) {
 async function renderDocument(request: Request, env: BenchEnv) {
 	const shell = await getShell(env, request);
 	if (!shell) return new Response("Not found", { status: 404 });
+	if (!isValidShell(shell)) {
+		return new Response("Invalid Vue shell", { status: 500 });
+	}
 
 	const url = new URL(request.url);
 	const pathname = normalizeBenchPath(url.pathname);

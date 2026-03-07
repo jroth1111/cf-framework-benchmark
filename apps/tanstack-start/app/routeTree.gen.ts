@@ -27,37 +27,37 @@ const MediaRoute = MediaRouteImport.update({
   id: '/media',
   path: '/media',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/media.lazy').then((d) => d.Route))
 const ChartRoute = ChartRouteImport.update({
   id: '/chart',
   path: '/chart',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/chart.lazy').then((d) => d.Route))
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
 const StaysIndexRoute = StaysIndexRouteImport.update({
   id: '/stays/',
   path: '/stays/',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/stays/index.lazy').then((d) => d.Route))
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/blog/index.lazy').then((d) => d.Route))
 const StaysIdRoute = StaysIdRouteImport.update({
   id: '/stays/$id',
   path: '/stays/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/stays/$id.lazy').then((d) => d.Route))
 const BlogSlugRoute = BlogSlugRouteImport.update({
   id: '/blog/$slug',
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/blog/$slug.lazy').then((d) => d.Route))
 const ApiPricesRoute = ApiPricesRouteImport.update({
   id: '/api/prices',
   path: '/api/prices',

@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
-  import { createChart } from "@cf-bench/chart-core";
+  import { onMount, onDestroy, tick } from "svelte";
   import { createChartStore } from "@cf-bench/chart-hooks/svelte";
   import { markChartReady, markChartError, updateChartCoreMetrics } from "@cf-bench/bench-types";
+
+  type ChartModule = typeof import("@cf-bench/chart-core");
+  type ChartInstance = ReturnType<ChartModule["createChart"]>;
 
   const {
     symbol,
@@ -19,47 +21,60 @@
   } = createChartStore();
 
   let canvas: HTMLCanvasElement;
-  let chart: ReturnType<typeof createChart> | null = null;
+  let chart: ChartInstance | null = null;
   let chartReady = false;
   let rafId: number | null = null;
   let error: string | null = null;
+  let destroyed = false;
 
   onMount(async () => {
     try {
+      await tick();
       if (!canvas) {
         throw new Error("Canvas element not found");
       }
 
       // Defer chart creation to next frame
       rafId = requestAnimationFrame(() => {
-        try {
-          chart = createChart(canvas, {
-            initialViewport: 180,
-            onStats: (stats) => {
-              updateChartCoreMetrics(stats);
+        void (async () => {
+          try {
+            const { createChart } = await import("@cf-bench/chart-core");
+            if (destroyed) {
+              return;
             }
-          });
 
-          // Defer resize to next frame
-          requestAnimationFrame(() => {
-            try {
-              chart?.resize();
-              chart?.setIndicators($indicators);
-              // Set initial data after chart is created
-              if ($data) {
-                chart?.setCandles($data.candles);
+            chart = createChart(canvas, {
+              initialViewport: 180,
+              onStats: (stats) => {
+                updateChartCoreMetrics(stats);
               }
-              chartReady = true;
-              markChartReady($symbol, $timeframe);
-            } catch (err) {
-              error = err instanceof Error ? err.message : "Chart setup failed";
-              markChartError(err instanceof Error ? err : "Chart setup failed");
-            }
-          });
-        } catch (err) {
-          error = err instanceof Error ? err.message : "Chart creation failed";
-          markChartError(err instanceof Error ? err : "Chart creation failed");
-        }
+            });
+
+            // Defer resize to next frame
+            requestAnimationFrame(() => {
+              try {
+                if (destroyed) {
+                  return;
+                }
+
+                chart?.resize();
+                chart?.setIndicators($indicators);
+                // Set initial data after chart is created
+                if ($data) {
+                  chart?.setCandles($data.candles);
+                }
+                chartReady = true;
+                markChartReady($symbol, $timeframe);
+              } catch (err) {
+                error = err instanceof Error ? err.message : "Chart setup failed";
+                markChartError(err instanceof Error ? err : "Chart setup failed");
+              }
+            });
+          } catch (err) {
+            error = err instanceof Error ? err.message : "Chart creation failed";
+            markChartError(err instanceof Error ? err : "Chart creation failed");
+          }
+        })();
       });
     } catch (err) {
       error = err instanceof Error ? err.message : "Chart failed to load";
@@ -68,6 +83,7 @@
   });
 
   onDestroy(() => {
+    destroyed = true;
     if (rafId !== null) {
       cancelAnimationFrame(rafId);
     }

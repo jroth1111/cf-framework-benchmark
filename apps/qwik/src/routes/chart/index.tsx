@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$ } from "@qwik.dev/core";
+import { component$, useSignal, useTask$, useVisibleTask$ } from "@qwik.dev/core";
 import { chartSymbols, chartTimeframes } from "@cf-bench/dataset";
 import { markChartReady, markChartError, updateChartCoreMetrics, startChartSwitch, getChartFetchOptions } from "@cf-bench/bench-types";
 
@@ -43,8 +43,8 @@ export default component$(() => {
   const status = useSignal<"idle" | "loading" | "ready" | "error">("idle");
   const errorMessage = useSignal<string>("");
   const canvasRef = useSignal<HTMLCanvasElement>();
-
   const chartRef = useSignal<ChartInstance>();
+  const requestSeq = useSignal(0);
 
   const currentIndicators = () => ({
     sma20: sma20.value,
@@ -54,38 +54,19 @@ export default component$(() => {
   });
 
   useVisibleTask$(async ({ track }) => {
-    track(() => canvasRef.value);
-    track(() => symbol.value);
-    track(() => timeframe.value);
+    const canvas = track(() => canvasRef.value);
+    if (!canvas || chartRef.value) return;
 
     try {
-      if (!canvasRef.value) {
-        throw new Error("Canvas element not found");
-      }
-
-      if (!chartRef.value) {
-        const { createChart } = await import("@cf-bench/chart-core");
-        chartRef.value = createChart(canvasRef.value, {
-          initialViewport: 180,
-          onStats: (stats) => {
-            updateChartCoreMetrics(stats);
-          },
-        });
-        chartRef.value.resize();
-        chartRef.value.setIndicators(currentIndicators());
-      }
-
-      status.value = "loading";
-      const points =
-        timeframe.value === "1m" ? 900 : timeframe.value === "5m" ? 700 : timeframe.value === "15m" ? 520 : 360;
-
-      startChartSwitch();
-
-      const data = await fetchCandles(symbol.value, timeframe.value, points);
-      chartRef.value?.setCandles(data.candles);
-
-      markChartReady(symbol.value, timeframe.value);
-      status.value = "ready";
+      const { createChart } = await import("@cf-bench/chart-core");
+      if (chartRef.value) return;
+      chartRef.value = createChart(canvas, {
+        initialViewport: 180,
+        onStats: (stats) => {
+          updateChartCoreMetrics(stats);
+        },
+      });
+      chartRef.value.resize();
       errorMessage.value = "";
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : String(e);
@@ -95,13 +76,43 @@ export default component$(() => {
     }
   });
 
-  useVisibleTask$(({ track }) => {
+  useTask$(async ({ track }) => {
+    const chart = track(() => chartRef.value);
+    const currentSymbol = track(() => symbol.value);
+    const currentTimeframe = track(() => timeframe.value);
+    if (!chart) return;
+
+    const seq = ++requestSeq.value;
+    status.value = "loading";
+    errorMessage.value = "";
+    startChartSwitch();
+
+    const points =
+      currentTimeframe === "1m" ? 900 : currentTimeframe === "5m" ? 700 : currentTimeframe === "15m" ? 520 : 360;
+
+    try {
+      const data = await fetchCandles(currentSymbol, currentTimeframe, points);
+      if (requestSeq.value !== seq || chartRef.value !== chart) return;
+      chart.setCandles(data.candles);
+      markChartReady(currentSymbol, currentTimeframe);
+      status.value = "ready";
+    } catch (e) {
+      if (requestSeq.value !== seq) return;
+      const errMsg = e instanceof Error ? e.message : String(e);
+      errorMessage.value = errMsg;
+      status.value = "error";
+      markChartError(errMsg);
+    }
+  });
+
+  useTask$(({ track }) => {
+    const chart = track(() => chartRef.value);
     track(() => sma20.value);
     track(() => sma50.value);
     track(() => ema20.value);
     track(() => volume.value);
-
-    chartRef.value?.setIndicators(currentIndicators());
+    if (!chart) return;
+    chart.setIndicators(currentIndicators());
   });
 
   return (

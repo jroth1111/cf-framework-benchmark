@@ -33,6 +33,16 @@ const BlogPost = lazy(async () => {
   return { default: module.BlogPost };
 });
 
+export function preloadRoute(pathname: string) {
+  if (pathname === "/stays") return import("./pages/Stays");
+  if (pathname === "/chart") return import("./pages/Chart");
+  if (pathname === "/media") return import("./pages/Media");
+  if (pathname === "/blog") return import("./pages/Blog");
+  if (/^\/stays\/[^/]+$/.test(pathname)) return import("./pages/StayDetail");
+  if (/^\/blog\/[^/]+$/.test(pathname)) return import("./pages/BlogPost");
+  return Promise.resolve(null);
+}
+
 export function App() {
   return (
     <Layout>

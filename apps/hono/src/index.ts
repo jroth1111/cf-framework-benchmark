@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono } from "hono/tiny";
 import { handleContractApi } from "@cf-bench/bench-contract";
 import { handleHonoPageRequest } from "./render";
 

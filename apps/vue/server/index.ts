@@ -89,14 +89,85 @@ function htmlHeaders(pathname: string, profile: string | null, start: number) {
 	});
 }
 
-let shellPromise: Promise<string> | null = null;
+const APP_HTML_PLACEHOLDER = "__CF_BENCH_APP_HTML__";
+const CLIENT_ASSETS_RE = /__CF_BENCH_CLIENT_ASSETS_START__[\s\S]*?__CF_BENCH_CLIENT_ASSETS_END__/;
+const CLIENT_MODULE_SCRIPT_RE = /\s*<script type="module" crossorigin src="\/assets\/index-[^"]+\.js"><\/script>/g;
+const CLIENT_MODULE_PRELOAD_RE = /\s*<link rel="modulepreload" crossorigin href="\/assets\/[^"]+">/g;
+const HYDRATION_TAIL =
+	'<script>(function(){var w=globalThis;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(h.endMs==null)h.endMs=h.startMs??performance.now();})();</script>';
+
+type ShellParts = {
+	head: string;
+	tail: string;
+};
+
+let shellPromise: Promise<ShellParts> | null = null;
 
 function isValidShell(shell: string) {
 	return (
 		shell.includes("__CF_BENCH_ROUTE__") &&
 		shell.includes("__CF_BENCH_TITLE__") &&
-		shell.includes("__CF_BENCH_APP_HTML__")
+		shell.includes(APP_HTML_PLACEHOLDER)
 	);
+}
+
+function splitShell(shell: string): ShellParts {
+	const splitIndex = shell.indexOf(APP_HTML_PLACEHOLDER);
+	if (splitIndex < 0) {
+		throw new Error("Failed to load Vue shell: missing app placeholder");
+	}
+
+	return {
+		head: shell.slice(0, splitIndex),
+		tail: shell.slice(splitIndex + APP_HTML_PLACEHOLDER.length),
+	};
+}
+
+function resolveShellParts(shell: ShellParts, pathname: string, includeClient: boolean): ShellParts {
+	const route = escapeHtml(pathname);
+	const title = escapeHtml(pageTitle(pathname));
+	const head = shell.head
+		.replaceAll("__CF_BENCH_ROUTE__", route)
+		.replaceAll("__CF_BENCH_TITLE__", title)
+		.replace(CLIENT_ASSETS_RE, "")
+		.replace(includeClient ? /$^/ : CLIENT_MODULE_SCRIPT_RE, "")
+		.replace(includeClient ? /$^/ : CLIENT_MODULE_PRELOAD_RE, "");
+	const tailWithoutMarkers = shell.tail
+		.replaceAll("__CF_BENCH_ROUTE__", route)
+		.replaceAll("__CF_BENCH_TITLE__", title)
+		.replace(CLIENT_ASSETS_RE, "");
+
+	return {
+		head,
+		tail: includeClient ? tailWithoutMarkers : `${HYDRATION_TAIL}${tailWithoutMarkers}`,
+	};
+}
+
+function createDocumentStream(head: string, appStream: ReadableStream<Uint8Array>, tail: string) {
+	const encoder = new TextEncoder();
+
+	return new ReadableStream<Uint8Array>({
+		async start(controller) {
+			controller.enqueue(encoder.encode(head));
+			const reader = appStream.getReader();
+			try {
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
+					if (value) controller.enqueue(value);
+				}
+				controller.enqueue(encoder.encode(tail));
+				controller.close();
+			} catch (error) {
+				controller.error(error);
+			} finally {
+				reader.releaseLock();
+			}
+		},
+		cancel(reason) {
+			return appStream.cancel(reason);
+		},
+	});
 }
 
 async function getShell(env: BenchEnv, request: Request) {
@@ -112,7 +183,7 @@ async function getShell(env: BenchEnv, request: Request) {
 				if (!isValidShell(shell)) {
 					throw new Error("Failed to load Vue shell: missing benchmark placeholders");
 				}
-				return shell;
+				return splitShell(shell);
 			})
 			.catch((error) => {
 				shellPromise = null;
@@ -125,32 +196,15 @@ async function getShell(env: BenchEnv, request: Request) {
 async function renderDocument(request: Request, env: BenchEnv) {
 	const shell = await getShell(env, request);
 	if (!shell) return new Response("Not found", { status: 404 });
-	if (!isValidShell(shell)) {
-		return new Response("Invalid Vue shell", { status: 500 });
-	}
 
 	const url = new URL(request.url);
 	const pathname = normalizeBenchPath(url.pathname);
 	const start = performance.now();
-	const appHtml = await render(pathname);
-	const route = escapeHtml(pathname);
 	const includeClient = needsClient(pathname);
-	const hydrationTail = includeClient
-		? ""
-		: '<script>(function(){var w=globalThis;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(h.endMs==null)h.endMs=h.startMs??performance.now();})();</script>';
-	const documentHtml = shell
-		.replaceAll("__CF_BENCH_ROUTE__", route)
-		.replace("__CF_BENCH_TITLE__", escapeHtml(pageTitle(pathname)))
-		.replace("__CF_BENCH_APP_HTML__", `${appHtml}${hydrationTail}`)
-		.replace(
-			/__CF_BENCH_CLIENT_ASSETS_START__[\s\S]*?__CF_BENCH_CLIENT_ASSETS_END__/,
-			includeClient ? "__CF_BENCH_CLIENT_ASSETS_START__" : "",
-		)
-		.replace(includeClient ? /$^/ : /<script type="module" crossorigin src="\/assets\/index-[^"]+\.js"><\/script>\s*/g, "")
-		.replace("__CF_BENCH_CLIENT_ASSETS_START__", "")
-		.replace("__CF_BENCH_CLIENT_ASSETS_END__", "");
+	const { head, tail } = resolveShellParts(shell, pathname, includeClient);
+	const appStream = await render(pathname);
 
-	return new Response(documentHtml, {
+	return new Response(createDocumentStream(head, appStream, tail), {
 		status: 200,
 		headers: htmlHeaders(pathname, request.headers.get("x-cf-bench-profile"), start),
 	});

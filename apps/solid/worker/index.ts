@@ -14,7 +14,12 @@ type ManifestEntry = {
 
 let clientManifestPromise: Promise<ManifestEntry> | null = null;
 
+function normalizeBenchPath(pathname: string) {
+  return pathname.replace(/\/+$/, "") || "/";
+}
+
 function cacheKind(pathname: string) {
+  pathname = normalizeBenchPath(pathname);
   if (pathname === "/stays" || pathname === "/blog") return "list";
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
   return null;
@@ -39,6 +44,11 @@ function assetRequestFor(url: URL, request: Request) {
     method: request.method,
     headers,
   });
+}
+
+function needsClient(pathname: string) {
+  pathname = normalizeBenchPath(pathname);
+  return pathname === "/chart" || pathname === "/media";
 }
 
 function applyHtmlHeaders(headersInit: HeadersInit | null, pathname: string, profile: string | null, start: number) {
@@ -87,6 +97,7 @@ async function getClientManifest(env: Env, request: Request) {
 }
 
 async function renderDocument(pathname: string, env: Env, request: Request) {
+  pathname = normalizeBenchPath(pathname);
   const route = renderRoute(pathname);
   if (!route) return null;
 
@@ -94,9 +105,14 @@ async function renderDocument(pathname: string, env: Env, request: Request) {
   const styleLinks = (clientEntry.css ?? [])
     .map((href) => `    <link rel="stylesheet" href="/${href}" />`)
     .join("\n");
+  const includeClient = needsClient(pathname);
   const pagePropsScript = route.pageProps
     ? `\n    <script>window.__PAGE_PROPS__=${safeJson(route.pageProps)};</script>`
     : "";
+  const hydrationTail = includeClient
+    ? ""
+    : '\n    <script>(function(){var w=globalThis;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(h.endMs==null)h.endMs=h.startMs??performance.now();})();</script>';
+  const clientScript = includeClient ? `\n    <script type="module" src="/${clientEntry.file}"></script>` : "";
 
   return `<!doctype html>
 <html lang="en">
@@ -115,8 +131,7 @@ ${styleLinks}
     </script>
   </head>
   <body data-route="${route.route}">
-    <div id="app">${route.html}</div>${pagePropsScript}
-    <script type="module" src="/${clientEntry.file}"></script>
+    <div id="app">${route.html}</div>${pagePropsScript}${hydrationTail}${clientScript}
   </body>
 </html>`;
 }
@@ -133,7 +148,12 @@ export default {
       if (html) {
         return new Response(html, {
           status: 200,
-          headers: applyHtmlHeaders(null, url.pathname, request.headers.get("x-cf-bench-profile"), start),
+          headers: applyHtmlHeaders(
+            null,
+            normalizeBenchPath(url.pathname),
+            request.headers.get("x-cf-bench-profile"),
+            start
+          ),
         });
       }
     }

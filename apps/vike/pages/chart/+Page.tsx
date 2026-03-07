@@ -9,8 +9,8 @@ import {
   updateChartCoreMetrics,
 } from "../../src/bench";
 
-type ChartModule = typeof import("../../src/bench");
-type ChartInstance = ReturnType<ChartModule["createChart"]>;
+type ChartCoreModule = typeof import("../../src/chart-core");
+type ChartInstance = ReturnType<ChartCoreModule["createChart"]>;
 
 async function fetchCandles(symbol: string, timeframe: string, points: number) {
   const response = await fetch(
@@ -51,7 +51,7 @@ export default function Page() {
       let cancelled = false;
       requestAnimationFrame(() => {
         void (async () => {
-          const { createChart } = await import("../../src/bench");
+          const { createChart } = await import("../../src/chart-core");
           if (cancelled || chartRef.current) return;
           const chart = createChart(canvas, chartOptions);
           chartRef.current = chart;
@@ -66,7 +66,6 @@ export default function Page() {
       return () => {
         cancelled = true;
       };
-      return;
     }
 
     requestAnimationFrame(() => {

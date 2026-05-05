@@ -176,6 +176,18 @@
       }
     },
     {
+      "name": "honox",
+      "c3Template": "hono",
+      "tier": "framework-runtime",
+      "status": "implemented",
+      "benchmarkEnabled": true,
+      "appDir": "apps/honox",
+      "deploy": {
+        "type": "workers",
+        "command": "pnpm -C apps/honox run deploy"
+      }
+    },
+    {
       "name": "next",
       "tier": "framework-runtime",
       "status": "implemented",

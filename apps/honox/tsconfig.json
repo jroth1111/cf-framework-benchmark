@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"strict": true,
+		"skipLibCheck": true,
+		"jsx": "react-jsx",
+		"jsxImportSource": "hono/jsx",
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"types": ["@cloudflare/workers-types"],
+		"paths": {
+			"@cf-bench/dataset": ["../../packages/dataset/src/index.js"],
+			"@cf-bench/bench-contract": ["../../packages/bench-contract/src/index.d.ts"],
+			"@cf-bench/bench-types": ["../../packages/bench-types/src/index.ts"]
+		}
+	},
+	"include": ["app/**/*.ts", "app/**/*.tsx"]
+}

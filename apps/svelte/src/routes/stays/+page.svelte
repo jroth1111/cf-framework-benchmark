@@ -4,39 +4,14 @@
 
   export let data: PageData;
 
-  let city = data.city;
-  let maxRaw = data.maxRaw;
-  let cities = data.cities;
-  let filtered = data.filtered as Listing[];
+  let listings = data.listings as Listing[];
 </script>
 
 <h1 class="h1">Stays</h1>
+<p class="muted">Airbnb-style listing index.</p>
 
-<form method="get" action="/stays" class="card" style="padding:14px;margin-bottom:14px">
-  <div class="grid cols-3">
-    <div>
-      <div class="small muted">City</div>
-      <select class="input" name="city" bind:value={city}>
-        <option value="">Any</option>
-        {#each cities as c}
-          <option value={c}>{c}</option>
-        {/each}
-      </select>
-    </div>
-
-    <div>
-      <div class="small muted">Max price</div>
-      <input class="input" name="max" bind:value={maxRaw} placeholder="e.g. 250" inputmode="numeric" />
-    </div>
-
-    <div style="display:flex;align-items:end">
-      <button class="btn" type="submit">Apply</button>
-    </div>
-  </div>
-</form>
-
-<div class="grid cols-2">
-  {#each filtered as l (l.id)}
+<div class="grid cols-3">
+  {#each listings as l (l.id)}
     <a
       class="card"
       data-testid="stay-card"

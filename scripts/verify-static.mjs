@@ -43,6 +43,7 @@ await run("test:deploy-bench", "pnpm", ["test:deploy-bench"]);
 await run("test:bench-runner", "pnpm", ["test:bench-runner"]);
 await run("test:control-package", "pnpm", ["test:control-package"]);
 await run("test:verify-results", "pnpm", ["test:verify-results"]);
+await run("verify:result-artifacts", "pnpm", ["verify:results", "--", "--all-local", "--artifact-policy"]);
 await run("test:bench-stability", "pnpm", ["test:bench-stability"]);
 await run("test:cloudflare-config", "pnpm", ["test:cloudflare-config"]);
 await run("test:cloudflare-optimization", "pnpm", ["test:cloudflare-optimization"]);

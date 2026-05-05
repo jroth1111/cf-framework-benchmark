@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import fs from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { provenanceHashForRow } from "../bench/src/run.mjs";
+import { provenanceHashForRow } from "../bench/src/provenance.mjs";
 
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);
@@ -71,18 +72,78 @@ export async function verifyResultPair(jsonPath, { requireRowHashes = true } = {
   return { ok: failures.length === 0, failures };
 }
 
+export async function verifyResultArtifactPolicy(jsonPath) {
+  const failures = [];
+  const raw = await fs.readFile(jsonPath, "utf8");
+  const result = JSON.parse(raw);
+  const base = path.basename(jsonPath);
+  const mdPath = jsonPath.replace(/\.json$/, ".md");
+  const md = await fs.readFile(mdPath, "utf8").catch(() => null);
+  const dirty = result.provenance?.git?.dirty === true;
+
+  if (dirty && !base.includes(".dirty.")) {
+    fail("dirty provenance written to non-.dirty result path", failures);
+  }
+  if (!dirty && base.includes(".dirty.")) {
+    fail("clean provenance written to .dirty result path", failures);
+  }
+  if (md == null) {
+    fail(`missing markdown pair: ${mdPath}`, failures);
+  } else if (dirty && !/\|\s*Git dirty\s*\|\s*(?:\*\*)?true\b/i.test(md)) {
+    fail("dirty JSON provenance is not disclosed in markdown pair", failures);
+  }
+
+  return { ok: failures.length === 0, failures };
+}
+
+function trackedResultJsonPaths() {
+  const out = execFileSync("git", ["ls-files", "bench/results*.json"], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  });
+  return out.split(/\r?\n/).filter(Boolean);
+}
+
+async function localResultJsonPaths() {
+  const entries = await fs.readdir("bench").catch((err) => {
+    if (err?.code === "ENOENT") return [];
+    throw err;
+  });
+  return entries
+    .filter((entry) => /^results.*\.json$/.test(entry))
+    .map((entry) => path.join("bench", entry))
+    .sort((a, b) => a.localeCompare(b));
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const jsonPath = argValue("--json", process.argv[2]);
-  if (!jsonPath) {
+  if (hasFlag("--all-tracked") || hasFlag("--all-local")) {
+    const paths = hasFlag("--all-local") ? await localResultJsonPaths() : trackedResultJsonPaths();
+    const failures = [];
+    for (const resultPath of paths) {
+      const result = hasFlag("--artifact-policy")
+        ? await verifyResultArtifactPolicy(resultPath)
+        : await verifyResultPair(resultPath, { requireRowHashes: !hasFlag("--allow-legacy") });
+      if (!result.ok) {
+        failures.push(...result.failures.map((failure) => `${resultPath}: ${failure}`));
+      }
+    }
+    if (failures.length) {
+      console.error(`Result artifact verification failed (${failures.length}).`);
+      process.exit(1);
+    }
+    console.log(`Result artifact verification passed (${paths.length} result JSON files).`);
+  } else if (!jsonPath) {
     console.error("Usage: node scripts/verify-results.mjs --json bench/results.v4.<suite>.json");
     process.exit(2);
+  } else {
+    const result = await verifyResultPair(jsonPath, {
+      requireRowHashes: !hasFlag("--allow-legacy"),
+    });
+    if (!result.ok) {
+      console.error(`Result verification failed (${result.failures.length}).`);
+      process.exit(1);
+    }
+    console.log(`Result verification passed: ${jsonPath}`);
   }
-  const result = await verifyResultPair(jsonPath, {
-    requireRowHashes: !hasFlag("--allow-legacy"),
-  });
-  if (!result.ok) {
-    console.error(`Result verification failed (${result.failures.length}).`);
-    process.exit(1);
-  }
-  console.log(`Result verification passed: ${jsonPath}`);
 }

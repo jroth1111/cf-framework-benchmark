@@ -13,12 +13,12 @@
   </div>
   <div class="card" style="padding:16px">
     <h2>SSG blog</h2>
-    <p class="muted">Prerendered at build time.</p>
+    <p class="muted">Prerendered route content.</p>
     <a class="btn" href="/blog">Read blog</a>
   </div>
   <div class="card" style="padding:16px">
     <h2>Media feed</h2>
-    <p class="muted">YouTube-like browse and player interactions.</p>
+    <p class="muted">Feed browsing and player interactions.</p>
     <a class="btn" href="/media">Open media</a>
   </div>
 </div>

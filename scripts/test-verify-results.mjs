@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { provenanceHashForRow } from "../bench/src/run.mjs";
-import { verifyResultPair } from "./verify-results.mjs";
+import { provenanceHashForRow } from "../bench/src/provenance.mjs";
+import { verifyResultArtifactPolicy, verifyResultPair } from "./verify-results.mjs";
 
 const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "cf-bench-verify-results-"));
 try {
@@ -85,6 +85,39 @@ try {
   const failed = await verifyResultPair(jsonPath);
   assert.equal(failed.ok, false);
   assert(failed.failures.some((failure) => failure.includes("provenanceHash mismatch")));
+
+  const dirtyGit = { ...git, dirty: true, describe: "abc123-dirty" };
+  const dirtyJsonPath = path.join(tempDir, "results.v4.demo.json");
+  await fs.writeFile(
+    dirtyJsonPath,
+    JSON.stringify(
+      {
+        ts: "2026-05-05T00:00:00.000Z",
+        runOrder: { seed },
+        provenance: {
+          git: dirtyGit,
+          hashes: { matrix: "m", targets: "t", lockfile: "l", contract: "c", cloudflarePlatform: "cfp", cloudflareConfig: "cf", cloudflareOptimization: "cfo" },
+          cloudflarePlatform: { activeEra: "pingora-cache-2026-05-04" },
+          cloudflareAudit: { ok: true },
+          cloudflareOptimizationAudit: { ok: true },
+        },
+        scoring: { model: "real-world-choice-v1" },
+        failures: [],
+        rows: [],
+      },
+      null,
+      2
+    )
+  );
+  await fs.writeFile(path.join(tempDir, "results.v4.demo.md"), "| Git dirty | true |\n");
+  const dirtyPolicy = await verifyResultArtifactPolicy(dirtyJsonPath);
+  assert.equal(dirtyPolicy.ok, false);
+  assert(dirtyPolicy.failures.some((failure) => failure.includes("non-.dirty result path")));
+
+  const dirtySuffixedJsonPath = path.join(tempDir, "results.v4.demo.dirty.json");
+  await fs.rename(dirtyJsonPath, dirtySuffixedJsonPath);
+  await fs.rename(path.join(tempDir, "results.v4.demo.md"), path.join(tempDir, "results.v4.demo.dirty.md"));
+  assert.equal((await verifyResultArtifactPolicy(dirtySuffixedJsonPath)).ok, true);
 } finally {
   await fs.rm(tempDir, { recursive: true, force: true });
 }

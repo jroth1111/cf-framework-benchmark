@@ -6,38 +6,15 @@ export const Route = createLazyFileRoute("/stays/")({
 });
 
 function Stays() {
-  const data = Route.useLoaderData();
-  const { city, maxRaw, cities, filtered } = data;
+  const listings = Route.useLoaderData();
 
   return (
     <>
       <h1 className="h1">Stays</h1>
+      <p className="muted">Airbnb-style listing index.</p>
 
-      <form method="get" action="/stays" className="card" style={{ padding: 14, marginBottom: 14 }}>
-        <div className="grid cols-3">
-          <div>
-            <div className="small muted">City</div>
-            <select className="input" name="city" defaultValue={city}>
-              <option value="">Any</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <div className="small muted">Max price</div>
-            <input className="input" name="max" defaultValue={maxRaw} placeholder="e.g. 250" inputMode="numeric" />
-          </div>
-          <div style={{ display: "flex", alignItems: "end" }}>
-            <button className="btn" type="submit">Apply</button>
-          </div>
-        </div>
-      </form>
-
-      <div className="grid cols-2">
-        {filtered.map((l) => (
+      <div className="grid cols-3">
+        {listings.map((l) => (
           <Link key={l.id} data-testid="stay-card" className="card" to={`/stays/${l.id}`} style={{ padding: 14, display: "block" }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
               <div>

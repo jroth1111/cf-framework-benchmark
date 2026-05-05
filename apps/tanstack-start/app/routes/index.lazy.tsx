@@ -21,8 +21,13 @@ function Home() {
         </div>
         <div className="card" style={{ padding: 16 }}>
           <h2>SSG blog</h2>
-          <p className="muted">Static-friendly routes.</p>
+          <p className="muted">Prerendered route content.</p>
           <Link className="btn" to="/blog">Read blog</Link>
+        </div>
+        <div className="card" style={{ padding: 16 }}>
+          <h2>Media feed</h2>
+          <p className="muted">Feed browsing and player interactions.</p>
+          <Link className="btn" to="/media">Open media</Link>
         </div>
       </div>
     </>

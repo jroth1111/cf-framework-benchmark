@@ -1,5 +1,4 @@
 import { execSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -9,6 +8,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 import { buildCloudflareAudit } from '../../scripts/cloudflare-config-audit.mjs';
 import { buildOptimizationAudit } from '../../scripts/cloudflare-optimization-audit.mjs';
+import { provenanceHashForRow, sha256 } from './provenance.mjs';
+
+export { provenanceHashForRow } from './provenance.mjs';
 
 const require = createRequire(import.meta.url);
 const BENCH_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -195,19 +197,6 @@ function safeExec(command) {
   }
 }
 
-function stableStringify(value) {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(',')}]`;
-  return `{${Object.keys(value)
-    .sort()
-    .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
-    .join(',')}}`;
-}
-
-function sha256(value) {
-  return createHash('sha256').update(typeof value === 'string' ? value : stableStringify(value)).digest('hex');
-}
-
 function seedNumber(seed) {
   const hex = sha256(seed).slice(0, 16);
   return Number.parseInt(hex, 16) || 1;
@@ -324,41 +313,6 @@ function stableCloudflareOptimizationAuditInput(report) {
       disclosures: row.disclosures ?? [],
     })),
   };
-}
-
-function hashRowsInput(row, gitInfo, runSeed) {
-  return {
-    version: 1,
-    commit: gitInfo?.commit ?? null,
-    seed: runSeed,
-    framework: row.framework,
-    profile: row.profile,
-    phase: row.phase,
-    scenario: row.scenario,
-    iteration: row.iteration,
-    status: row.status ?? null,
-    ok: row.ok === true,
-    skipped: row.skipped === true,
-    error: row.error ?? null,
-    headers: row.headers ?? null,
-    trace: row.trace ?? null,
-    earlyHints: row.earlyHints ?? null,
-    serverMetrics: row.serverMetrics ?? null,
-    clientMetrics: row.clientMetrics ?? null,
-    memory: row.memory ?? null,
-    synthetic: {
-      nav: row.synthetic?.nav ?? null,
-      cwv: row.synthetic?.cwv ?? null,
-      longTasks: row.synthetic?.longTasks ?? null,
-      resources: row.synthetic?.resources ?? null,
-      app: row.synthetic?.app ?? null,
-    },
-    clientNavMs: row.clientNavMs ?? null,
-  };
-}
-
-export function provenanceHashForRow(row, gitInfo, runSeed) {
-  return sha256(hashRowsInput(row, gitInfo, runSeed));
 }
 
 async function readJsonFile(filePath) {

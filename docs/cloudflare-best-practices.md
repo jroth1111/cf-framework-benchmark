@@ -132,7 +132,10 @@ framework-runtime bucket.
 
 Cloudflare integration support exists, but this repo's Qwik package line is
 beta. Keep its caveats split into Cloudflare support, framework maturity, and
-runtime proof status.
+runtime proof status. The current Qwik row is blocked and excluded from
+canonical runs because fresh Worker deploys with `@qwik.dev/router`
+`2.0.0-beta.34` returned Q14 task-resolution error pages; re-enable it only
+after a source-built Worker passes the v5 live contracts.
 
 ### Waku
 

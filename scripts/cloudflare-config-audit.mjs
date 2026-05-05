@@ -117,6 +117,12 @@ function normalizeArray(value) {
   return [String(value)];
 }
 
+function normalizeRunWorkerFirst(value) {
+  if (value === true) return ["*"];
+  if (value === false || value == null) return [];
+  return normalizeArray(value);
+}
+
 function routeMatchesPattern(route, pattern) {
   if (pattern === route) return true;
   if (pattern.endsWith("*")) return route.startsWith(pattern.slice(0, -1));
@@ -134,7 +140,15 @@ function classifyAssetRouting(assets) {
       routePatterns: [],
     };
   }
-  const routePatterns = normalizeArray(assets.run_worker_first);
+  if (assets.run_worker_first === true) {
+    return {
+      mode: "worker-first-for-contract-routes",
+      contractRoutesThroughWorker: CONTRACT_ROUTES,
+      contractRoutesAssetFirst: [],
+      routePatterns: ["*"],
+    };
+  }
+  const routePatterns = normalizeRunWorkerFirst(assets.run_worker_first);
   if (!routePatterns.length) {
     return {
       mode: "asset-first-with-worker-fallback",
@@ -173,7 +187,7 @@ function summarizeConfig(config) {
           directory: assets.directory ?? null,
           htmlHandling: assets.html_handling ?? null,
           notFoundHandling: assets.not_found_handling ?? null,
-          runWorkerFirst: normalizeArray(assets.run_worker_first),
+          runWorkerFirst: normalizeRunWorkerFirst(assets.run_worker_first),
         }
       : null,
     assetRouting: classifyAssetRouting(assets),

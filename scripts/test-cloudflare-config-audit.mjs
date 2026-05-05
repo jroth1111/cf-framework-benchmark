@@ -28,7 +28,9 @@ assert.equal(reactRouter.wrangler.assetRouting.mode, "worker-only");
 const astro = byName.get("astro");
 assert.ok(astro, "astro audit row missing");
 assert.equal(astro.cloudflare.notes, "Astro 6 requires Node 22+ in Workers Builds.");
-assert.equal(astro.wrangler.assetRouting.mode, "asset-first-with-worker-fallback");
+assert.equal(astro.wrangler.assetRouting.mode, "worker-first-for-contract-routes");
+assert.deepEqual(astro.wrangler.assetRouting.contractRoutesAssetFirst, []);
+assert.deepEqual(astro.wrangler.assetRouting.routePatterns, ["*"]);
 
 const waku = byName.get("waku");
 assert.ok(waku, "waku audit row missing");

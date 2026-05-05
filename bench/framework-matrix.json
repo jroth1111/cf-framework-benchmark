@@ -205,9 +205,10 @@
     },
     {
       "name": "qwik",
-      "tier": "framework-runtime",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "tier": "framework-experimental",
+      "status": "blocked",
+      "benchmarkEnabled": false,
+      "blockedReason": "Fresh Worker deploys with @qwik.dev/router 2.0.0-beta.34 return Qwik Q14 task-resolution error pages; exclude from canonical runs until a source-built Worker passes v5 live contracts.",
       "appDir": "apps/qwik",
       "scenarioContracts": {
         "mpa_airbnb": {

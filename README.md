@@ -6,11 +6,11 @@ Framework entries are classified before they are ranked:
 
 | Tier | Entries | Ranking policy |
 | --- | --- | --- |
-| `framework-runtime` | Next.js, Nuxt, Qwik, React Router, RedwoodSDK, SvelteKit, TanStack Start | Headline tables, bucketed by route/render/data/hydration contract. |
+| `framework-runtime` | Next.js, Nuxt, React Router, RedwoodSDK, SvelteKit, TanStack Start | Headline tables, bucketed by route/render/data/hydration contract. |
 | `framework-prerender` | Angular, Astro, Vike, Waku | Ranked separately from runtime SSR entries. |
 | `wrapper-baseline` | React, Solid, Vue | Custom Worker + frontend library baselines; not framework-runtime peers. |
 | `worker-baseline` | Hono, Hono + frontend composites | Worker/Hono baselines; useful context, not framework-runtime rankings. |
-| `framework-experimental` | Analog, SolidStart variants, incomplete composites | Excluded until the matrix marks them benchmark-enabled. |
+| `framework-experimental` | Analog, Qwik, SolidStart variants, incomplete composites | Excluded until the matrix marks them benchmark-enabled. |
 
 The standalone control implementation lives in `apps/control` and `bench/controls.json`. It is used for live verification and appendix baselines, not headline framework scoreboards.
 

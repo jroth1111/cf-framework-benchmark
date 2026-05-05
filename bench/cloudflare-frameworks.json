@@ -81,8 +81,9 @@
       "adapter": "Qwik City Cloudflare output",
       "cloudflareSupport": "official-guide",
       "maturity": "beta",
-      "benchmarkMode": "framework-runtime-with-prerendered-blog",
-      "verificationTarget": "wrangler/workerd"
+      "benchmarkMode": "experimental-blocked",
+      "verificationTarget": "wrangler/workerd",
+      "notes": "Fresh Worker deploys with @qwik.dev/router 2.0.0-beta.34 return Qwik Q14 task-resolution error pages; excluded from canonical runs until a source-built Worker passes v5 live contracts."
     },
     "react": {
       "officialGuide": "https://developers.cloudflare.com/workers/vite-plugin/tutorial/",

@@ -80,3 +80,4 @@ bench-output.log
 .cache
 .parcel-cache
 eslint-cache
+.code-state

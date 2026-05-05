@@ -9,3 +9,5 @@ main = "./server/entry.cloudflare-pages.js"
 directory = "./dist"
 binding = "ASSETS"
 html_handling = "drop-trailing-slash"
+[vars]
+NODE_ENV = "production"

@@ -7,3 +7,5 @@ main = "@astrojs/cloudflare/entrypoints/server"
 directory = "./dist"
 binding = "ASSETS"
 html_handling = "drop-trailing-slash"
+[vars]
+NODE_ENV = "production"

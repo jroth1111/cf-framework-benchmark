@@ -27,6 +27,14 @@ function parseFrameworksFromHelp(helpText) {
 
 const DEPRECATED_FRAMEWORKS = new Set(['analog', 'docusaurus', 'gatsby']);
 
+const VALID_TIERS = new Set([
+  'framework-runtime',
+  'framework-prerender',
+  'wrapper-baseline',
+  'worker-baseline',
+  'framework-experimental',
+]);
+
 function diffSets(expected, actual) {
   const exp = new Set(expected);
   const act = new Set(actual);
@@ -62,8 +70,13 @@ async function main() {
     .map((fw) => `${fw.name}:${fw.c3Template || fw.name}`);
   const { missing } = diffSets(supportedC3Frameworks, coveredC3Frameworks);
 
-  if (!missing.length && !invalidMappings.length) {
-    console.log(`Framework matrix is in sync (${supportedC3Frameworks.length} required C3 Workers templates).`);
+  const missingTier = matrixEntries.filter((fw) => !fw.tier).map((fw) => fw.name);
+  const invalidTier = matrixEntries
+    .filter((fw) => fw.tier && !VALID_TIERS.has(fw.tier))
+    .map((fw) => `${fw.name}:${fw.tier}`);
+
+  if (!missing.length && !invalidMappings.length && !missingTier.length && !invalidTier.length) {
+    console.log(`Framework matrix is in sync (${supportedC3Frameworks.length} required C3 Workers templates, all tiers valid).`);
     return;
   }
 
@@ -72,6 +85,12 @@ async function main() {
   }
   if (invalidMappings.length) {
     console.error(`Invalid c3Template mappings: ${invalidMappings.join(', ')}`);
+  }
+  if (missingTier.length) {
+    console.error(`Missing tier field: ${missingTier.join(', ')}`);
+  }
+  if (invalidTier.length) {
+    console.error(`Invalid tier values: ${invalidTier.join(', ')}`);
   }
 
   process.exit(1);

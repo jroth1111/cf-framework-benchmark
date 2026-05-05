@@ -8,8 +8,8 @@ import {
 
 const CACHE = {
   noStore: "no-store",
-  short: "public, max-age=0, s-maxage=60",
-  detail: "public, max-age=0, s-maxage=300",
+  short: "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
+  detail: "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
 };
 
 type HonoPageMatch =

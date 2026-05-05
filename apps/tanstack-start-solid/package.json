@@ -19,18 +19,18 @@
     "@cf-bench/chart-hooks": "workspace:*",
     "@cf-bench/dataset": "workspace:*",
     "@cf-bench/ui": "workspace:*",
-    "@tanstack/solid-router": "^1.166.2",
-    "@tanstack/solid-start": "^1.166.2",
-    "solid-js": "^1.9.10"
+    "@tanstack/solid-router": "1.169.1",
+    "@tanstack/solid-start": "1.167.60",
+    "solid-js": "1.9.12"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.26.0",
-    "@tanstack/router-plugin": "^1.166.2",
-    "@types/node": "^24.11.0",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1",
-    "vite-plugin-solid": "^2.11.10",
-    "vite-tsconfig-paths": "^5.1.4",
-    "wrangler": "^4.71.0"
+    "@cloudflare/vite-plugin": "1.35.0",
+    "@tanstack/router-plugin": "1.167.33",
+    "@types/node": "25.6.0",
+    "typescript": "6.0.3",
+    "vite": "8.0.10",
+    "vite-plugin-solid": "2.11.12",
+    "vite-tsconfig-paths": "6.1.1",
+    "wrangler": "4.87.0"
   }
 }

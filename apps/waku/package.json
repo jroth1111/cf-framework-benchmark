@@ -16,23 +16,24 @@
 		"@cf-bench/bench-types": "workspace:*",
 		"@cf-bench/chart-core": "workspace:*",
 		"@cf-bench/dataset": "workspace:*",
-		"hono": "^4.10.0",
-		"react": "~19.2.4",
-		"react-dom": "~19.2.4",
-		"react-server-dom-webpack": "~19.2.4",
-		"waku": "1.0.0-alpha.5"
+		"hono": "4.12.17",
+		"react": "19.2.5",
+		"react-dom": "19.2.5",
+		"react-server-dom-webpack": "19.2.5",
+		"waku": "1.0.0-alpha.9"
 	},
 	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.25.6",
-		"@tailwindcss/vite": "^4.2.1",
-		"@types/node": "^25.3.3",
-		"@types/react": "^19.2.14",
-		"@types/react-dom": "^19.2.3",
-		"@vitejs/plugin-react": "^5.1.0",
-		"babel-plugin-react-compiler": "^1.0.0",
-		"miniflare": "^4.20260305.0",
-		"tailwindcss": "^4.2.1",
-		"typescript": "^5.9.3",
-		"wrangler": "^4.71.0"
+		"@cloudflare/vite-plugin": "1.35.0",
+		"@rolldown/plugin-babel": "0.2.3",
+		"@tailwindcss/vite": "4.2.4",
+		"@types/node": "25.6.0",
+		"@types/react": "19.2.14",
+		"@types/react-dom": "19.2.3",
+		"@vitejs/plugin-react": "6.0.1",
+		"babel-plugin-react-compiler": "1.0.0",
+		"miniflare": "4.20260430.0",
+		"tailwindcss": "4.2.4",
+		"typescript": "6.0.3",
+		"wrangler": "4.87.0"
 	}
 }

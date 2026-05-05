@@ -16,19 +16,19 @@
 		"@cf-bench/chart-core": "workspace:*",
 		"@cf-bench/dataset": "workspace:*",
 		"@cf-bench/ui": "workspace:*",
-		"hono": "^4.12.5",
-		"vue": "^3.5.29",
-		"vue-router": "^4.6.3"
+		"hono": "4.12.17",
+		"vue": "3.5.33",
+		"vue-router": "5.0.6"
 	},
 	"devDependencies": {
-		"@tsconfig/node24": "^24.0.4",
-		"@types/node": "^24.11.0",
-		"@vitejs/plugin-vue": "^6.0.4",
-		"@vue/server-renderer": "^3.5.29",
-		"@vue/tsconfig": "^0.8.1",
-		"typescript": "~5.9.3",
-		"vite": "^7.3.1",
-		"vue-tsc": "^3.2.5",
-		"wrangler": "^4.71.0"
+		"@tsconfig/node24": "24.0.4",
+		"@types/node": "25.6.0",
+		"@vitejs/plugin-vue": "6.0.6",
+		"@vue/server-renderer": "3.5.33",
+		"@vue/tsconfig": "0.9.1",
+		"typescript": "6.0.3",
+		"vite": "8.0.10",
+		"vue-tsc": "3.2.8",
+		"wrangler": "4.87.0"
 	}
 }

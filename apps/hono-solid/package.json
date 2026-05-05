@@ -16,14 +16,14 @@
 		"@cf-bench/chart-hooks": "workspace:*",
 		"@cf-bench/dataset": "workspace:*",
 		"@cf-bench/ui": "workspace:*",
-		"hono": "^4.12.5",
-		"solid-js": "^1.9.10"
+		"hono": "4.12.17",
+		"solid-js": "1.9.12"
 	},
 	"devDependencies": {
-		"@types/node": "^25.3.5",
-		"typescript": "^5.9.3",
-		"vite": "^7.3.0",
-		"vite-plugin-solid": "^2.11.10",
-		"wrangler": "^4.71.0"
+		"@types/node": "25.6.0",
+		"typescript": "6.0.3",
+		"vite": "8.0.10",
+		"vite-plugin-solid": "2.11.12",
+		"wrangler": "4.87.0"
 	}
 }

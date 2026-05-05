@@ -18,7 +18,15 @@ export const reqHandler = createRequestHandler(async (req) => {
 	const start = performance.now();
 	const angularUrl = new URL(req.url);
 	angularUrl.hostname = 'localhost';
-	const angularReq = new Request(angularUrl, req);
+	const headers = new Headers(req.headers);
+	headers.set('host', 'localhost');
+	const angularReq = new Request(angularUrl, {
+		method: req.method,
+		headers,
+		body: req.method === 'GET' || req.method === 'HEAD' ? undefined : req.body,
+		redirect: req.redirect,
+		signal: req.signal,
+	});
 	const res = await angularApp.handle(angularReq);
 
 	if (!res) return new Response('Page not found.', { status: 404 });

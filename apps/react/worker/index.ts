@@ -35,6 +35,14 @@ function isDocumentRequest(request: Request, url: URL) {
     return !url.pathname.includes(".");
 }
 
+function isBenchmarkRoute(pathname: string) {
+    pathname = normalizeBenchPath(pathname);
+    if (pathname === "/" || pathname === "/stays" || pathname === "/blog" || pathname === "/chart" || pathname === "/media") {
+        return true;
+    }
+    return /^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname);
+}
+
 function needsClient(pathname: string) {
     pathname = normalizeBenchPath(pathname);
     return pathname === "/chart" || pathname === "/media";
@@ -137,6 +145,16 @@ async function loadShell(env: Env, request: Request, origin: URL) {
 
 async function renderDocument(request: Request, env: Env, url: URL, start: number) {
     const pathname = normalizeBenchPath(url.pathname);
+    if (!isBenchmarkRoute(pathname)) {
+        return new Response("Not found", {
+            status: 404,
+            headers: {
+                "content-type": "text/plain; charset=utf-8",
+                "cache-control": "no-store",
+                "server-timing": `cf_bench;dur=${(performance.now() - start).toFixed(1)}`,
+            },
+        });
+    }
     const shell = await loadShell(env, request, url);
     const html = injectDocument(shell, url, renderApp(`${pathname}${url.search}`));
     const headers = withHtmlHeaders(pathname, request.headers.get("x-cf-bench-profile"), start);

@@ -6,7 +6,8 @@
 	"assets": {
 		"binding": "ASSETS",
 		"directory": "./dist/browser",
-		"html_handling": "drop-trailing-slash"
+		"html_handling": "drop-trailing-slash",
+		"run_worker_first": ["/", "/stays", "/stays/*", "/blog", "/blog/*", "/chart", "/media", "/api/*"]
 	},
 	"observability": {
 		"enabled": true

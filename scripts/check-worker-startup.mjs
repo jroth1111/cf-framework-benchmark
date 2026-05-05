@@ -47,6 +47,26 @@ async function fileExists(filePath) {
   }
 }
 
+async function readPackageJson(appDir) {
+  try {
+    return JSON.parse(await fs.readFile(path.join(appDir, "package.json"), "utf8"));
+  } catch (err) {
+    if (err?.code === "ENOENT") return null;
+    throw err;
+  }
+}
+
+async function prepareStartupEntrypoint(row, appDir) {
+  if (!row.wrangler?.main) return;
+  const entrypoint = path.join(appDir, row.wrangler.main);
+  if (await fileExists(entrypoint)) return;
+
+  const packageJson = await readPackageJson(appDir);
+  if (!packageJson?.scripts?.["build:worker"]) return;
+
+  await run(`build worker entrypoint: ${row.name}`, "pnpm", ["run", "build:worker"], appDir);
+}
+
 async function startupArgsForApp(appDir) {
   const generatedConfigCandidates = [
     "dist/server/wrangler.json",
@@ -102,6 +122,7 @@ pushPair(passthroughArgs, "--args");
 for (const row of selected) {
   const appDir = path.resolve(repoRoot, row.appDir);
   await cleanupWranglerStartupArtifacts(appDir);
+  await prepareStartupEntrypoint(row, appDir);
   const startupArgs = await startupArgsForApp(appDir);
   try {
     await run(

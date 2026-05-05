@@ -128,14 +128,14 @@ jobs:
             bench/results.v4.stability.md
 
       - name: Run WebPageTest (optional)
-        if: ${{ secrets.WPT_API_KEY != '' && secrets.WPT_LOCATIONS != '' }}
+        if: ${{ secrets.WPT_API_KEY != '' }}
         env:
           WPT_API_KEY: ${{ secrets.WPT_API_KEY }}
-          WPT_LOCATIONS: ${{ secrets.WPT_LOCATIONS }}
+          WPT_LOCATIONS: ${{ secrets.WPT_LOCATIONS || 'MEL_AU_03:Chrome.Native,IAD_US_01:Chrome.Native,DUB_IE_01:Chrome.Native' }}
         run: pnpm bench:remote
 
       - name: Upload remote results
-        if: ${{ secrets.WPT_API_KEY != '' && secrets.WPT_LOCATIONS != '' }}
+        if: ${{ secrets.WPT_API_KEY != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: bench-results-remote

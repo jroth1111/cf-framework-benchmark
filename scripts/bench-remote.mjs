@@ -11,6 +11,13 @@ import {
   toAbsolutePath,
 } from "../bench/src/config-v4.mjs";
 
+const CANONICAL_WPT_LOCATIONS = [
+  { region: "MEL", location: "MEL_AU_03:Chrome.Native" },
+  { region: "US", location: "IAD_US_01:Chrome.Native" },
+  { region: "EU", location: "DUB_IE_01:Chrome.Native" },
+];
+const DEFAULT_WPT_LOCATIONS = CANONICAL_WPT_LOCATIONS.map((entry) => entry.location).join(",");
+
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);
   if (idx === -1) return fallback;
@@ -19,7 +26,7 @@ function argValue(flag, fallback = null) {
 
 const apiKey = argValue("--api-key", process.env.WPT_API_KEY || "");
 const endpoint = argValue("--endpoint", process.env.WPT_ENDPOINT || "https://www.webpagetest.org");
-const locationsRaw = argValue("--locations", process.env.WPT_LOCATIONS || "");
+const locationsRaw = argValue("--locations", process.env.WPT_LOCATIONS || DEFAULT_WPT_LOCATIONS);
 const targetsPath = toAbsolutePath(argValue("--targets", null), DEFAULT_TARGETS_PATH);
 const matrixPath = toAbsolutePath(argValue("--matrix", null), DEFAULT_MATRIX_PATH);
 const suitesDir = toAbsolutePath(argValue("--suites-dir", null), DEFAULT_SUITES_DIR);
@@ -36,11 +43,6 @@ const locations = locationsRaw
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
-
-if (!locations.length) {
-  console.error("Missing WPT locations. Set WPT_LOCATIONS or pass --locations.");
-  process.exit(1);
-}
 
 const frameworks = await resolveLiveTargets({
   matrixPath,
@@ -89,6 +91,11 @@ function pickMetric(obj, keys) {
   return null;
 }
 
+function canonicalRegionForLocation(location) {
+  const locationId = String(location).split(/[.:]/)[0];
+  return CANONICAL_WPT_LOCATIONS.find((entry) => entry.location.startsWith(`${locationId}:`))?.region ?? null;
+}
+
 const results = [];
 
 for (const fw of frameworks) {
@@ -105,6 +112,7 @@ for (const fw of frameworks) {
         const record = {
           framework: fw.name,
           scenario: scenario.name,
+          region: canonicalRegionForLocation(location),
           location,
           url,
           metrics: {
@@ -135,6 +143,7 @@ for (const fw of frameworks) {
         results.push({
           framework: fw.name,
           scenario: scenario.name,
+          region: canonicalRegionForLocation(location),
           location,
           url,
           error: err instanceof Error ? err.message : String(err),
@@ -144,5 +153,16 @@ for (const fw of frameworks) {
   }
 }
 
-await fs.writeFile(outPath, JSON.stringify({ ts: new Date().toISOString(), results }, null, 2));
+await fs.writeFile(
+  outPath,
+  JSON.stringify(
+    {
+      ts: new Date().toISOString(),
+      canonicalLocations: CANONICAL_WPT_LOCATIONS,
+      results,
+    },
+    null,
+    2
+  )
+);
 console.log(`Remote results written to ${path.relative(process.cwd(), outPath)}`);

@@ -159,8 +159,12 @@ Cloudflare config disclosure is part of static verification: the audit records
 each app's adapter, framework support status, maturity label, Wrangler entry,
 Static Assets routing mode, compatibility flags, and observability setting.
 The optimization audit adds Worker startup probe commands, asset/header evidence,
-prefetch mode disclosure, server/client boundary leak scans, and `/chart` +
-`/media` hydration-risk evidence.
+prefetch mode disclosure, server/client boundary leak scans, explicit benchmark
+disclosures, `/chart` + `/media` route/client-work evidence, and the tracked
+optimization-variant catalog in `bench/cloudflare-optimization-variants.json`.
+Benchmark rows also carry Cloudflare trace metadata (`cf-ray`, derived colo,
+cache status, cache-control, age, date, and parsed `server-timing`) so edge
+placement and cache outliers are part of result provenance.
 
 ## Directory layout
 

@@ -86,6 +86,10 @@ function isClientCandidate(appDir, filePath) {
   return parts.some((part) => UI_DIR_PARTS.has(part));
 }
 
+function isGeneratedHtml(relativePath) {
+  return /^pages\/.+\.html$/i.test(relativePath);
+}
+
 function lineNumber(source, index) {
   return source.slice(0, index).split(/\r?\n/).length;
 }
@@ -109,21 +113,35 @@ function findBoundaryLeaks(appDir, sources) {
   return leaks;
 }
 
+function isPrefetchDisclosureLine(line) {
+  if (!/modulepreload|rel=["']preload["']/.test(line)) return false;
+  return /_RE\b|RegExp|\.replace|replace\(|CLIENT_.*RE|\\s\*<link|\/\\s\*</.test(line);
+}
+
+function prefetchHitsForSource(sourceFile) {
+  const hits = [];
+  const checks = [
+    { mode: "disabled", re: /prefetch=\{false\}|prefetch={false}|prefetchStaticAssets:\s*false|data-sveltekit-preload-data=["']off["']/ },
+    { mode: "intent", re: /prefetch=["']intent["']/ },
+    { mode: "tap", re: /data-sveltekit-preload-data=["']tap["']/ },
+    { mode: "hover", re: /data-sveltekit-preload-data=["']hover["']|preload-data=["']hover["']/ },
+    { mode: "viewport-or-render", re: /prefetch=["'](render|viewport)["']|modulepreload|rel=["']preload["']/ },
+  ];
+
+  for (const line of sourceFile.source.split(/\r?\n/)) {
+    if (isPrefetchDisclosureLine(line)) continue;
+    for (const check of checks) {
+      if (check.re.test(line)) hits.push({ mode: check.mode, file: sourceFile.relative });
+    }
+  }
+  return hits;
+}
+
 function classifyPrefetch(sources) {
   const hits = [];
   for (const sourceFile of sources) {
-    const rel = sourceFile.relative;
-    const source = sourceFile.source;
-    const checks = [
-      { mode: "disabled", re: /prefetch=\{false\}|prefetch={false}|prefetchStaticAssets:\s*false|data-sveltekit-preload-data=["']off["']/ },
-      { mode: "intent", re: /prefetch=["']intent["']/ },
-      { mode: "tap", re: /data-sveltekit-preload-data=["']tap["']/ },
-      { mode: "hover", re: /data-sveltekit-preload-data=["']hover["']|preload-data=["']hover["']/ },
-      { mode: "viewport-or-render", re: /prefetch=["'](render|viewport)["']|modulepreload|rel=["']preload["']/ },
-    ];
-    for (const check of checks) {
-      if (check.re.test(source)) hits.push({ mode: check.mode, file: rel });
-    }
+    if (sourceFile.generated) continue;
+    hits.push(...prefetchHitsForSource(sourceFile));
   }
   const modes = [...new Set(hits.map((hit) => hit.mode))].sort();
   let classification = "not-detected";
@@ -135,24 +153,37 @@ function classifyPrefetch(sources) {
 
 function classifyRouteHydration(sources, scenario) {
   const routeFiles = sources.filter((sourceFile) => {
+    if (sourceFile.generated) return false;
     const rel = sourceFile.relative.toLowerCase();
     return rel.includes(`/${scenario}`) || rel.includes(`${scenario}.`) || sourceFile.source.includes(`/${scenario}`);
   });
   const evidence = [];
   for (const sourceFile of routeFiles) {
+    const rel = sourceFile.relative.toLowerCase();
     const markers = [];
     if (/\.lazy\.|lazy\s*\(|dynamic\s*\(|import\s*\(/.test(sourceFile.relative) || /lazy\s*\(|dynamic\s*\(|import\s*\(/.test(sourceFile.source)) markers.push("lazy");
-    if (/useVisibleTask\$|useEffect\s*\(|onMount\s*\(|hydrateRoot|createRoot|client:load|client:idle|client:visible|["']use client["']/.test(sourceFile.source)) {
+    if (/["']use client["']/.test(sourceFile.source)) markers.push("client-island");
+    if (/useVisibleTask\$/.test(sourceFile.source)) markers.push("resumable-task");
+    if (/useEffect\s*\(|onMount\s*\(|hydrateRoot|createRoot|client:load|client:idle|client:visible|["']use client["']/.test(sourceFile.source)) {
       markers.push("client-hydration");
     }
     if (/canvas|getContext\(|draw[A-Z]|requestAnimationFrame/.test(sourceFile.source)) markers.push("canvas-work");
     if (/fetch\s*\(|routeLoader\$|loader\s*:|createServerFn|server\$|useAsyncData|load\s*\(/.test(sourceFile.source)) markers.push("data-loader");
     if (markers.length) {
-      evidence.push({ file: sourceFile.relative, markers: [...new Set(markers)].sort() });
+      evidence.push({
+        file: sourceFile.relative,
+        routeSpecific: rel.includes(`/${scenario}`) || rel.includes(`${scenario}.`),
+        markers: [...new Set(markers)].sort(),
+      });
     }
   }
   const markerSet = new Set(evidence.flatMap((item) => item.markers));
-  const risk = markerSet.has("client-hydration") && !markerSet.has("lazy") ? "hydration-on-route-entry" : markerSet.has("lazy") ? "route-split" : "not-detected";
+  const routeMarkerSet = new Set(evidence.filter((item) => item.routeSpecific).flatMap((item) => item.markers));
+  let risk = "not-detected";
+  if (markerSet.has("lazy")) risk = "route-split";
+  else if (routeMarkerSet.has("client-island")) risk = "client-island";
+  else if (routeMarkerSet.has("client-hydration")) risk = "hydration-on-route-entry";
+  else if (markerSet.has("client-hydration")) risk = "instrumented-layout";
   return { risk, files: routeFiles.length, evidence: evidence.slice(0, 12) };
 }
 
@@ -231,27 +262,130 @@ function sourceRequirementLinks() {
   ];
 }
 
+function arrayIncludesAll(items, required) {
+  const set = new Set(Array.isArray(items) ? items : []);
+  return required.every((item) => set.has(item));
+}
+
+function targetsFramework(variant, name) {
+  if (variant.frameworks === "all-enabled-workers" || variant.frameworks === "all-live-results") return true;
+  return Array.isArray(variant.frameworks) && variant.frameworks.includes(name);
+}
+
+function summarizeOptimizationVariants(doc) {
+  const variants = Array.isArray(doc?.variants) ? doc.variants : [];
+  const byClass = variants.reduce((acc, variant) => {
+    if (variant?.class) acc[variant.class] = (acc[variant.class] ?? 0) + 1;
+    return acc;
+  }, {});
+  return {
+    schemaVersion: doc?.schemaVersion ?? null,
+    references: doc?.references ?? [],
+    requiredClasses: doc?.requiredClasses ?? [],
+    classCounts: byClass,
+    rankingPolicy: doc?.rankingPolicy ?? null,
+    sourceRequirements: doc?.sourceRequirements ?? [],
+    variants: variants.map((variant) => ({
+      id: variant.id,
+      class: variant.class,
+      status: variant.status,
+      frameworks: variant.frameworks,
+      ranking: variant.ranking ?? null,
+    })),
+  };
+}
+
+function validateOptimizationVariants(doc) {
+  const gaps = [];
+  const variants = Array.isArray(doc?.variants) ? doc.variants : [];
+  const requiredClasses = Array.isArray(doc?.requiredClasses) ? doc.requiredClasses : [];
+  const variantClasses = new Set(variants.map((variant) => variant?.class).filter(Boolean));
+
+  for (const requiredClass of requiredClasses) {
+    if (!variantClasses.has(requiredClass)) gaps.push(`missing-optimization-class:${requiredClass}`);
+  }
+
+  const sourceClasses = new Set((doc?.sourceRequirements ?? []).map((item) => item?.class).filter(Boolean));
+  for (const requiredClass of requiredClasses) {
+    if (!sourceClasses.has(requiredClass)) gaps.push(`missing-source-requirement-class:${requiredClass}`);
+  }
+
+  for (const variant of variants) {
+    if (!variant?.id) gaps.push("optimization-variant-missing-id");
+    if (!variant?.class) gaps.push(`optimization-variant-missing-class:${variant?.id ?? "unknown"}`);
+    if (!variant?.status) gaps.push(`optimization-variant-missing-status:${variant?.id ?? "unknown"}`);
+    if (!variant?.frameworks) gaps.push(`optimization-variant-missing-frameworks:${variant?.id ?? "unknown"}`);
+  }
+
+  const assetVariants = variants.filter((variant) => variant?.class === "asset-routing-experiment");
+  if (!assetVariants.some((variant) => Array.isArray(variant?.configPatch?.assets?.run_worker_first) && variant.configPatch.assets.run_worker_first.includes("/api/*"))) {
+    gaps.push("missing-assets-first-api-worker-control");
+  }
+  if (
+    !assetVariants.some((variant) =>
+      arrayIncludesAll(variant?.configPatch?.assets?.run_worker_first, ["/", "/stays", "/stays/*", "/blog", "/blog/*", "/chart", "/media", "/api/*"])
+    )
+  ) {
+    gaps.push("missing-worker-first-contract-route-control");
+  }
+
+  const traceVariant = variants.find((variant) => variant?.class === "trace-correlation");
+  if (!arrayIncludesAll(traceVariant?.capturedHeaders, ["cf-ray", "server-timing", "cf-cache-status"])) {
+    gaps.push("missing-trace-correlation-headers");
+  }
+  if (!arrayIncludesAll(traceVariant?.derivedFields, ["colo", "serverTiming"])) {
+    gaps.push("missing-trace-correlation-derived-fields");
+  }
+
+  const workerdVariant = variants.find((variant) => variant?.class === "workerd-local-harness");
+  if (!workerdVariant?.commands?.some((command) => command.includes("wrangler check startup"))) {
+    gaps.push("missing-workerd-startup-command");
+  }
+
+  const openNextVariants = variants.filter((variant) => variant?.class === "opennext-cache-mode" && targetsFramework(variant, "next"));
+  if (!openNextVariants.some((variant) => variant?.openNextConfig?.incrementalCache === "staticAssetsIncrementalCache")) {
+    gaps.push("missing-opennext-static-assets-cache-mode");
+  }
+  if (!openNextVariants.some((variant) => String(variant?.openNextConfig?.incrementalCache ?? "").includes("r2IncrementalCache"))) {
+    gaps.push("missing-opennext-r2-cache-mode");
+  }
+
+  const vinext = variants.find((variant) => variant?.class === "vinext-diagnostic");
+  if (vinext?.ranking !== "excluded") gaps.push("vinext-diagnostic-not-excluded");
+
+  return gaps;
+}
+
 function riskSummary(row) {
   const risks = [];
   if (row.boundaryLeaks.length) risks.push("server-client-boundary-leaks");
   if (row.prefetch.classification === "broad-or-implicit") risks.push("broad-prefetch");
-  if (row.workerEntrypoint.status === "not-built") risks.push("startup-size-needs-build-output");
-  if (row.cloudflare.wrangler?.nodejsCompat) risks.push("nodejs-compat-startup-surface");
   if (row.routes.chart.risk === "hydration-on-route-entry") risks.push("chart-hydration-on-entry");
   if (row.routes.media.risk === "hydration-on-route-entry") risks.push("media-hydration-on-entry");
   return risks;
+}
+
+function disclosureSummary(row) {
+  const disclosures = [];
+  if (row.workerEntrypoint.status === "not-built") disclosures.push("startup-size-needs-build-output");
+  if (row.cloudflare.wrangler?.nodejsCompat) disclosures.push("nodejs-compat-startup-surface");
+  return disclosures;
 }
 
 export async function buildOptimizationAudit({
   cwd = process.cwd(),
   matrixPath = path.join(cwd, "bench", "framework-matrix.json"),
   metadataPath = path.join(cwd, "bench", "cloudflare-frameworks.json"),
+  variantsPath = path.join(cwd, "bench", "cloudflare-optimization-variants.json"),
 } = {}) {
   const matrix = await readJson(matrixPath);
+  const optimizationVariantsDoc = await readJson(variantsPath);
   const configAudit = await buildCloudflareAudit({ cwd, matrixPath, metadataPath });
   const configByName = new Map(configAudit.frameworks.map((row) => [row.name, row]));
+  const optimizationVariantGaps = validateOptimizationVariants(optimizationVariantsDoc);
+  const variants = Array.isArray(optimizationVariantsDoc?.variants) ? optimizationVariantsDoc.variants : [];
   const rows = [];
-  const gaps = [];
+  const gaps = [...optimizationVariantGaps];
 
   for (const framework of matrix.frameworks ?? []) {
     const appDir = framework.appDir ? path.resolve(cwd, framework.appDir) : null;
@@ -266,9 +400,11 @@ export async function buildOptimizationAudit({
     const sources = [];
     for (const filePath of files) {
       const source = await fs.readFile(filePath, "utf8");
+      const relative = normalizePath(path.relative(appDir, filePath));
       sources.push({
         path: filePath,
-        relative: normalizePath(path.relative(appDir, filePath)),
+        relative,
+        generated: isGeneratedHtml(relative),
         source,
       });
     }
@@ -295,12 +431,28 @@ export async function buildOptimizationAudit({
       },
       workerEntrypoint: await workerEntrypointSize(cwd, appDir, wrangler),
       startupProbe: framework.deploy?.type === "workers" ? `pnpm -C ${normalizePath(path.relative(cwd, appDir))} run build && npx wrangler check startup ${wrangler?.main ?? "<built-worker>"}` : null,
+      workerdLocalHarness:
+        framework.deploy?.type === "workers"
+          ? {
+              build: `pnpm -C ${normalizePath(path.relative(cwd, appDir))} run build`,
+              startup: `npx wrangler check startup ${wrangler?.main ?? "<built-worker>"}`,
+            }
+          : null,
       assetCaching: {
         headersPath: headers ? normalizePath(path.relative(cwd, headers.path)) : null,
         staticAssetFileCount,
         immutableAssetHeaders: headers ? /Cache-Control:\s*public,\s*max-age=31536000,\s*immutable/i.test(headers.source) : false,
         routeCacheEvidence: routeCacheEvidence(sources),
       },
+      optimizationVariants: variants
+        .filter((variant) => targetsFramework(variant, framework.name))
+        .map((variant) => ({ id: variant.id, class: variant.class, status: variant.status, ranking: variant.ranking ?? null })),
+      openNextCacheModes:
+        framework.name === "next"
+          ? variants
+              .filter((variant) => variant.class === "opennext-cache-mode" && targetsFramework(variant, "next"))
+              .map((variant) => ({ id: variant.id, status: variant.status, config: variant.openNextConfig ?? null }))
+          : [],
       prefetch: classifyPrefetch(sources),
       boundaryLeaks: findBoundaryLeaks(appDir, sources),
       routes: {
@@ -309,6 +461,7 @@ export async function buildOptimizationAudit({
       },
     };
     row.risks = riskSummary(row);
+    row.disclosures = disclosureSummary(row);
     rows.push(row);
   }
 
@@ -322,6 +475,9 @@ export async function buildOptimizationAudit({
     schemaVersion: "1.0.0",
     generatedAt: new Date().toISOString(),
     sourceRequirements: sourceRequirementLinks(),
+    optimizationSourceRequirements: optimizationVariantsDoc.sourceRequirements ?? [],
+    optimizationVariants: summarizeOptimizationVariants(optimizationVariantsDoc),
+    traceCorrelation: variants.find((variant) => variant.class === "trace-correlation") ?? null,
     ok: gaps.length === 0,
     gaps,
     frameworkCount: rows.length,
@@ -341,14 +497,20 @@ function markdown(report) {
     `Generated: ${report.generatedAt}`,
     "",
     `Required gaps: ${report.gaps.length}`,
+    `Optimization classes: ${Object.entries(report.optimizationVariants?.classCounts ?? {})
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([name, count]) => `${name}=${count}`)
+      .join(", ")}`,
     "",
-    "| Framework | Tier | Prefetch | Entrypoint | Flags | Risks |",
-    "| --- | --- | --- | --- | --- | --- |",
+    "| Framework | Tier | Prefetch | Entrypoint | Flags | Risks | Disclosures |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
   ];
   for (const row of report.rows.filter((item) => item.benchmarkEnabled)) {
     const flags = row.cloudflare?.wrangler?.compatibilityFlags?.join(", ") || "none";
     const entry = row.workerEntrypoint?.bytes ? `${row.workerEntrypoint.bytes} B` : row.workerEntrypoint?.status ?? "";
-    lines.push(`| ${row.name} | ${row.tier ?? ""} | ${row.prefetch?.classification ?? ""} | ${entry} | ${flags} | ${(row.risks ?? []).join(", ") || "none"} |`);
+    lines.push(
+      `| ${row.name} | ${row.tier ?? ""} | ${row.prefetch?.classification ?? ""} | ${entry} | ${flags} | ${(row.risks ?? []).join(", ") || "none"} | ${(row.disclosures ?? []).join(", ") || "none"} |`
+    );
   }
   return `${lines.join("\n")}\n`;
 }
@@ -356,10 +518,11 @@ function markdown(report) {
 async function main() {
   const matrixPath = path.resolve(argValue("--matrix", path.join(process.cwd(), "bench", "framework-matrix.json")));
   const metadataPath = path.resolve(argValue("--metadata", path.join(process.cwd(), "bench", "cloudflare-frameworks.json")));
+  const variantsPath = path.resolve(argValue("--variants", path.join(process.cwd(), "bench", "cloudflare-optimization-variants.json")));
   const outPath = argValue("--out", null);
   const markdownPath = argValue("--markdown", null);
   const failOnGaps = hasFlag("--fail-on-gaps");
-  const report = await buildOptimizationAudit({ matrixPath, metadataPath });
+  const report = await buildOptimizationAudit({ matrixPath, metadataPath, variantsPath });
 
   if (outPath) {
     await fs.mkdir(path.dirname(path.resolve(outPath)), { recursive: true });

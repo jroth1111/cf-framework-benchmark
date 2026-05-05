@@ -109,4 +109,40 @@ assert.equal(
   )
 );
 
+assert.notEqual(
+  provenanceHashForRow(
+    {
+      framework: "demo",
+      profile: "parity",
+      phase: "cold",
+      scenario: "home",
+      iteration: 1,
+      ok: true,
+      status: 200,
+      trace: { cfRay: "abc-MEL", colo: "MEL", cacheStatus: "MISS" },
+      serverMetrics: { ttfb: 10 },
+      synthetic: { nav: { ttfb: 10 } },
+    },
+    { commit: "abc123" },
+    "seed"
+  ),
+  provenanceHashForRow(
+    {
+      framework: "demo",
+      profile: "parity",
+      phase: "cold",
+      scenario: "home",
+      iteration: 1,
+      ok: true,
+      status: 200,
+      trace: { cfRay: "def-SYD", colo: "SYD", cacheStatus: "HIT" },
+      serverMetrics: { ttfb: 10 },
+      synthetic: { nav: { ttfb: 10 } },
+    },
+    { commit: "abc123" },
+    "seed"
+  ),
+  "row provenance hash should include Cloudflare trace metadata"
+);
+
 console.log("bench runner regression tests passed");

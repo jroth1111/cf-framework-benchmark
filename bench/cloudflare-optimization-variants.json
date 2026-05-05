@@ -1,0 +1,169 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-05-05",
+  "description": "Cloudflare optimization experiment catalog. These variants are benchmark controls and diagnostics, not headline scoreboard peers.",
+  "references": [
+    "https://developers.cloudflare.com/workers/static-assets/routing/worker-script/",
+    "https://developers.cloudflare.com/workers/static-assets/binding/",
+    "https://developers.cloudflare.com/workers/observability/traces/",
+    "https://developers.cloudflare.com/changelog/post/2026-02-18-cfworker-server-timing/",
+    "https://opennext.js.org/cloudflare/caching",
+    "https://opennext.js.org/cloudflare/perf",
+    "https://github.com/cloudflare/vinext"
+  ],
+  "sourceRequirements": [
+    {
+      "id": "immutable-static-assets",
+      "source": "Cloudflare Workers Static Assets and framework adapter output should serve hashed assets with long-lived immutable cache headers.",
+      "class": "static-cache-contract"
+    },
+    {
+      "id": "asset-routing-matrix",
+      "source": "Cloudflare Static Assets binding can route static matches before Worker code unless run_worker_first forces Worker execution.",
+      "class": "asset-routing-experiment"
+    },
+    {
+      "id": "smart-placement-split",
+      "source": "Smart Placement and service bindings can change latency/runtime placement and must be isolated from framework-runtime ranking.",
+      "class": "smart-placement-service-binding"
+    },
+    {
+      "id": "opennext-cache-modes",
+      "source": "OpenNext Cloudflare supports static-asset, R2, regional, queue, and tag-cache choices that materially affect Next.js Workers behavior.",
+      "class": "opennext-cache-mode"
+    },
+    {
+      "id": "workerd-local-regression",
+      "source": "Wrangler/workerd local checks should prove generated Worker entrypoints start before live benchmark runs.",
+      "class": "workerd-local-harness"
+    },
+    {
+      "id": "trace-colo-correlation",
+      "source": "Cloudflare trace headers and cf-ray colos should be captured so live benchmark outliers can be correlated with edge placement.",
+      "class": "trace-correlation"
+    },
+    {
+      "id": "vinext-diagnostic",
+      "source": "Vinext is useful as a Cloudflare-owned Vite/Next diagnostic comparator, but must stay excluded from framework ranking.",
+      "class": "vinext-diagnostic"
+    }
+  ],
+  "requiredClasses": [
+    "static-cache-contract",
+    "asset-routing-experiment",
+    "smart-placement-service-binding",
+    "opennext-cache-mode",
+    "workerd-local-harness",
+    "trace-correlation",
+    "vinext-diagnostic"
+  ],
+  "rankingPolicy": {
+    "canonical": "Never mix optimization variants into headline framework scoreboards.",
+    "optimized": "Optimized variants may be compared only inside the same route contract, rendering contract, and optimization class.",
+    "diagnostic": "Diagnostic comparators can be built or probed, but remain excluded from ranking."
+  },
+  "variants": [
+    {
+      "id": "static-cache-contract",
+      "class": "static-cache-contract",
+      "status": "enforced-by-audit",
+      "frameworks": "all-enabled-workers",
+      "verification": {
+        "static": "cloudflare:optimization-audit requires _headers coverage when an enabled Worker target has static assets.",
+        "runtime": "contract tests and result reports capture route cache-control and cf-cache-status headers."
+      }
+    },
+    {
+      "id": "wrapper-assets-first",
+      "class": "asset-routing-experiment",
+      "status": "defined",
+      "frameworks": ["react", "solid", "vue", "vue-c3", "hono", "hono-solid", "hono-vue"],
+      "ranking": "optimized-only",
+      "configPatch": {
+        "assets": {
+          "run_worker_first": ["/api/*"],
+          "not_found_handling": "single-page-application"
+        }
+      },
+      "purpose": "Measure the CDN/static-assets ceiling for wrapper and Worker-baseline apps without changing their source routes."
+    },
+    {
+      "id": "wrapper-worker-first-contract-routes",
+      "class": "asset-routing-experiment",
+      "status": "defined",
+      "frameworks": ["react", "solid", "vue", "vue-c3", "hono", "hono-solid", "hono-vue"],
+      "ranking": "optimized-only",
+      "configPatch": {
+        "assets": {
+          "run_worker_first": ["/", "/stays", "/stays/*", "/blog", "/blog/*", "/chart", "/media", "/api/*"]
+        }
+      },
+      "purpose": "Keep document/API benchmark routes Worker-first while still disclosing static asset serving behavior."
+    },
+    {
+      "id": "smart-placement-entry-worker",
+      "class": "smart-placement-service-binding",
+      "status": "defined",
+      "frameworks": ["next", "nuxt", "react-router", "svelte", "tanstack-start", "tanstack-start-solid", "redwood"],
+      "ranking": "optimized-only",
+      "configPatch": {
+        "placement": { "mode": "smart" }
+      },
+      "negativeControl": "Do not compare this variant against canonical single-Worker framework-runtime rows unless the placement mode is part of the bucket key."
+    },
+    {
+      "id": "opennext-static-assets-cache",
+      "class": "opennext-cache-mode",
+      "status": "defined",
+      "frameworks": ["next"],
+      "ranking": "optimized-only",
+      "openNextConfig": {
+        "incrementalCache": "staticAssetsIncrementalCache",
+        "enableCacheInterception": true
+      },
+      "purpose": "SSG/prerender cache control for the repo's prerendered Next.js blog routes."
+    },
+    {
+      "id": "opennext-r2-regional-cache",
+      "class": "opennext-cache-mode",
+      "status": "requires-bindings",
+      "frameworks": ["next"],
+      "ranking": "optimized-only",
+      "openNextConfig": {
+        "incrementalCache": "withRegionalCache(r2IncrementalCache, { mode: \"long-lived\" })",
+        "queue": "doQueue",
+        "tagCache": "d1NextTagCache or doShardedTagCache when on-demand revalidation is in scope"
+      },
+      "requiredBindings": ["NEXT_INC_CACHE_R2_BUCKET", "NEXT_CACHE_DO_QUEUE"]
+    },
+    {
+      "id": "workerd-local-entrypoint-startup",
+      "class": "workerd-local-harness",
+      "status": "enforced-by-audit",
+      "frameworks": "all-enabled-workers",
+      "commands": [
+        "pnpm -C <appDir> run build",
+        "npx wrangler check startup <main>"
+      ],
+      "purpose": "Catch generated Worker entrypoints that build but cannot start under workerd before live runs."
+    },
+    {
+      "id": "trace-colo-runtime-correlation",
+      "class": "trace-correlation",
+      "status": "implemented",
+      "frameworks": "all-live-results",
+      "capturedHeaders": ["cf-ray", "cf-cache-status", "server-timing", "cache-control", "age", "date"],
+      "derivedFields": ["colo", "serverTiming"],
+      "purpose": "Make edge location and cache state explicit in row hashes and aggregate result summaries."
+    },
+    {
+      "id": "vinext-diagnostic-comparator",
+      "class": "vinext-diagnostic",
+      "status": "diagnostic-only",
+      "frameworks": ["vinext"],
+      "ranking": "excluded",
+      "source": "https://github.com/cloudflare/vinext",
+      "purpose": "Use as a Cloudflare-maintained diagnostic reference for Vite/Next-on-Workers behavior without treating it as a framework peer."
+    }
+  ]
+}

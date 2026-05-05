@@ -67,12 +67,13 @@ The static control is:
 pnpm cloudflare:optimization-audit --fail-on-gaps
 ```
 
-The audit is intentionally a disclosure and risk report, not a blanket tuning
-gate. A warning such as `nodejs-compat-startup-surface` can be correct for
-OpenNext, Nitro, SvelteKit, Waku, or another adapter that requires Node
-compatibility. Canonical benchmark work should use the report to decide what to
-measure or tune next, not to silently normalize framework behavior across
-incompatible tiers.
+The audit separates source-level optimization risks from benchmark disclosures.
+A disclosure such as `nodejs-compat-startup-surface` or
+`startup-size-needs-build-output` can be correct for OpenNext, Nitro, SvelteKit,
+Waku, or another adapter that requires Node compatibility or emits a generated
+Worker only after build. Canonical benchmark work should use the report to
+decide what to measure or tune next, not to silently normalize framework
+behavior across incompatible tiers.
 
 The report records, per app:
 
@@ -82,7 +83,22 @@ The report records, per app:
 - Compatibility flags from Wrangler config.
 - Prefetch/preload mode evidence.
 - Server/client boundary leak scan results for common server-only imports.
-- `/chart` and `/media` route-splitting and hydration-risk evidence.
+- `/chart` and `/media` route-splitting, client-island, instrumentation, and
+  hydration-risk evidence.
+
+The companion catalog `bench/cloudflare-optimization-variants.json` records the
+optimization variants that came out of GitHub/source research:
+
+- Immutable static-asset cache contract checks for hashed assets.
+- Assets-first versus Worker-first routing variants for wrapper and Hono
+  baselines.
+- Smart Placement and service-binding split experiments, isolated from
+  canonical framework-runtime ranking.
+- OpenNext Cloudflare cache-mode variants for static-assets cache and
+  R2/regional cache configurations.
+- Workerd-local startup probes using `wrangler check startup`.
+- Trace/colo correlation fields for live result rows.
+- Vinext as an excluded diagnostic comparator, not a framework peer.
 
 Use optimization changes only inside comparable buckets. For example, disabling
 unbounded prefetch is a fair same-contract change, while converting a runtime
@@ -143,3 +159,6 @@ For canonical runs, use this minimum chain:
    and Cloudflare config disclosure.
 5. Benchmark result verification checks provenance, row hashes, run order, and
    contract output before any Markdown report is used for ranking.
+6. Live result rows include Cloudflare trace metadata (`cf-ray`, derived colo,
+   cache status, cache-control, age, date, and parsed `server-timing`) so edge
+   placement and cache outliers are visible in JSON, Markdown, and row hashes.

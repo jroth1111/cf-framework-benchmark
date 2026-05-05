@@ -8,6 +8,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 import { buildCloudflareAudit } from '../../scripts/cloudflare-config-audit.mjs';
+import { buildOptimizationAudit } from '../../scripts/cloudflare-optimization-audit.mjs';
 
 const require = createRequire(import.meta.url);
 const BENCH_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -278,6 +279,52 @@ function stableCloudflareAuditInput(report) {
   };
 }
 
+function stableCloudflareOptimizationAuditInput(report) {
+  return {
+    schemaVersion: report.schemaVersion,
+    ok: report.ok,
+    gaps: report.gaps ?? [],
+    frameworkCount: report.frameworkCount,
+    enabledFrameworkCount: report.enabledFrameworkCount,
+    riskCounts: report.riskCounts ?? {},
+    optimizationSourceRequirements: report.optimizationSourceRequirements ?? [],
+    optimizationVariants: report.optimizationVariants ?? null,
+    traceCorrelation: report.traceCorrelation
+      ? {
+          id: report.traceCorrelation.id,
+          class: report.traceCorrelation.class,
+          status: report.traceCorrelation.status,
+          capturedHeaders: report.traceCorrelation.capturedHeaders ?? [],
+          derivedFields: report.traceCorrelation.derivedFields ?? [],
+        }
+      : null,
+    rows: (report.rows ?? []).map((row) => ({
+      name: row.name,
+      tier: row.tier,
+      status: row.status,
+      benchmarkEnabled: row.benchmarkEnabled,
+      appDir: row.appDir,
+      workerEntrypoint: row.workerEntrypoint ?? null,
+      workerdLocalHarness: row.workerdLocalHarness ?? null,
+      assetCaching: row.assetCaching
+        ? {
+            headersPath: row.assetCaching.headersPath,
+            staticAssetFileCount: row.assetCaching.staticAssetFileCount,
+            immutableAssetHeaders: row.assetCaching.immutableAssetHeaders,
+            routeCacheEvidence: row.assetCaching.routeCacheEvidence,
+          }
+        : null,
+      prefetch: row.prefetch ?? null,
+      optimizationVariants: row.optimizationVariants ?? [],
+      openNextCacheModes: row.openNextCacheModes ?? [],
+      boundaryLeakCount: row.boundaryLeaks?.length ?? 0,
+      routes: row.routes ?? null,
+      risks: row.risks ?? [],
+      disclosures: row.disclosures ?? [],
+    })),
+  };
+}
+
 function hashRowsInput(row, gitInfo, runSeed) {
   return {
     version: 1,
@@ -293,6 +340,7 @@ function hashRowsInput(row, gitInfo, runSeed) {
     skipped: row.skipped === true,
     error: row.error ?? null,
     headers: row.headers ?? null,
+    trace: row.trace ?? null,
     serverMetrics: row.serverMetrics ?? null,
     clientMetrics: row.clientMetrics ?? null,
     memory: row.memory ?? null,
@@ -452,13 +500,43 @@ function summarizeHeaderValues(rows, key) {
 function summarizeEdgeLocations(rows) {
   const byColo = {};
   for (const row of rows) {
-    const colo = extractColo(row?.headers?.['cf-ray']);
+    const colo = row?.trace?.colo ?? extractColo(row?.headers?.['cf-ray']);
     if (!colo) continue;
     byColo[colo] = (byColo[colo] || 0) + 1;
   }
   const distinct = Object.keys(byColo).sort();
   const total = distinct.reduce((sum, colo) => sum + byColo[colo], 0);
   return { byColo, distinct, total };
+}
+
+function summarizeTraceCorrelation(rows) {
+  const byColo = {};
+  const headerCoverage = {
+    cfRay: 0,
+    colo: 0,
+    cacheStatus: 0,
+    serverTiming: 0,
+    cacheControl: 0,
+    age: 0,
+    date: 0,
+  };
+  for (const row of rows) {
+    const trace = row?.trace ?? cloudflareTraceMetadata(row?.headers ?? {});
+    if (!trace) continue;
+    if (trace.cfRay) headerCoverage.cfRay += 1;
+    if (trace.colo) headerCoverage.colo += 1;
+    if (trace.cacheStatus) headerCoverage.cacheStatus += 1;
+    if (Array.isArray(trace.serverTiming) && trace.serverTiming.length) headerCoverage.serverTiming += 1;
+    if (trace.cacheControl) headerCoverage.cacheControl += 1;
+    if (trace.age) headerCoverage.age += 1;
+    if (trace.date) headerCoverage.date += 1;
+    if (!trace.colo) continue;
+    const cacheStatus = trace.cacheStatus || "missing";
+    byColo[trace.colo] ??= { count: 0, cacheStatus: {} };
+    byColo[trace.colo].count += 1;
+    byColo[trace.colo].cacheStatus[cacheStatus] = (byColo[trace.colo].cacheStatus[cacheStatus] ?? 0) + 1;
+  }
+  return { headerCoverage, byColo };
 }
 
 function summarizeServerTiming(rows) {
@@ -535,6 +613,20 @@ function parseServerTiming(value) {
     }
     return data;
   });
+}
+
+function cloudflareTraceMetadata(headers = {}) {
+  const cfRay = headers['cf-ray'] ?? null;
+  const serverTimingHeader = headers['server-timing'] ?? null;
+  return {
+    cfRay,
+    colo: extractColo(cfRay),
+    cacheStatus: headers['cf-cache-status'] ?? null,
+    cacheControl: headers['cache-control'] ?? null,
+    age: headers.age ?? null,
+    date: headers.date ?? null,
+    serverTiming: parseServerTiming(serverTimingHeader),
+  };
 }
 
 const DEFAULT_SCENARIOS = [
@@ -1177,13 +1269,15 @@ async function fetchBenchApi(browser, fw) {
     } catch {
       data = null;
     }
+    const trace = cloudflareTraceMetadata(headers);
     return {
       ok: res.ok(),
       status: res.status(),
       data,
+      trace,
       headers: {
         'server-timing': headers['server-timing'],
-        serverTiming: parseServerTiming(headers['server-timing']),
+        serverTiming: trace.serverTiming,
         'cf-cache-status': headers['cf-cache-status'],
         'cf-ray': headers['cf-ray'],
         'cache-control': headers['cache-control'],
@@ -1304,7 +1398,8 @@ async function runScenario(
         await waitForInp(page, TIMING.INP_SETTLE_MS * timeoutScale);
         const data = await collect(page, { skipLcp: true, suppressNav: true, timeoutScale, cdp });
         const headers = res ? res.headers() : {};
-        const serverTiming = parseServerTiming(headers['server-timing']);
+        const trace = cloudflareTraceMetadata(headers);
+        const serverTiming = trace.serverTiming;
         const serverMetrics = {
           ttfb: data.synthetic?.nav?.ttfb ?? null,
           serverTiming,
@@ -1315,6 +1410,7 @@ async function runScenario(
           status,
           navAttempts,
           clientNavMs: end - start,
+          trace,
           headers: {
             'server-timing': headers['server-timing'],
             serverTiming,
@@ -1357,7 +1453,8 @@ async function runScenario(
         throw new Error(`chart_error:${message}`);
       }
       const headers = res ? res.headers() : {};
-      const serverTiming = parseServerTiming(headers['server-timing']);
+      const trace = cloudflareTraceMetadata(headers);
+      const serverTiming = trace.serverTiming;
       const serverMetrics = {
         ttfb: data.synthetic?.nav?.ttfb ?? null,
         serverTiming,
@@ -1382,6 +1479,7 @@ async function runScenario(
         ok: true,
         status,
         navAttempts,
+        trace,
         headers: {
           'server-timing': headers['server-timing'],
           serverTiming,
@@ -2111,6 +2209,7 @@ async function main() {
   }
 
   const edgeLocations = summarizeEdgeLocations(all);
+  const traceCorrelation = summarizeTraceCorrelation(all);
   const cacheStatusSummary = summarizeHeaderValues(all, 'cf-cache-status');
   const cacheControlSummary = summarizeHeaderValues(all, 'cache-control');
   const serverTimingSummary = summarizeServerTiming(all);
@@ -2215,6 +2314,8 @@ async function main() {
   };
   const cloudflareAudit = await buildCloudflareAudit({ cwd: REPO_ROOT });
   const cloudflareAuditStable = stableCloudflareAuditInput(cloudflareAudit);
+  const cloudflareOptimizationAudit = await buildOptimizationAudit({ cwd: REPO_ROOT });
+  const cloudflareOptimizationAuditStable = stableCloudflareOptimizationAuditInput(cloudflareOptimizationAudit);
   const provenance = {
     git: gitInfo,
     dataset: datasetInfo,
@@ -2224,8 +2325,10 @@ async function main() {
       lockfile: hashFile('pnpm-lock.yaml'),
       contract: hashFile('docs/contracts-v5.md') || hashFile('docs/contracts-v3.md'),
       cloudflareConfig: sha256(cloudflareAuditStable),
+      cloudflareOptimization: sha256(cloudflareOptimizationAuditStable),
     },
     cloudflareAudit: cloudflareAuditStable,
+    cloudflareOptimizationAudit: cloudflareOptimizationAuditStable,
     frameworkPackages,
     frameworkVersions,
     benchApi: benchApiByFramework,
@@ -2263,6 +2366,7 @@ async function main() {
       hotspots: flamegraphHotspots,
     },
     edgeLocations,
+    traceCorrelation,
     cacheStatusSummary,
     cacheControlSummary,
     serverTimingSummary,
@@ -2434,6 +2538,7 @@ async function main() {
   md += `| Targets hash | ${provenance.hashes.targets || '—'} |\n`;
   md += `| Contract hash | ${provenance.hashes.contract || '—'} |\n`;
   md += `| Cloudflare config hash | ${provenance.hashes.cloudflareConfig || '—'} |\n`;
+  md += `| Cloudflare optimization hash | ${provenance.hashes.cloudflareOptimization || '—'} |\n`;
   md += `| Lockfile hash | ${provenance.hashes.lockfile || '—'} |\n`;
   md += `| Dataset | ${datasetInfo ? `${datasetInfo.name}@${datasetInfo.version}` : '—'} |\n\n`;
 
@@ -2482,6 +2587,31 @@ async function main() {
     }
   } else {
     md += `| — | 0 |\n`;
+  }
+  md += '\n';
+
+  md += `### Trace header coverage\n\n`;
+  md += `| Field | Rows |\n`;
+  md += `|-------|-----:|\n`;
+  for (const [field, count] of Object.entries(traceCorrelation.headerCoverage)) {
+    md += `| ${field} | ${count} |\n`;
+  }
+  md += '\n';
+
+  md += `### Cache status by colo\n\n`;
+  md += `| Colo | Rows | Cache statuses |\n`;
+  md += `|------|-----:|----------------|\n`;
+  const traceColos = Object.entries(traceCorrelation.byColo).sort(([a], [b]) => a.localeCompare(b));
+  if (traceColos.length) {
+    for (const [colo, data] of traceColos) {
+      const statuses = Object.entries(data.cacheStatus)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([status, count]) => `${status}=${count}`)
+        .join(', ');
+      md += `| ${colo} | ${data.count} | ${statuses || '—'} |\n`;
+    }
+  } else {
+    md += `| — | 0 | — |\n`;
   }
   md += '\n';
 

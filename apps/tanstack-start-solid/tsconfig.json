@@ -5,6 +5,7 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "module": "ESNext",
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

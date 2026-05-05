@@ -7,9 +7,10 @@ export default defineConfig({
         outDir: "dist",
         rollupOptions: {
             output: {
-                manualChunks: {
-                    vendor: ["react", "react-dom", "react-router-dom"],
-                    chart: ["@cf-bench/chart-core"],
+                manualChunks(id) {
+                    if (id.includes("@cf-bench/chart-core")) return "chart";
+                    if (id.includes("node_modules/react") || id.includes("node_modules/react-dom") || id.includes("node_modules/react-router-dom")) return "vendor";
+                    return undefined;
                 },
             },
         },

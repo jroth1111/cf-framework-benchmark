@@ -5,6 +5,7 @@
   "compilerOptions": {
     // Extra safety for array and object lookups, but may have false positives.
     "noUncheckedIndexedAccess": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
 

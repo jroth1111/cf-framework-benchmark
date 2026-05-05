@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm -r build",
+    "build:enabled": "node scripts/build-enabled.mjs",
     "dev": "pnpm -r --parallel dev",
     "deploy": "node scripts/deploy-bench.mjs",
     "deploy:matrix": "node scripts/deploy-bench.mjs",
@@ -15,7 +16,11 @@
     "test:deploy-bench": "node scripts/test-deploy-bench.mjs",
     "test:bench-runner": "node scripts/test-bench-runner.mjs",
     "test:control-package": "node scripts/test-control-package.mjs",
+    "test:verify-results": "node scripts/test-verify-results.mjs",
+    "test:build-enabled": "node --check scripts/build-enabled.mjs",
     "test:contracts": "node scripts/contract-tests.mjs",
+    "contract:report": "node scripts/contract-report.mjs",
+    "verify:results": "node scripts/verify-results.mjs",
     "smoke": "node scripts/smoke.mjs",
     "verify:static": "node scripts/verify-static.mjs",
     "verify:live": "node scripts/verify-live.mjs",
@@ -29,7 +34,7 @@
     "bench:remote": "node scripts/bench-remote.mjs"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "6.0.3"
   },
   "engines": {
     "node": ">=20.0.0",

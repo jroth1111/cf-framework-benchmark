@@ -230,6 +230,22 @@ async function waitForMediaChange(page, beforeText, beforeMediaId, label) {
   throw new Error(`${label} media interaction did not change player text or id: ${JSON.stringify({ beforeText, beforeMediaId, last })}`);
 }
 
+async function clickMediaAndWaitForChange(page, locator, beforeText, beforeMediaId, label) {
+  const deadline = Date.now() + timeoutMs;
+  let last = { text: null, id: null };
+  while (Date.now() < deadline) {
+    await locator.click().catch(() => null);
+    const settleUntil = Math.min(Date.now() + 500, deadline);
+    while (Date.now() < settleUntil) {
+      last.text = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
+      last.id = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
+      if (beforeText ? last.text && last.text !== beforeText : last.id && last.id !== beforeMediaId) return;
+      await page.waitForTimeout(100);
+    }
+  }
+  throw new Error(`${label} media interaction did not change player text or id: ${JSON.stringify({ beforeText, beforeMediaId, last })}`);
+}
+
 async function runMediaInteractions(page) {
   await assertVisibleLocator(page, "[data-testid=media-card]", "media card");
   const mediaCardCount = await page.locator("[data-testid=media-card]").count();
@@ -239,17 +255,20 @@ async function runMediaInteractions(page) {
   const before = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
   const beforeId = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
   const cards = page.locator("[data-testid=media-card]");
-  const targetCard = (await cards.count()) > 1 ? cards.nth(1) : cards.first();
-  await targetCard.click();
+  const cardTexts = await cards.allTextContents();
+  const targetIndex = Math.max(
+    0,
+    cardTexts.findIndex((text, index) => index > 0 && before && !before.includes(text.trim().split(/\s+/).slice(0, 4).join("")))
+  );
+  const targetCard = (await cards.count()) > 1 ? cards.nth(targetIndex > 0 ? targetIndex : 1) : cards.first();
   await assertVisibleLocator(page, "[data-testid=media-player]", "media player");
-  await waitForMediaChange(page, before, beforeId, "media-card");
+  await clickMediaAndWaitForChange(page, targetCard, before, beforeId, "media-card");
 
   const next = page.locator("[data-testid=media-next]");
   if (await next.count()) {
     const beforeNext = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
     const beforeNextId = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
-    await next.first().click();
-    await waitForMediaChange(page, beforeNext, beforeNextId, "media-next");
+    await clickMediaAndWaitForChange(page, next.first(), beforeNext, beforeNextId, "media-next");
   }
   await assertVisibleLocator(page, "[data-testid=media-player]", "media player after next");
   const after = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);

@@ -184,7 +184,9 @@ export const listings = (() => {
 
     const hostName = hostNames[Math.floor(rand() * hostNames.length)];
     const hostSinceYear = 2015 + Math.floor(rand() * 10);
-    const hostSinceISO = `${hostSinceYear}-0${1 + Math.floor(rand() * 9)}-0${1 + Math.floor(rand() * 9)}`;
+    const hostSinceMonth = String(1 + Math.floor(rand() * 12)).padStart(2, '0');
+    const hostSinceDay = String(1 + Math.floor(rand() * 28)).padStart(2, '0');
+    const hostSinceISO = `${hostSinceYear}-${hostSinceMonth}-${hostSinceDay}`;
     const superhost = rand() > 0.72;
 
     const lat = 25 + rand() * 25;

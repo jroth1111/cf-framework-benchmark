@@ -196,10 +196,10 @@ function chartPage(framework) {
               <option value="1d">1d</option>
             </select>
           </label>
-          <label class="small muted"><input type="checkbox" checked /> SMA20</label>
-          <label class="small muted"><input type="checkbox" /> SMA50</label>
-          <label class="small muted"><input type="checkbox" /> EMA20</label>
-          <label class="small muted"><input type="checkbox" checked /> Volume</label>
+          <label class="small muted"><input type="checkbox" data-testid="ind-sma20" checked /> SMA20</label>
+          <label class="small muted"><input type="checkbox" data-testid="ind-sma50" /> SMA50</label>
+          <label class="small muted"><input type="checkbox" data-testid="ind-ema20" /> EMA20</label>
+          <label class="small muted"><input type="checkbox" data-testid="ind-volume" checked /> Volume</label>
         </div>
         <div style="height:420px; margin-top:12px">
           <canvas data-testid="chart-canvas" width="1200" height="420"></canvas>

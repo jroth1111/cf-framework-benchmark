@@ -169,8 +169,9 @@ function summarize(a) {
 function formatBytes(bytes) {
   if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const rawIdx = Math.floor(Math.log(bytes) / Math.log(k));
+  const i = Math.max(0, Math.min(sizes.length - 1, rawIdx));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
@@ -197,13 +198,14 @@ function safeExec(command) {
   }
 }
 
-function seedNumber(seed) {
+function seedBigInt(seed) {
   const hex = sha256(seed).slice(0, 16);
-  return Number.parseInt(hex, 16) || 1;
+  const value = BigInt('0x' + hex) & ((1n << 64n) - 1n);
+  return value === 0n ? 1n : value;
 }
 
 function createPrng(seed) {
-  let state = BigInt(seedNumber(seed)) & ((1n << 64n) - 1n);
+  let state = seedBigInt(seed);
   return () => {
     state = (state * 6364136223846793005n + 1442695040888963407n) & ((1n << 64n) - 1n);
     return Number(state >> 11n) / 2 ** 53;
@@ -1504,12 +1506,16 @@ async function runScenario(
       return result;
     } finally {
       if (profiler && flamegraphFilePath) {
-        const captured = await stopCpuProfiler(profiler, flamegraphFilePath, flamegraphs?.sampleIntervalUs);
-        if (captured && result) {
-          result.flamegraph = {
-            ...captured,
-            path: path.relative(REPO_ROOT, captured.path),
-          };
+        try {
+          const captured = await stopCpuProfiler(profiler, flamegraphFilePath, flamegraphs?.sampleIntervalUs);
+          if (captured && result) {
+            result.flamegraph = {
+              ...captured,
+              path: path.relative(REPO_ROOT, captured.path),
+            };
+          }
+        } catch (profilerErr) {
+          console.warn(`  ⚠️  CPU profiler stop failed: ${errorToString(profilerErr)}`);
         }
       }
       await endCdpMetrics(cdp);
@@ -1533,12 +1539,17 @@ async function warmupFramework(browser, fw, initScript, scenarios, throttling, t
   }
 
   try {
-    // Hit all routes once to warm up isolates
+    // Hit all routes once to warm up isolates. For client-nav scenarios warm both the
+    // origin and destination URLs so warm-phase iterations don't hit a cold destination.
+    const seen = new Set();
     for (const sc of scenarios) {
-      const warmPath = sc.path ?? sc.clientNav?.from;
-      if (!warmPath) continue;
-      await page.goto(fw.url + warmPath, { waitUntil: 'load', timeout: 15000 * timeoutScale });
-      await page.waitForTimeout(TIMING.WARMUP_SETTLE_MS);
+      const warmPaths = [sc.path, sc.clientNav?.from, sc.clientNav?.to].filter(Boolean);
+      for (const warmPath of warmPaths) {
+        if (seen.has(warmPath)) continue;
+        seen.add(warmPath);
+        await page.goto(fw.url + warmPath, { waitUntil: 'load', timeout: 15000 * timeoutScale });
+        await page.waitForTimeout(TIMING.WARMUP_SETTLE_MS);
+      }
     }
   } catch (e) {
     console.log(`  ⚠️  Warmup failed for ${fw.name}: ${e.message}`);
@@ -2071,7 +2082,8 @@ async function main() {
         { key: 'tbt', get: (s) => s.tbt.p50 },
         { key: 'interaction', get: interactionMs },
         { key: 'scriptBoot', get: (s) => s.scriptBootMs.p50 },
-        { key: 'jsBytes', get: (s) => bundleSizes[s.framework]?.js },
+        // Skip unmeasured frameworks: an unset bundle would otherwise score as 0 bytes (best possible).
+        { key: 'jsBytes', get: (s) => (bundleSizes[s.framework]?.measured ? bundleSizes[s.framework].js : null) },
         { key: 'heap', get: (s) => s.heapUsed.p50 },
       ];
 
@@ -2141,7 +2153,7 @@ async function main() {
             const tbt = s.tbt.p50?.toFixed(0) ?? '—';
             const script = s.scriptBootMs.p50?.toFixed(0) ?? '—';
             const cpu = s.cpuTaskMs.p50?.toFixed(0) ?? '—';
-            const js = formatBytes(bundleSizes[fw]?.js || 0);
+            const js = bundleSizes[fw]?.measured ? formatBytes(bundleSizes[fw].js || 0) : '—';
             const heap = formatBytes(s.heapUsed.p50 || 0);
 
             console.log(`│ ${fw.padEnd(18)} │ ${(ttfb + 'ms').padStart(7)} │ ${(lcp + 'ms').padStart(7)} │ ${(tbt + 'ms').padStart(7)} │ ${(script + 'ms').padStart(7)} │ ${(cpu + 'ms').padStart(7)} │ ${js.padStart(9)} │ ${heap.padStart(9)} │`);
@@ -2410,7 +2422,7 @@ async function main() {
   console.log(`Run duration: ${(durationMs / 1000).toFixed(1)}s`);
 
   // Also write a markdown summary
-  const mdPath = outPath.replace('.json', '.md');
+  const mdPath = outPath.replace(/\.json$/, '.md');
   let md = `# Framework Benchmark Results\n\n`;
   md += `Generated: ${runEndedAt}\n`;
   md += `Run started: ${runStartedAt}\n`;

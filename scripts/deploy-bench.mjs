@@ -19,8 +19,13 @@ function argValue(flag, fallback = null) {
 
 function runAndCollect(cmd) {
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, {
-      shell: true,
+    const argv = cmd.trim().split(/\s+/);
+    if (!argv.length || !argv[0]) {
+      reject(new Error(`Empty deploy command: ${cmd}`));
+      return;
+    }
+    const [bin, ...args] = argv;
+    const child = spawn(bin, args, {
       env: process.env,
       stdio: ["inherit", "pipe", "pipe"],
     });

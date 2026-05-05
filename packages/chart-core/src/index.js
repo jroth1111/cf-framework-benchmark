@@ -88,7 +88,7 @@ function ema(candles, period) {
   /** @type {Array<number|null>} */
   const out = new Array(candles.length).fill(null);
   const k = 2 / (period + 1);
-  let prev = candles[0]?.c ?? 0;
+  let prev = 0;
   for (let i = 0; i < candles.length; i++) {
     const val = candles[i].c;
     prev = i === 0 ? val : val * k + prev * (1 - k);
@@ -193,7 +193,8 @@ class CandleChart {
     const rect = this.canvas.getBoundingClientRect();
     const w = Math.max(320, Math.floor(rect.width));
     const h = Math.max(240, Math.floor(rect.height));
-    const dpr = this.dpr || 1;
+    this.dpr = globalThis.devicePixelRatio || this.dpr || 1;
+    const dpr = this.dpr;
     this.canvas.width = Math.floor(w * dpr);
     this.canvas.height = Math.floor(h * dpr);
     this.canvas.style.width = `${w}px`;

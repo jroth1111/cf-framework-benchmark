@@ -20,10 +20,20 @@ function fail(message, failures) {
   console.error(`- ${message}`);
 }
 
+function parseJsonOrFail(raw, jsonPath, failures) {
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    fail(`failed to parse JSON at ${jsonPath}: ${err?.message || err}`, failures);
+    return null;
+  }
+}
+
 export async function verifyResultPair(jsonPath, { requireRowHashes = true } = {}) {
   const failures = [];
   const raw = await fs.readFile(jsonPath, "utf8");
-  const result = JSON.parse(raw);
+  const result = parseJsonOrFail(raw, jsonPath, failures);
+  if (result == null) return { ok: false, failures };
   const mdPath = argValue("--md", jsonPath.replace(/\.json$/, ".md"));
   const md = await fs.readFile(mdPath, "utf8").catch(() => null);
 
@@ -75,7 +85,8 @@ export async function verifyResultPair(jsonPath, { requireRowHashes = true } = {
 export async function verifyResultArtifactPolicy(jsonPath) {
   const failures = [];
   const raw = await fs.readFile(jsonPath, "utf8");
-  const result = JSON.parse(raw);
+  const result = parseJsonOrFail(raw, jsonPath, failures);
+  if (result == null) return { ok: false, failures };
   const base = path.basename(jsonPath);
   const mdPath = jsonPath.replace(/\.json$/, ".md");
   const md = await fs.readFile(mdPath, "utf8").catch(() => null);

@@ -267,7 +267,7 @@ async function runMediaInteractions(page) {
   const cardTexts = await cards.allTextContents();
   const targetIndex = Math.max(
     0,
-    cardTexts.findIndex((text, index) => index > 0 && before && !before.includes(text.trim().split(/\s+/).slice(0, 4).join("")))
+    cardTexts.findIndex((text, index) => index > 0 && before && !before.includes(text.trim().split(/\s+/).slice(0, 4).join(" ")))
   );
   const targetCard = (await cards.count()) > 1 ? cards.nth(targetIndex > 0 ? targetIndex : 1) : cards.first();
   await assertVisibleLocator(page, "[data-testid=media-player]", "media player");

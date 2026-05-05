@@ -291,7 +291,9 @@ const requiredRoutes = [...new Set(suites.flatMap((suite) => suite.requiredRoute
 const suiteByRoute = new Map();
 for (const suite of suites) {
   for (const scenario of suite.scenarios) {
-    const route = requiredRoutes.find((candidate) => routeSample(candidate) === scenario.path);
+    const route = requiredRoutes.find(
+      (candidate) => candidate === scenario.path || routeSample(candidate) === scenario.path
+    );
     if (route && !suiteByRoute.has(route)) {
       suiteByRoute.set(route, { suiteId: suite.id, scenarioName: scenario.name });
     }

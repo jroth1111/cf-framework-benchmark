@@ -5,5 +5,8 @@
 	"main": "./workers/app.ts",
 	"observability": {
 		"enabled": true
+	},
+	"vars": {
+		"NODE_ENV": "production"
 	}
 }

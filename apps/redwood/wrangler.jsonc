@@ -8,9 +8,13 @@
 	],
 	"assets": {
 		"binding": "ASSETS",
-		"directory": "./dist/client"
+		"directory": "./dist/client",
+		"html_handling": "drop-trailing-slash"
 	},
 	"observability": {
 		"enabled": true
+	},
+	"vars": {
+		"NODE_ENV": "production"
 	}
 }

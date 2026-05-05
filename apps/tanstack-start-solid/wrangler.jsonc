@@ -1,12 +1,15 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "cf-bench-tanstack-start-solid",
-  "compatibility_date": "2026-03-06",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-  "main": "@tanstack/solid-start/server-entry",
-  "observability": {
-    "enabled": true
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "cf-bench-tanstack-start-solid",
+	"compatibility_date": "2026-03-06",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"main": "@tanstack/solid-start/server-entry",
+	"observability": {
+		"enabled": true
+	},
+	"vars": {
+		"NODE_ENV": "production"
+	}
 }

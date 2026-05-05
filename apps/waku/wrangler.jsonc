@@ -21,5 +21,8 @@
 			"/media",
 			"/api/*"
 		]
+	},
+	"vars": {
+		"NODE_ENV": "production"
 	}
 }

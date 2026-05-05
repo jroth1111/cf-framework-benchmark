@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     analog({
       nitro: {
         preset: "cloudflare_module",
-        compatibilityDate: "2025-09-27"
+        compatibilityDate: "2026-03-06"
       }
     }),
   ],

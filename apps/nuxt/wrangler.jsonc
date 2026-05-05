@@ -5,7 +5,8 @@
 	"compatibility_date": "2026-03-05",
 	"assets": {
 		"binding": "ASSETS",
-		"directory": "./.output/public/"
+		"directory": "./.output/public/",
+		"html_handling": "drop-trailing-slash"
 	},
 	"observability": {
 		"enabled": true

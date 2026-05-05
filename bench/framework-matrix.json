@@ -55,8 +55,8 @@
       "name": "analog",
       "c3Template": "analog",
       "benchmarkVariantOf": "analog",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "blocked",
+      "benchmarkEnabled": false,
       "appDir": "apps/analog",
       "deploy": {
         "type": "workers",
@@ -247,8 +247,8 @@
       "name": "solidstart",
       "c3Template": "solid",
       "benchmarkVariantOf": "solid",
-      "status": "implemented",
-      "benchmarkEnabled": true,
+      "status": "blocked",
+      "benchmarkEnabled": false,
       "appDir": "apps/solidstart",
       "deploy": {
         "type": "workers",

@@ -1,13 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-03-06T14:29:43.157Z",
+  "generatedAt": "2026-03-06T23:41:25.161Z",
   "source": "bench/framework-matrix.json",
   "targets": [
-    {
-      "framework": "analog",
-      "platform": "workers",
-      "url": "https://cf-bench-analog.gwizz.workers.dev"
-    },
     {
       "framework": "angular",
       "platform": "workers",
@@ -67,11 +62,6 @@
       "framework": "solid",
       "platform": "workers",
       "url": "https://cf-bench-solid.gwizz.workers.dev"
-    },
-    {
-      "framework": "solidstart",
-      "platform": "workers",
-      "url": "https://cf-bench-solidstart.gwizz.workers.dev"
     },
     {
       "framework": "svelte",

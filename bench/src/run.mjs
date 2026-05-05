@@ -11,6 +11,7 @@ const BENCH_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.
 const REPO_ROOT = path.resolve(BENCH_ROOT, '..');
 
 const DEFAULT_OUT = new URL('../results.v4.json', import.meta.url);
+const NON_CANONICAL_RESULT_SUFFIXES = ['.smoke.', '.dirty.', '.flame.', '.stability.'];
 
 /**
  * Timing constants for benchmark measurements.
@@ -85,6 +86,29 @@ function arg(name, fallback = null) {
 
 function flag(name) {
   return process.argv.includes(name);
+}
+
+export function isCanonicalResultPath(outPath) {
+  const baseName = path.basename(outPath);
+  return !NON_CANONICAL_RESULT_SUFFIXES.some((suffix) => baseName.includes(suffix));
+}
+
+export function assertCanonicalResultWritable({ outPath, gitInfo, allowDirtyProvenance = false }) {
+  const canonical = isCanonicalResultPath(outPath);
+  const dirty = Boolean(gitInfo?.dirty);
+  if (canonical && dirty && !allowDirtyProvenance) {
+    throw new Error(
+      `Refusing to write canonical results to ${outPath}: git working tree is dirty.\n` +
+      `Commit or stash changes before running a canonical benchmark, or:\n` +
+      `  - Use a suffixed output path (e.g. results.v4.<suite>.dirty.json)\n` +
+      `  - Pass --allow-dirty-provenance to override this check`
+    );
+  }
+  return {
+    canonical,
+    dirty,
+    dirtyCanonicalOverride: canonical && dirty && allowDirtyProvenance,
+  };
 }
 
 function parseCsvSet(value) {
@@ -475,9 +499,11 @@ function scenarioContractBucketKey({ delivery, implementationKind, scenario, con
 function frameworkBucketKey(meta, scenarioNames, scenarioTypesByName) {
   const delivery = meta?.delivery ?? 'unknown';
   const implementationKind = meta?.implementationKind ?? 'unknown';
+  const tier = meta?.tier ?? 'unknown';
   const segments = [
     `delivery=${delivery}`,
     `impl=${implementationKind}`,
+    `tier=${tier}`,
   ];
   for (const scenarioName of scenarioNames) {
     const contract = scenarioContractForFramework(meta, scenarioName, scenarioTypesByName.get(scenarioName));
@@ -1409,6 +1435,11 @@ async function main() {
   const frameworkVersions = pickFrameworkVersions(frameworkPackages);
   const datasetInfo = await collectDatasetInfo();
   const gitInfo = getGitInfo();
+  const allowDirtyProvenance = flag('--allow-dirty-provenance');
+  const provenanceGate = assertCanonicalResultWritable({ outPath, gitInfo, allowDirtyProvenance });
+  if (provenanceGate.dirtyCanonicalOverride) {
+    console.warn('\nWARNING: Writing canonical results with dirty working tree (--allow-dirty-provenance set).');
+  }
   const flamegraphDefaultScenarios = scenarios
     .map((sc) => sc.name)
     .filter((name) => name === 'chart' || name === 'media');
@@ -1977,6 +2008,7 @@ async function main() {
     profileArg,
     headless,
     skipWarmup,
+    allowDirtyProvenance,
     flamegraphs: {
       enabled: flamegraphs.enabled,
       outputDir: flamegraphs.outputDirRelative,
@@ -2055,6 +2087,7 @@ async function main() {
       url: fw.url,
       delivery: fw.delivery ?? null,
       implementationKind: fw.implementationKind ?? null,
+      tier: fw.tier ?? null,
       scenarioContracts: fw.scenarioContracts ?? null,
       features: fw.features ?? null,
       deploy: fw.deploy ?? null,
@@ -2066,21 +2099,6 @@ async function main() {
     summary,
     rows: all
   };
-
-  const CANONICAL_SUFFIXES = ['.smoke.', '.dirty.', '.flame.', '.stability.'];
-  const isCanonical = !CANONICAL_SUFFIXES.some((s) => path.basename(outPath).includes(s));
-  const allowDirtyProvenance = flag('--allow-dirty-provenance');
-  if (isCanonical && gitInfo?.dirty && !allowDirtyProvenance) {
-    throw new Error(
-      `Refusing to write canonical results to ${outPath}: git working tree is dirty.\n` +
-      `Commit or stash changes before running a canonical benchmark, or:\n` +
-      `  - Use a suffixed output path (e.g. results.v4.<suite>.dirty.json)\n` +
-      `  - Pass --allow-dirty-provenance to override this check`
-    );
-  }
-  if (isCanonical && gitInfo?.dirty && allowDirtyProvenance) {
-    console.warn(`\n⚠️  WARNING: Writing canonical results with dirty working tree (--allow-dirty-provenance set).`);
-  }
 
   await fs.writeFile(outPath, JSON.stringify(out, null, 2));
   console.log(`\n✅ Results written to ${outPath}`);
@@ -2448,6 +2466,10 @@ async function main() {
   }
 
   md += `\n## Bucketed Scores\n\n`;
+  md += `> **Scoring rubric**: composite score = Σ_scenario(scenarioWeight × Σ_metric(metricWeight × minMaxNorm(metric))), lower is better.\n`;
+  md += `> Metric weights: TTFB 0.25, LCP 0.40, TBT 0.20, HeapUsed 0.15.\n`;
+  md += `> Scenario weights: home 0.20, stays 0.25, blog 0.20, chart 0.35 (spa_nav excluded).\n`;
+  md += `> Each metric is min-max normalized within the scored bucket. Frameworks in different tiers are bucketed separately — see bucket headers.\n\n`;
   for (const profile of profileNames) {
     md += `### Profile: ${profile}\n\n`;
     for (const phase of phases) {

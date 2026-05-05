@@ -7,6 +7,7 @@ import {
   assertCanonicalResultWritable,
   fallbackScenarioContractForType,
   isCanonicalResultPath,
+  provenanceHashForRow,
   scenarioContractBucketKey,
 } from "../bench/src/run.mjs";
 import { defaultOutPathForSuite, defaultScenarioContract } from "../bench/src/run-v4.mjs";
@@ -72,6 +73,39 @@ assert.equal(
     },
   }),
   "delivery=workers::impl=native::tier=framework-runtime::scenario=stays::render=ssr::data=document::hydration=framework"
+);
+
+assert.equal(
+  provenanceHashForRow(
+    {
+      framework: "demo",
+      profile: "parity",
+      phase: "cold",
+      scenario: "home",
+      iteration: 1,
+      ok: true,
+      status: 200,
+      serverMetrics: { ttfb: 10 },
+      synthetic: { nav: { ttfb: 10 } },
+    },
+    { commit: "abc123" },
+    "seed"
+  ),
+  provenanceHashForRow(
+    {
+      framework: "demo",
+      profile: "parity",
+      phase: "cold",
+      scenario: "home",
+      iteration: 1,
+      ok: true,
+      status: 200,
+      serverMetrics: { ttfb: 10 },
+      synthetic: { nav: { ttfb: 10 } },
+    },
+    { commit: "abc123" },
+    "seed"
+  )
 );
 
 console.log("bench runner regression tests passed");

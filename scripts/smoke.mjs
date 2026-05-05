@@ -75,10 +75,36 @@ async function gotoScenario(page, baseUrl, scenario) {
   }
 }
 
+async function waitForBenchHydration(page) {
+  const settled = await page
+    .waitForFunction(
+      () => {
+        const hydration = globalThis.__CF_BENCH__?.hydration;
+        if (globalThis.__CF_BENCH__?.chart?.ready === true || globalThis.__CF_BENCH__?.media?.ready === true) return true;
+        if (!hydration) return true;
+        return Number.isFinite(hydration.endMs) || hydration.endMs === null;
+      },
+      { timeout: timeoutMs }
+    )
+    .then(() => true)
+    .catch(() => false);
+
+  if (!settled) {
+    const observed = await page.evaluate(() => globalThis.__CF_BENCH__ ?? null).catch(() => null);
+    throw new Error(`hydration marker did not settle before interaction: ${JSON.stringify(observed)}`);
+  }
+}
+
 async function runChartInteractions(page, scenario) {
   await page.waitForSelector("[data-testid=chart-canvas]", { timeout: timeoutMs });
   await page.waitForSelector("[data-testid=symbol-select]", { timeout: timeoutMs });
   await page.waitForSelector("[data-testid=timeframe-select]", { timeout: timeoutMs });
+  try {
+    await page.waitForFunction(() => globalThis.__CF_BENCH__?.chart?.ready === true, { timeout: timeoutMs });
+  } catch (err) {
+    const observed = await page.evaluate(() => globalThis.__CF_BENCH__ ?? null).catch(() => null);
+    throw new Error(`initial chart ready marker missing: ${JSON.stringify(observed)}; ${err instanceof Error ? err.message : String(err)}`);
+  }
 
   const config = Array.isArray(scenario.interactions)
     ? scenario.interactions.find((item) => String(item?.kind || "").startsWith("chart"))
@@ -103,13 +129,24 @@ async function runChartInteractions(page, scenario) {
     if ((await options.count()) > 1) await timeframeSelect.selectOption({ index: 1 });
   }
 
-  await page.waitForFunction(() => globalThis.__CF_BENCH__?.chart?.ready === true, { timeout: timeoutMs });
-  await page.waitForFunction(
-    () =>
-      Number.isFinite(globalThis.__CF_BENCH__?.chartCore?.lastDrawMs) &&
-      Number.isFinite(globalThis.__CF_BENCH__?.chart?.switchDurationMs),
-    { timeout: timeoutMs }
-  );
+  try {
+    await page.waitForFunction(() => globalThis.__CF_BENCH__?.chart?.ready === true, { timeout: timeoutMs });
+  } catch (err) {
+    const observed = await page.evaluate(() => globalThis.__CF_BENCH__ ?? null).catch(() => null);
+    throw new Error(`chart ready marker missing: ${JSON.stringify(observed)}; ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  try {
+    await page.waitForFunction(
+      () =>
+        Number.isFinite(globalThis.__CF_BENCH__?.chartCore?.lastDrawMs) &&
+        Number.isFinite(globalThis.__CF_BENCH__?.chart?.switchDurationMs),
+      { timeout: timeoutMs }
+    );
+  } catch (err) {
+    const observed = await page.evaluate(() => globalThis.__CF_BENCH__ ?? null).catch(() => null);
+    throw new Error(`chart metric markers missing: ${JSON.stringify(observed)}; ${err instanceof Error ? err.message : String(err)}`);
+  }
 }
 
 async function runMediaInteractions(page) {
@@ -122,7 +159,12 @@ async function runMediaInteractions(page) {
     await next.first().click();
   }
 
-  await page.waitForFunction(() => globalThis.__CF_BENCH__?.media?.ready === true, { timeout: timeoutMs });
+  try {
+    await page.waitForFunction(() => globalThis.__CF_BENCH__?.media?.ready === true, { timeout: timeoutMs });
+  } catch (err) {
+    const observed = await page.evaluate(() => globalThis.__CF_BENCH__ ?? null).catch(() => null);
+    throw new Error(`media ready marker missing: ${JSON.stringify(observed)}; ${err instanceof Error ? err.message : String(err)}`);
+  }
 }
 
 async function runFramework(framework) {
@@ -135,6 +177,9 @@ async function runFramework(framework) {
     console.log(`\n${framework.name}`);
     for (const scenario of scenarios) {
       await gotoScenario(page, baseUrl, scenario);
+      if (hasChartInteraction(scenario) || hasMediaInteraction(scenario)) {
+        await waitForBenchHydration(page);
+      }
       if (hasChartInteraction(scenario)) await runChartInteractions(page, scenario);
       if (hasMediaInteraction(scenario)) await runMediaInteractions(page);
     }

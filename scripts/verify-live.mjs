@@ -40,13 +40,14 @@ async function run(label, command, args) {
 const matrixArgs = [];
 const targetsArgs = [];
 const contractArgs = [];
+const contractReportArgs = [];
 const smokeArgs = [];
 
 pushPair(matrixArgs, "--matrix");
 pushPair(targetsArgs, "--matrix");
 pushPair(targetsArgs, "--targets");
 
-for (const args of [contractArgs, smokeArgs]) {
+for (const args of [contractArgs, contractReportArgs, smokeArgs]) {
   pushPair(args, "--matrix");
   pushPair(args, "--targets");
   pushPair(args, "--suites-dir");
@@ -54,12 +55,14 @@ for (const args of [contractArgs, smokeArgs]) {
   pushPair(args, "--only");
   pushPair(args, "--timeout");
 }
+contractReportArgs.push("--fail-on-violations");
 
 pushFlag(smokeArgs, "--headed");
 pushPair(smokeArgs, "--slowmo");
 
 await run("check:matrix", "pnpm", ["check:matrix", ...matrixArgs]);
 await run("check:targets", "pnpm", ["check:targets", ...targetsArgs]);
+await run("contract-report", "node", ["scripts/contract-report.mjs", ...contractReportArgs]);
 await run("test:contracts", "pnpm", ["test:contracts", ...contractArgs]);
 await run("smoke", "pnpm", ["smoke", ...smokeArgs]);
 

@@ -1,4 +1,6 @@
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import os from 'node:os';
@@ -190,6 +192,42 @@ function safeExec(command) {
   }
 }
 
+function stableStringify(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  return `{${Object.keys(value)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
+    .join(',')}}`;
+}
+
+function sha256(value) {
+  return createHash('sha256').update(typeof value === 'string' ? value : stableStringify(value)).digest('hex');
+}
+
+function seedNumber(seed) {
+  const hex = sha256(seed).slice(0, 16);
+  return Number.parseInt(hex, 16) || 1;
+}
+
+function createPrng(seed) {
+  let state = BigInt(seedNumber(seed)) & ((1n << 64n) - 1n);
+  return () => {
+    state = (state * 6364136223846793005n + 1442695040888963407n) & ((1n << 64n) - 1n);
+    return Number(state >> 11n) / 2 ** 53;
+  };
+}
+
+function shuffled(items, seed) {
+  const out = [...items];
+  const random = createPrng(seed);
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 function getGitInfo() {
   const commit = safeExec('git rev-parse HEAD');
   if (!commit) return null;
@@ -197,6 +235,48 @@ function getGitInfo() {
   const describe = safeExec('git describe --tags --always --dirty');
   const dirty = Boolean(safeExec('git status --porcelain'));
   return { commit, branch, describe, dirty };
+}
+
+function hashFile(relativePath) {
+  try {
+    const fullPath = path.resolve(REPO_ROOT, relativePath);
+    return sha256(readFileSync(fullPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function hashRowsInput(row, gitInfo, runSeed) {
+  return {
+    version: 1,
+    commit: gitInfo?.commit ?? null,
+    seed: runSeed,
+    framework: row.framework,
+    profile: row.profile,
+    phase: row.phase,
+    scenario: row.scenario,
+    iteration: row.iteration,
+    status: row.status ?? null,
+    ok: row.ok === true,
+    skipped: row.skipped === true,
+    error: row.error ?? null,
+    headers: row.headers ?? null,
+    serverMetrics: row.serverMetrics ?? null,
+    clientMetrics: row.clientMetrics ?? null,
+    memory: row.memory ?? null,
+    synthetic: {
+      nav: row.synthetic?.nav ?? null,
+      cwv: row.synthetic?.cwv ?? null,
+      longTasks: row.synthetic?.longTasks ?? null,
+      resources: row.synthetic?.resources ?? null,
+      app: row.synthetic?.app ?? null,
+    },
+    clientNavMs: row.clientNavMs ?? null,
+  };
+}
+
+export function provenanceHashForRow(row, gitInfo, runSeed) {
+  return sha256(hashRowsInput(row, gitInfo, runSeed));
 }
 
 async function readJsonFile(filePath) {
@@ -1106,6 +1186,7 @@ async function runScenario(
   const frameworkMeta = {
     delivery: fw.delivery ?? null,
     implementationKind: fw.implementationKind ?? null,
+    tier: fw.tier ?? null,
     scenarioContracts: fw.scenarioContracts ?? null,
     features: fw.features ?? null,
   };
@@ -1227,6 +1308,7 @@ async function runScenario(
       navAttempts = navResult.attempts ?? 0;
       if (sc.waitFor) await page.waitForSelector(sc.waitFor, { timeout: scenarioTimeout });
       if (sc.interact) {
+        await waitForHydration(page, TIMING.HYDRATION_MAX_WAIT_MS * timeoutScale);
         if (sc.interactType === 'media' || sc.name === 'media') {
           await mediaInteractions(page, timeoutScale);
         } else {
@@ -1346,6 +1428,7 @@ async function main() {
   const frameworks = normalizeFrameworks(config.frameworks);
   const profileArg = arg('--profile', null);
   const iterationsArg = arg('--iterations', null);
+  const seedArg = arg('--seed', config.seed || null);
   const cliArgs = process.argv.slice(2);
   const profiles = profileArg
     ? (profileArg === 'both' ? ['parity', 'idiomatic'] : [profileArg])
@@ -1401,11 +1484,21 @@ async function main() {
     return `per-profile (${profiles.map((p) => `${p}=${warmupByProfile[p] ? 'on' : 'off'}`).join(', ')})`;
   })();
   const warmupPaths = scenarios.map((sc) => sc.path ?? sc.clientNav?.from).filter(Boolean);
+  const runSeed = seedArg || sha256({
+    runStartedAt,
+    configPath,
+    outPath,
+    frameworks: frameworks.map((fw) => fw.name),
+    scenarios: scenarios.map((sc) => sc.name),
+    profiles,
+  }).slice(0, 16);
   const runOrder = {
-    randomization: 'none',
-    order: ['profile', 'framework', 'scenario', 'iteration', 'phase'],
+    randomization: 'seeded-shuffle',
+    seed: runSeed,
+    order: ['profile', 'shuffled(framework,scenario,iteration)', 'phase'],
     phaseOrder: ['cold', 'warm'],
     scenarioOrder: scenarios.map((sc) => sc.name),
+    frameworkOrder: frameworks.map((fw) => fw.name),
   };
   const cpuList = os.cpus() || [];
   const systemInfo = {
@@ -1525,80 +1618,95 @@ async function main() {
     const throttling = throttlingByProfile[profile] || null;
     const timeoutScale = timeoutScaleByProfile[profile] || 1;
 
-    for (const fw of frameworks) {
-      console.log(`\n▶ ${fw.name} (${fw.url})`);
-
-      // Warmup phase - hit each route once to warm isolates
+    for (const fw of shuffled(frameworks, `${runSeed}:${profile}:warmup`)) {
       if (profileWarmup) {
+        console.log(`\n▶ ${fw.name} (${fw.url})`);
         await warmupFramework(browser, fw, initScript, scenarios, throttling, timeoutScale, benchHeaders);
       }
-
-      // Initialize bundle size tracking for this framework
       bundleSizes[fw.name] = { js: 0, css: 0, total: 0, measured: false };
+    }
 
+    const runUnits = [];
+    for (const fw of frameworks) {
       for (const sc of scenarios) {
-        for (let i = 0; i < profileIterations; i++) {
-          const ctx = await browser.newContext({ viewport: VIEWPORT, extraHTTPHeaders: benchHeaders });
-          await ctx.addInitScript({ content: initScript });
-          const page = await ctx.newPage();
-          const throttleApplied = await applyThrottling(page, throttling);
-
-          const cold = await runScenario(
-            page,
-            fw,
-            sc,
-            i,
-            'cold',
-            bundleSizes,
-            profile,
-            throttling,
-            timeoutScale,
-            throttleApplied,
-            flamegraphs
-          );
-          all.push(cold);
-          recordFailure(cold);
-
-          let warm = null;
-          if (!cold.skipped) {
-            warm = await runScenario(
-              page,
-              fw,
-              sc,
-              i,
-              'warm',
-              bundleSizes,
-              profile,
-              throttling,
-              timeoutScale,
-              throttleApplied,
-              flamegraphs
-            );
-            all.push(warm);
-            recordFailure(warm);
-          }
-
-          const ttfb = warm?.synthetic?.nav?.ttfb?.toFixed?.(1) ?? '—';
-          const lcp = warm?.synthetic?.cwv?.lcp?.value?.toFixed?.(1) ?? '—';
-          const tbt = warm?.synthetic?.longTasks?.tbt?.toFixed?.(1) ?? '—';
-          const js = formatBytes(cold.synthetic?.resources?.js || 0);
-
-          if (i === 0) {
-            console.log(`  [1/${profileIterations}] ${sc.name} cold: ttfb=${cold.synthetic?.nav?.ttfb?.toFixed?.(1) ?? '—'}ms lcp=${cold.synthetic?.cwv?.lcp?.value?.toFixed?.(1) ?? '—'}ms tbt=${cold.synthetic?.longTasks?.tbt?.toFixed?.(1) ?? '—'}ms js=${js}`);
-            if (warm) {
-              console.log(`  [1/${profileIterations}] ${sc.name} warm: ttfb=${ttfb}ms lcp=${lcp}ms tbt=${tbt}ms`);
-            }
-          } else if (i === profileIterations - 1 && warm) {
-            console.log(`  [${profileIterations}/${profileIterations}] ${sc.name} warm: ttfb=${ttfb}ms lcp=${lcp}ms tbt=${tbt}ms`);
-          }
-
-          await ctx.close();
+        for (let i = 0; i < profileIterations; i += 1) {
+          runUnits.push({ fw, sc, iteration: i });
         }
       }
+    }
+
+    const orderedUnits = shuffled(runUnits, `${runSeed}:${profile}:units`);
+    runOrder[profile] = orderedUnits.map((unit) => ({
+      framework: unit.fw.name,
+      scenario: unit.sc.name,
+      iteration: unit.iteration + 1,
+    }));
+
+    for (const unit of orderedUnits) {
+      const { fw, sc, iteration: i } = unit;
+      console.log(`\n▶ ${fw.name} (${fw.url}) · ${sc.name} [${i + 1}/${profileIterations}]`);
+
+      const ctx = await browser.newContext({ viewport: VIEWPORT, extraHTTPHeaders: benchHeaders });
+      await ctx.addInitScript({ content: initScript });
+      const page = await ctx.newPage();
+      const throttleApplied = await applyThrottling(page, throttling);
+
+      const cold = await runScenario(
+        page,
+        fw,
+        sc,
+        i,
+        'cold',
+        bundleSizes,
+        profile,
+        throttling,
+        timeoutScale,
+        throttleApplied,
+        flamegraphs
+      );
+      all.push(cold);
+      recordFailure(cold);
+
+      let warm = null;
+      if (!cold.skipped) {
+        warm = await runScenario(
+          page,
+          fw,
+          sc,
+          i,
+          'warm',
+          bundleSizes,
+          profile,
+          throttling,
+          timeoutScale,
+          throttleApplied,
+          flamegraphs
+        );
+        all.push(warm);
+        recordFailure(warm);
+      }
+
+      const coldTtfb = cold.synthetic?.nav?.ttfb?.toFixed?.(1) ?? '—';
+      const coldLcp = cold.synthetic?.cwv?.lcp?.value?.toFixed?.(1) ?? '—';
+      const coldTbt = cold.synthetic?.longTasks?.tbt?.toFixed?.(1) ?? '—';
+      const warmTtfb = warm?.synthetic?.nav?.ttfb?.toFixed?.(1) ?? '—';
+      const warmLcp = warm?.synthetic?.cwv?.lcp?.value?.toFixed?.(1) ?? '—';
+      const warmTbt = warm?.synthetic?.longTasks?.tbt?.toFixed?.(1) ?? '—';
+      const js = formatBytes(cold.synthetic?.resources?.js || 0);
+      console.log(
+        `  cold: ttfb=${coldTtfb}ms lcp=${coldLcp}ms tbt=${coldTbt}ms js=${js}` +
+          (warm ? ` · warm: ttfb=${warmTtfb}ms lcp=${warmLcp}ms tbt=${warmTbt}ms` : '')
+      );
+
+      await ctx.close();
     }
   }
 
   await browser.close();
+
+  for (const row of all) {
+    row.provenanceHash = provenanceHashForRow(row, gitInfo, runSeed);
+  }
 
   const failureSummary = new Map();
   for (const f of failures) {
@@ -2040,6 +2148,7 @@ async function main() {
     configPath,
     outPath,
     iterationsArg,
+    seed: runSeed,
     profileArg,
     headless,
     skipWarmup,
@@ -2071,6 +2180,12 @@ async function main() {
   const provenance = {
     git: gitInfo,
     dataset: datasetInfo,
+    hashes: {
+      matrix: hashFile('bench/framework-matrix.json'),
+      targets: hashFile('bench/targets.live.json'),
+      lockfile: hashFile('pnpm-lock.yaml'),
+      contract: hashFile('docs/contracts-v5.md') || hashFile('docs/contracts-v3.md'),
+    },
     frameworkPackages,
     frameworkVersions,
     benchApi: benchApiByFramework,
@@ -2167,6 +2282,7 @@ async function main() {
   md += `| User agent | ${browserEnv?.userAgent || '—'} |\n`;
   md += `| Run order | ${runOrder.order.join(' -> ')} |\n`;
   md += `| Randomization | ${runOrder.randomization} |\n`;
+  md += `| Randomization seed | ${runOrder.seed} |\n`;
   md += `| Flamegraphs enabled | ${flamegraphs.enabled ? 'true' : 'false'} |\n`;
   md += `| Flamegraph captures | ${flamegraphCaptures.length} |\n`;
   md += `| Flamegraph output dir | ${flamegraphs.enabled ? flamegraphs.outputDirRelative : '—'} |\n\n`;
@@ -2274,6 +2390,10 @@ async function main() {
   md += `| Git describe | ${gitInfo?.describe || '—'} |\n`;
   md += `| Git dirty | ${gitInfo ? (gitInfo.dirty ? '**true (NON-CANONICAL)**' : 'false') : '—'} |\n`;
   md += `| Iterations override | ${iterationsArg ? `**--iterations ${iterationsArg} (overrides profile defaults)**` : 'none'} |\n`;
+  md += `| Matrix hash | ${provenance.hashes.matrix || '—'} |\n`;
+  md += `| Targets hash | ${provenance.hashes.targets || '—'} |\n`;
+  md += `| Contract hash | ${provenance.hashes.contract || '—'} |\n`;
+  md += `| Lockfile hash | ${provenance.hashes.lockfile || '—'} |\n`;
   md += `| Dataset | ${datasetInfo ? `${datasetInfo.name}@${datasetInfo.version}` : '—'} |\n\n`;
 
   md += `### Framework versions\n\n`;

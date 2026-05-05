@@ -1,5 +1,9 @@
 # Benchmark Vision v4
 
+This document is historical context. The current canonical methodology lives in
+`METHODOLOGY.md`, and the active benchmark contract lives in
+`docs/contracts-v5.md`.
+
 ## Objective
 
 Benchmark Cloudflare-supported web frameworks on live Cloudflare Workers while keeping route, selector, API, cache, and dataset contracts fixed enough that app drift does not dominate the results.

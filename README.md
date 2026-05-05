@@ -2,23 +2,15 @@
 
 This repository contains the same benchmark app implemented across Cloudflare-supported frameworks and deployed to live Cloudflare Workers targets.
 
-Framework implementations in the matrix:
+Framework entries are classified before they are ranked:
 
-- Angular
-- Astro
-- Hono
-- Next.js (OpenNext on Workers)
-- Nuxt
-- Qwik (Qwik City)
-- React
-- React Router
-- RedwoodSDK
-- Solid (SolidJS + Vite)
-- SvelteKit
-- TanStack Start
-- Vike
-- Vue
-- Waku
+| Tier | Entries | Ranking policy |
+| --- | --- | --- |
+| `framework-runtime` | Next.js, Nuxt, Qwik, React Router, RedwoodSDK, SvelteKit, TanStack Start | Headline tables, bucketed by route/render/data/hydration contract. |
+| `framework-prerender` | Angular, Astro, Vike, Waku | Ranked separately from runtime SSR entries. |
+| `wrapper-baseline` | React, Solid, Vue | Custom Worker + frontend library baselines; not framework-runtime peers. |
+| `worker-baseline` | Hono, Hono + frontend composites | Worker/Hono baselines; useful context, not framework-runtime rankings. |
+| `framework-experimental` | Analog, SolidStart variants, incomplete composites | Excluded until the matrix marks them benchmark-enabled. |
 
 The standalone control implementation lives in `apps/control` and `bench/controls.json`. It is used for live verification and appendix baselines, not headline framework scoreboards.
 
@@ -48,7 +40,8 @@ We measure (synthetically, in a controlled browser) for each framework deploymen
 - **Chart interaction latency** (symbol/timeframe switch + draw time on `/chart`)
 - **Media interaction latency** (open + next actions on `/media`)
 
-The benchmark runner lives in `bench/`.
+The benchmark runner lives in `bench/`. The methodology is documented in
+`METHODOLOGY.md`; the canonical contract is `docs/contracts-v5.md`.
 
 ## Metrics glossary
 
@@ -148,6 +141,16 @@ This writes `.cpuprofile` artifacts under `bench/flamegraphs/<timestamp>/` and i
 
 Static verification for pull requests runs `pnpm verify:static`. Live contract checks stay in `pnpm verify:live` and in the benchmark workflow preflight.
 
+Contract and result integrity helpers:
+
+```bash
+pnpm contract:report -- --fail-on-violations
+pnpm verify:results -- --json bench/results.v4.mpa_airbnb.json
+```
+
+Canonical benchmark runs execute the contract report before measuring. Use
+`--skip-contract-report` only for explicitly diagnostic runs.
+
 ## Directory layout
 
 - `packages/dataset` – shared content (listings + blog posts + price series generator)
@@ -162,8 +165,12 @@ For more stable comparisons:
 - Use the **same custom domain pattern** (one per framework), e.g.:
   - `react.example.com`, `next.example.com`, ...
 - Disable Cloudflare features that can distort measurements (e.g. Rocket Loader).
-- Run benchmarks from the **same machine/network**.
-- Run at least **10 iterations** and compare medians.
+- Keep a clean git tree for canonical unsuffixed result files.
+- Reuse or record the `--seed` value when reproducing a run.
+- Run at least **10 iterations**; use **30** for canonical public reports.
+- Compare medians with dispersion (`p95`, `IQR`) rather than single-millisecond p50 differences.
+- Do not compare across tiers or contract buckets.
+- Report MEL, US, and EU remote runs separately; geography is part of Workers performance, not noise to average away.
 
 ## License
 

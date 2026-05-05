@@ -85,6 +85,41 @@ async function runLegacyRunner({ configPath, outPath, passthroughArgs }) {
   });
 }
 
+async function runContractReport({ tempDir, suiteName, targetsPath, matrixPath, suitesDir, only }) {
+  const outPath = path.join(tempDir, `contract-report.${suiteName}.json`);
+  const args = [
+    '../scripts/contract-report.mjs',
+    '--matrix',
+    matrixPath,
+    '--targets',
+    targetsPath,
+    '--suites-dir',
+    suitesDir,
+    '--suites',
+    suiteName,
+    '--out',
+    outPath,
+    '--fail-on-violations',
+  ];
+  if (only?.size) args.push('--only', [...only].join(','));
+
+  const child = spawn('node', args, {
+    cwd: BENCH_DIR,
+    stdio: 'inherit',
+    env: process.env,
+  });
+
+  await new Promise((resolve, reject) => {
+    child.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`contract-report failed with code ${code}; use --skip-contract-report only for diagnostic runs`));
+    });
+    child.on('error', reject);
+  });
+
+  return outPath;
+}
+
 async function main() {
   const suiteName = argValue('--suite', 'mpa_airbnb');
   const targetsPath = toAbsolutePath(argValue('--targets', null), DEFAULT_TARGETS_PATH);
@@ -164,6 +199,7 @@ async function main() {
   const passthroughPairs = [
     '--profile',
     '--iterations',
+    '--seed',
     '--throttle',
     '--cpu',
     '--network',
@@ -185,6 +221,9 @@ async function main() {
   }
 
   try {
+    if (!hasFlag('--skip-contract-report')) {
+      await runContractReport({ tempDir, suiteName, targetsPath, matrixPath, suitesDir, only });
+    }
     await runLegacyRunner({ configPath: tempConfigPath, outPath, passthroughArgs });
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true });

@@ -485,10 +485,11 @@ function scenarioContractForFramework(fw, scenarioName, scenarioType) {
   };
 }
 
-function scenarioContractBucketKey({ delivery, implementationKind, scenario, contract }) {
+export function scenarioContractBucketKey({ delivery, implementationKind, tier, scenario, contract }) {
   return [
     `delivery=${delivery || 'unknown'}`,
     `impl=${implementationKind || 'unknown'}`,
+    `tier=${tier || 'unknown'}`,
     `scenario=${scenario}`,
     `render=${contract.renderMode || 'unknown'}`,
     `data=${contract.initialData || 'unknown'}`,
@@ -1642,6 +1643,7 @@ async function main() {
     const bucketKeyScenario = scenarioContractBucketKey({
       delivery,
       implementationKind,
+      tier: meta?.tier ?? 'unknown',
       scenario,
       contract: scenarioContract,
     });
@@ -1749,8 +1751,29 @@ async function main() {
   const clientNavScenarios = [...new Set(summary.filter(s => s.scenarioType === 'client-nav').map(s => s.scenario))];
   const phases = [...new Set(summary.map(s => s.phase))];
 
-  const metricWeights = { ttfb: 0.25, lcp: 0.4, tbt: 0.2, heap: 0.15 };
-  const scenarioWeights = { home: 0.2, stays: 0.25, blog: 0.2, chart: 0.35, spa_nav: 0 };
+  const scoringRubric = {
+    model: 'real-world-choice-v1',
+    direction: 'lower-is-better',
+    normalization: 'min-max per metric within each profile/phase/tier/contract bucket; missing metrics are omitted and remaining observed weights are renormalized',
+    metricWeights: {
+      lcp: 0.3,
+      tbt: 0.2,
+      ttfb: 0.15,
+      interaction: 0.15,
+      scriptBoot: 0.1,
+      jsBytes: 0.05,
+      heap: 0.05,
+    },
+    scenarioWeights: {
+      home: 0.1,
+      stays: 0.25,
+      blog: 0.2,
+      chart: 0.25,
+      media: 0.2,
+    },
+  };
+  const metricWeights = scoringRubric.metricWeights;
+  const scenarioWeights = scoringRubric.scenarioWeights;
 
   const formatBucketKey = (key) => key.replace(/::/g, ' | ');
 
@@ -1781,14 +1804,26 @@ async function main() {
     const eligible = frameworksInBucket.filter((fw) => !incomplete.has(fw));
     const scores = new Map(eligible.map((fw) => [fw, { score: 0, weight: 0 }]));
     for (const scenario of scenarioNames) {
-      const scWeight = scenarioWeights[scenario] ?? 0.25;
+      const scWeight = scenarioWeights[scenario] ?? 0.2;
       const scRows = summary
         .filter((s) => s.profile === profile && s.phase === phase && s.scenario === scenario)
         .filter((s) => eligible.includes(s.framework));
+      const interactionMs = (s) => {
+        const values = [
+          s.inp?.p50,
+          s.chartSwitchMs?.p50,
+          s.chartDrawMs?.p50,
+        ].filter((v) => Number.isFinite(v));
+        if (!values.length) return null;
+        return values.reduce((sum, value) => sum + value, 0) / values.length;
+      };
       const metrics = [
         { key: 'ttfb', get: (s) => s.ttfb.p50 },
         { key: 'lcp', get: (s) => s.lcp.p50 },
         { key: 'tbt', get: (s) => s.tbt.p50 },
+        { key: 'interaction', get: interactionMs },
+        { key: 'scriptBoot', get: (s) => s.scriptBootMs.p50 },
+        { key: 'jsBytes', get: (s) => bundleSizes[s.framework]?.js },
         { key: 'heap', get: (s) => s.heapUsed.p50 },
       ];
 
@@ -2095,6 +2130,7 @@ async function main() {
     bundleSizes,
     failures,
     failureSummary: failureSummaryOut,
+    scoring: scoringRubric,
     bucketScores,
     summary,
     rows: all
@@ -2479,10 +2515,7 @@ async function main() {
   }
 
   md += `\n## Bucketed Scores\n\n`;
-  md += `> **Scoring rubric**: composite score = Σ_scenario(scenarioWeight × Σ_metric(metricWeight × minMaxNorm(metric))), lower is better.\n`;
-  md += `> Metric weights: TTFB 0.25, LCP 0.40, TBT 0.20, HeapUsed 0.15.\n`;
-  md += `> Scenario weights: home 0.20, stays 0.25, blog 0.20, chart 0.35 (spa_nav excluded).\n`;
-  md += `> Each metric is min-max normalized within the scored bucket. Frameworks in different tiers are bucketed separately — see bucket headers.\n\n`;
+  md += `> **Scoring rubric (${scoringRubric.model})**: lower is better. Metrics are min-max normalized within each profile/phase/tier/contract bucket, then weighted as LCP ${metricWeights.lcp}, TBT ${metricWeights.tbt}, TTFB ${metricWeights.ttfb}, interaction ${metricWeights.interaction}, script boot ${metricWeights.scriptBoot}, JS transfer ${metricWeights.jsBytes}, heap ${metricWeights.heap}. Scenario mix is home ${scenarioWeights.home}, stays ${scenarioWeights.stays}, blog ${scenarioWeights.blog}, chart ${scenarioWeights.chart}, media ${scenarioWeights.media}. Missing metrics are omitted and observed weights are renormalized. Failed or incomplete framework/scenario runs are not ranked.\n\n`;
   for (const profile of profileNames) {
     md += `### Profile: ${profile}\n\n`;
     for (const phase of phases) {

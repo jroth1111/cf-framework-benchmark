@@ -148,6 +148,7 @@ Contract and result integrity helpers:
 
 ```bash
 pnpm cloudflare:config-audit -- --fail-on-gaps
+pnpm cloudflare:optimization-audit -- --fail-on-gaps
 pnpm contract:report -- --fail-on-violations
 pnpm verify:results -- --json bench/results.v4.mpa_airbnb.json --allow-legacy
 ```
@@ -157,6 +158,9 @@ Canonical benchmark runs execute the contract report before measuring. Use
 Cloudflare config disclosure is part of static verification: the audit records
 each app's adapter, framework support status, maturity label, Wrangler entry,
 Static Assets routing mode, compatibility flags, and observability setting.
+The optimization audit adds Worker startup probe commands, asset/header evidence,
+prefetch mode disclosure, server/client boundary leak scans, and `/chart` +
+`/media` hydration-risk evidence.
 
 ## Directory layout
 

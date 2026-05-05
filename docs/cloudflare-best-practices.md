@@ -53,6 +53,42 @@ generic optimization advice. Some adapters require them. Record the flags becaus
 they change runtime assumptions, polyfill availability, bundle shape, and startup
 surface.
 
+## Optimization Audit Controls
+
+GitHub issue research identified recurring Cloudflare/framework optimization
+failure modes: Worker startup drag from large or lazily uploaded module graphs,
+server-only modules leaking into client bundles, broad prefetch defaults, static
+routes remaining in Worker bundles, ambiguous asset/route caching, and hydration
+work on the benchmark's `/chart` and `/media` routes.
+
+The static control is:
+
+```bash
+pnpm cloudflare:optimization-audit --fail-on-gaps
+```
+
+The audit is intentionally a disclosure and risk report, not a blanket tuning
+gate. A warning such as `nodejs-compat-startup-surface` can be correct for
+OpenNext, Nitro, SvelteKit, Waku, or another adapter that requires Node
+compatibility. Canonical benchmark work should use the report to decide what to
+measure or tune next, not to silently normalize framework behavior across
+incompatible tiers.
+
+The report records, per app:
+
+- Worker entrypoint presence and a reproducible `wrangler check startup` probe
+  command.
+- Static asset header coverage and route `cache-control` evidence.
+- Compatibility flags from Wrangler config.
+- Prefetch/preload mode evidence.
+- Server/client boundary leak scan results for common server-only imports.
+- `/chart` and `/media` route-splitting and hydration-risk evidence.
+
+Use optimization changes only inside comparable buckets. For example, disabling
+unbounded prefetch is a fair same-contract change, while converting a runtime
+SSR route into static output changes the route contract and belongs in the
+prerender/static bucket.
+
 ## Framework Notes
 
 ### Astro

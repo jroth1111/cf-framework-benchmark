@@ -8,8 +8,8 @@ function cacheKind(pathname: string) {
 
 function cacheHeader(pathname: string) {
   const kind = cacheKind(pathname);
-  if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=60";
-  if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=30";
+  if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
+  if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
   return "no-store";
 }
 

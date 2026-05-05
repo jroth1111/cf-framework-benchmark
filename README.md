@@ -54,7 +54,7 @@ See `docs/metrics-glossary.md` for definitions and metric sources.
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - pnpm (recommended) or npm/yarn
 - Cloudflare account (free plan)
 - Wrangler CLI (`pnpm add -g wrangler` or use `npx wrangler`)
@@ -70,8 +70,11 @@ pnpm install
 ### 2) Build
 
 ```bash
-pnpm -r build
+pnpm build:enabled
 ```
+
+`pnpm -r build` is a broader diagnostic sweep for experimental and disabled
+workspaces; it is not the default PR/canonical verification gate.
 
 ### 3) Run locally (per app)
 
@@ -144,12 +147,16 @@ Static verification for pull requests runs `pnpm verify:static`. Live contract c
 Contract and result integrity helpers:
 
 ```bash
+pnpm cloudflare:config-audit -- --fail-on-gaps
 pnpm contract:report -- --fail-on-violations
-pnpm verify:results -- --json bench/results.v4.mpa_airbnb.json
+pnpm verify:results -- --json bench/results.v4.mpa_airbnb.json --allow-legacy
 ```
 
 Canonical benchmark runs execute the contract report before measuring. Use
 `--skip-contract-report` only for explicitly diagnostic runs.
+Cloudflare config disclosure is part of static verification: the audit records
+each app's adapter, framework support status, maturity label, Wrangler entry,
+Static Assets routing mode, compatibility flags, and observability setting.
 
 ## Directory layout
 

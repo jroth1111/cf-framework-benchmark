@@ -65,6 +65,7 @@ assert.equal(
     delivery: "workers",
     implementationKind: "native",
     tier: "framework-runtime",
+    cloudflareMode: "worker-only",
     scenario: "stays",
     contract: {
       renderMode: "ssr",
@@ -72,7 +73,7 @@ assert.equal(
       hydrationModel: "framework",
     },
   }),
-  "delivery=workers::impl=native::tier=framework-runtime::scenario=stays::render=ssr::data=document::hydration=framework"
+  "delivery=workers::impl=native::tier=framework-runtime::cf=worker-only::scenario=stays::render=ssr::data=document::hydration=framework"
 );
 
 assert.equal(

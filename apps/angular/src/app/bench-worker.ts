@@ -1,4 +1,5 @@
 export function cacheHeader(pathname: string, profile: string | null) {
+  pathname = pathname.replace(/\/+$/, '') || '/';
   const isList = pathname === '/stays' || pathname === '/blog';
   const isDetail = /^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname);
 

@@ -17,8 +17,11 @@
     "test:bench-runner": "node scripts/test-bench-runner.mjs",
     "test:control-package": "node scripts/test-control-package.mjs",
     "test:verify-results": "node scripts/test-verify-results.mjs",
+    "test:bench-stability": "node --check scripts/bench-stability.mjs",
+    "test:cloudflare-config": "node scripts/test-cloudflare-config-audit.mjs",
     "test:build-enabled": "node --check scripts/build-enabled.mjs",
     "test:contracts": "node scripts/contract-tests.mjs",
+    "cloudflare:config-audit": "node scripts/cloudflare-config-audit.mjs",
     "contract:report": "node scripts/contract-report.mjs",
     "verify:results": "node scripts/verify-results.mjs",
     "smoke": "node scripts/smoke.mjs",
@@ -37,7 +40,7 @@
     "typescript": "6.0.3"
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=22.0.0",
     "pnpm": ">=9.0.0"
   },
   "pnpm": {

@@ -9,7 +9,12 @@ type Bindings = Env & {
   };
 };
 
+function normalizeBenchPath(pathname: string) {
+  return pathname.replace(/\/+$/, "") || "/";
+}
+
 function cacheKind(pathname: string) {
+  pathname = normalizeBenchPath(pathname);
   if (pathname === "/stays" || pathname === "/blog") return "list";
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
   return null;
@@ -25,6 +30,7 @@ function cacheHeader(pathname: string, profile: string | null) {
 }
 
 function isBenchRoute(pathname: string) {
+  pathname = normalizeBenchPath(pathname);
   if (pathname === "/" || pathname === "/stays" || pathname === "/blog" || pathname === "/chart" || pathname === "/media") {
     return true;
   }
@@ -32,6 +38,7 @@ function isBenchRoute(pathname: string) {
 }
 
 function needsClient(pathname: string) {
+  pathname = normalizeBenchPath(pathname);
   return pathname === "/chart" || pathname === "/media";
 }
 
@@ -57,6 +64,7 @@ function escapeHtml(value: string) {
 }
 
 function pageTitle(pathname: string) {
+  pathname = normalizeBenchPath(pathname);
   if (pathname === "/") return "Cloudflare Framework Benchmark";
   if (pathname === "/stays") return "Stays";
   if (pathname === "/blog") return "Blog";
@@ -183,14 +191,15 @@ async function renderDocument(request: Request, env: Bindings) {
   if (!shell) return new Response("Not found", { status: 404 });
 
   const url = new URL(request.url);
+  const pathname = normalizeBenchPath(url.pathname);
   const start = performance.now();
-  const includeClient = needsClient(url.pathname);
-  const { head, tail } = resolveShellParts(shell, url.pathname, includeClient);
-  const appStream = await render(url.pathname);
+  const includeClient = needsClient(pathname);
+  const { head, tail } = resolveShellParts(shell, pathname, includeClient);
+  const appStream = await render(pathname);
 
   return new Response(createDocumentStream(head, appStream, tail), {
     status: 200,
-    headers: htmlHeaders(url.pathname, request.headers.get("x-cf-bench-profile"), start),
+    headers: htmlHeaders(pathname, request.headers.get("x-cf-bench-profile"), start),
   });
 }
 

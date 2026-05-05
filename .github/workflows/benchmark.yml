@@ -8,7 +8,7 @@ on:
       iterations:
         description: "Iterations per scenario"
         required: false
-        default: "5"
+        default: "10"
       profile:
         description: "Profile to run (parity, idiomatic, or both)"
         required: false
@@ -62,7 +62,7 @@ jobs:
     needs: preflight
     runs-on: ubuntu-latest
     env:
-      BENCH_ITERATIONS: ${{ github.event.inputs.iterations || '5' }}
+      BENCH_ITERATIONS: ${{ github.event.inputs.iterations || '10' }}
       BENCH_PROFILE: ${{ github.event.inputs.profile || 'parity' }}
       BENCH_THROTTLE: ${{ github.event.inputs.throttle || 'none' }}
       STABILITY_REPEATS: ${{ github.event.inputs.stability_repeats || '3' }}
@@ -90,6 +90,11 @@ jobs:
         run: |
           pnpm -C bench exec node src/run-v4.mjs --suite mpa_airbnb --iterations $BENCH_ITERATIONS --profile $BENCH_PROFILE --throttle $BENCH_THROTTLE
           pnpm -C bench exec node src/run-v4.mjs --suite spa_trading_media --iterations $BENCH_ITERATIONS --profile $BENCH_PROFILE --throttle $BENCH_THROTTLE
+
+      - name: Verify benchmark results
+        run: |
+          pnpm verify:results -- --json bench/results.v4.mpa_airbnb.json
+          pnpm verify:results -- --json bench/results.v4.spa_trading_media.json
 
       - name: Upload results
         uses: actions/upload-artifact@v4

@@ -10,7 +10,12 @@ const app = new Hono<{ Bindings: Bindings }>();
 const CACHE_LIST = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
 const CACHE_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
 
+function normalizeBenchPath(pathname: string) {
+  return pathname.replace(/\/+$/, "") || "/";
+}
+
 function benchmarkPageKind(pathname: string) {
+  pathname = normalizeBenchPath(pathname);
   if (pathname === "/stays" || pathname === "/blog") return "list";
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
   return null;

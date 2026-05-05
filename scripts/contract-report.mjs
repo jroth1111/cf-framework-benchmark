@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import fs from "node:fs/promises";
 import path from "node:path";
-import { blogPosts } from "../packages/dataset/src/index.js";
+import { buildCloudflareAudit } from "./cloudflare-config-audit.mjs";
+import { blogPosts, listings } from "../packages/dataset/src/index.js";
 import {
   DEFAULT_MATRIX_PATH,
   DEFAULT_SUITES_DIR,
@@ -35,6 +36,13 @@ function routeSample(route) {
   if (route === "/stays/:id") return "/stays/001";
   if (route === "/blog/:slug") return `/blog/${blogPosts[0]?.slug || "why-this-benchmark-exists"}`;
   return route;
+}
+
+function routeSamples(route) {
+  const sample = routeSample(route);
+  if (sample === "/") return [sample];
+  if (route === "/chart" || route === "/media") return [sample];
+  return [sample, `${sample}/`];
 }
 
 function requiredTestIdsForRoute(route) {
@@ -76,6 +84,19 @@ function expectedHtmlCache(route) {
 function hasTestId(html, id) {
   const marker = String(id).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`data-testid=["']${marker}["']`).test(html);
+}
+
+function expectedDatasetContent(route) {
+  switch (route) {
+    case "/stays":
+    case "/stays/:id":
+      return [listings[0]?.title].filter(Boolean);
+    case "/blog":
+    case "/blog/:slug":
+      return [blogPosts[0]?.title].filter(Boolean);
+    default:
+      return [];
+  }
 }
 
 async function fetchWithTimeout(url, init = {}) {
@@ -138,6 +159,13 @@ async function probeHtml({ framework, baseUrl, route, path }) {
   for (const testId of requiredTestIds) {
     checks.push({ name: `selector:${testId}`, ok: hasTestId(text, testId), detail: testId });
   }
+  for (const expected of expectedDatasetContent(route)) {
+    checks.push({
+      name: `dataset-content:${expected}`,
+      ok: text.includes(expected),
+      detail: expected,
+    });
+  }
   checks.push({
     name: "html-body-size",
     ok: text.length > 500,
@@ -155,6 +183,36 @@ async function probeHtml({ framework, baseUrl, route, path }) {
     ok: checks.every((check) => check.ok),
     checks,
   };
+}
+
+async function probeUnknownRoute({ framework, baseUrl }) {
+  const path = "/__cf_bench_missing_contract_route";
+  const url = `${baseUrl}${path}`;
+  const checks = [];
+  let status = null;
+  let headers = {};
+
+  try {
+    const res = await fetchWithTimeout(url, { headers: { accept: "text/html" } });
+    status = res.status;
+    headers = {
+      "content-type": res.headers.get("content-type") || "",
+      "cache-control": res.headers.get("cache-control") || "",
+      "server-timing": res.headers.get("server-timing") || "",
+      "cf-ray": res.headers.get("cf-ray") || "",
+    };
+    await res.arrayBuffer();
+  } catch (err) {
+    checks.push({ name: "request", ok: false, detail: err instanceof Error ? err.message : String(err) });
+    return { framework, path, url, status, headers, checks, ok: false };
+  }
+
+  checks.push({
+    name: "unknown-route-status",
+    ok: status === 404,
+    detail: String(status),
+  });
+  return { framework, path, url, status, headers, checks, ok: checks.every((check) => check.ok) };
 }
 
 async function probeApi({ framework, baseUrl, path, expectedStatus = 200 }) {
@@ -203,6 +261,8 @@ const frameworks = await resolveLiveTargets({
 });
 const suites = await Promise.all([...suiteNames].map((name) => loadSuite(name, suitesDir)));
 const requiredRoutes = [...new Set(suites.flatMap((suite) => suite.requiredRoutes))];
+const cloudflareAudit = await buildCloudflareAudit({ matrixPath });
+const cloudflareByName = new Map(cloudflareAudit.frameworks.map((row) => [row.name, row]));
 
 const report = {
   schemaVersion: "1.0.0",
@@ -211,6 +271,11 @@ const report = {
   matrixPath,
   targetsPath,
   suites: [...suiteNames],
+  cloudflareAudit: {
+    ok: cloudflareAudit.ok,
+    gapCount: cloudflareAudit.gapCount,
+    metadataPath: cloudflareAudit.metadataPath,
+  },
   frameworks: [],
 };
 
@@ -220,8 +285,11 @@ for (const framework of frameworks) {
   const api = [];
 
   for (const route of requiredRoutes) {
-    routes.push(await probeHtml({ framework: framework.name, baseUrl, route, path: routeSample(route) }));
+    for (const sample of routeSamples(route)) {
+      routes.push(await probeHtml({ framework: framework.name, baseUrl, route, path: sample }));
+    }
   }
+  routes.push(await probeUnknownRoute({ framework: framework.name, baseUrl }));
 
   api.push(await probeApi({ framework: framework.name, baseUrl, path: "/api/bench" }));
   api.push(await probeApi({ framework: framework.name, baseUrl, path: "/api/listings?pageSize=1" }));
@@ -234,6 +302,7 @@ for (const framework of frameworks) {
     tier: framework.matrix?.tier || null,
     implementationKind: framework.matrix?.implementationKind || null,
     url: baseUrl,
+    cloudflare: cloudflareByName.get(framework.name) ?? null,
     ok,
     routes,
     api,
@@ -241,13 +310,13 @@ for (const framework of frameworks) {
   console.log(`${ok ? "ok" : "fail"} ${framework.name}`);
 }
 
-report.ok = report.frameworks.every((framework) => framework.ok);
+report.ok = cloudflareAudit.ok && report.frameworks.every((framework) => framework.ok);
 report.failureCount = report.frameworks.reduce(
   (sum, framework) =>
     sum +
     framework.routes.flatMap((route) => route.checks).filter((check) => !check.ok).length +
     framework.api.flatMap((endpoint) => endpoint.checks).filter((check) => !check.ok).length,
-  0
+  cloudflareAudit.gapCount
 );
 
 const resolvedOutPath = path.resolve(outPath);

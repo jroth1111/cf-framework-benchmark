@@ -1,48 +1,109 @@
-# Cloudflare deployment best practices (per framework)
+# Cloudflare Deployment And Benchmark Controls
 
-This repo tries to keep **behavior consistent** across frameworks while using the *idiomatic* Cloudflare adapter/preset for each.
+This repo compares framework behavior on Cloudflare Workers. The benchmark must
+therefore record the Cloudflare runtime mode for each entry instead of treating
+all deployed URLs as equivalent.
 
-## Cross-cutting (applies to all)
+## Required Disclosure
 
-- Prefer **static assets** where possible (SSG/blog) and keep dynamic/SSR limited to routes that need it.
-- Keep expensive initialization **out of module scope** unless you benefit from isolate reuse.
-- Add lightweight response headers during benchmarking:
-  - `Server-Timing` to tag responses (we include an isolate id in many API routes)
-  - `Cache-Control` and `CF-Cache-Status` (in production) to reason about cache effects.
-- Benchmark both:
-  - first request in a fresh browser context (cold cache / first view)
-  - subsequent navigation(s) (warm cache / repeat view)
+Before a result is canonical, the Cloudflare config audit must pass:
 
-## Framework notes
+```bash
+pnpm cloudflare:config-audit --fail-on-gaps
+```
 
-### React + Vite (MPA via multi-entry build)
-- Cloudflare Pages supports static asset hosting with an optional Worker for `/api/*`.
-- Use `assets.not_found_handling = "404-page"` for MPA routing (avoid SPA fallback).
+The audit records each app's framework guide, adapter, maturity label, Wrangler
+entrypoint, assets directory, compatibility date, compatibility flags,
+observability setting, and Workers Static Assets routing mode. The source
+metadata lives in `bench/cloudflare-frameworks.json`; live Wrangler settings are
+read from each app's `wrangler.toml` or `wrangler.jsonc`.
+
+## Workers Static Assets Routing
+
+Workers Static Assets are a benchmark-control surface:
+
+- `asset-first-with-worker-fallback` means static matches can be served before
+  Worker code runs.
+- `worker-first-for-contract-routes` means benchmark routes are listed in
+  `assets.run_worker_first` and should invoke Worker code before asset serving.
+- `worker-only` means the Wrangler config has no Static Assets binding.
+- `mixed-worker-first` means some contract routes are Worker-first and others
+  are asset-first.
+
+Do not normalize every app to one mode by default. Some frameworks intentionally
+emit static or prerendered routes. The benchmark should disclose the mode and
+rank only within compatible tier, route, render, data, and hydration buckets.
+
+## Observability Policy
+
+Workers Logs and Traces are useful for live trust gates, route diagnosis, and
+deployment debugging. They are not a free benchmark variable.
+
+- Live verification may rely on observability to diagnose failures.
+- Timing runs must either standardize observability across comparable targets or
+  disclose each target's setting in the config audit.
+- Do not compare a result as canonical when observability, sampling, or
+  diagnostic instrumentation differs in a way that could affect the measured
+  route and is not recorded.
+
+## Compatibility Flags
+
+`nodejs_compat`, `nodejs_als`, and related flags are benchmark metadata, not
+generic optimization advice. Some adapters require them. Record the flags because
+they change runtime assumptions, polyfill availability, bundle shape, and startup
+surface.
+
+## Framework Notes
 
 ### Astro
-- Use the official Cloudflare adapter and choose `output: "hybrid"` so you can mix prerendered pages with SSR routes.
-- Keep islands hydration scoped (only the chart page needs a client island in this benchmark).
 
-### Next.js (OpenNext for Cloudflare)
-- Use an OpenNext-based adapter so Next’s routing and SSR map cleanly to Workers.
-- Avoid Node-only APIs; treat runtime as workerd + V8 isolates.
+Use `@astrojs/cloudflare` for Workers. Astro 6 requires Node.js 22+ for Workers
+Builds, so `.nvmrc`, CI, and documented prerequisites must stay on Node 22 or
+newer. This repo classifies the current Astro entry as static-heavy/prerendered
+for benchmark ranking even though the framework supports hybrid output.
 
-### SvelteKit
-- Use `@sveltejs/adapter-cloudflare` and keep server code on web APIs.
-- Prefer server `load()` for SSR listings and keep the chart as client-only.
+### Next.js
+
+Use the OpenNext Cloudflare path for Workers. `next dev` is not evidence of the
+canonical runtime path; verification must exercise OpenNext build/preview/deploy
+or the deployed Worker. Node middleware support remains a framework/adaptor
+caveat and should not be assumed from local Next behavior.
+
+### React Router
+
+Cloudflare's React Router framework guide is the full-stack SSR Worker path.
+It is not the SPA/prerender mode. A React + Vite app that uses React Router as a
+client library belongs in the wrapper-baseline bucket, not the React Router
+framework-runtime bucket.
 
 ### Qwik
-- Qwik’s resumability reduces hydration cost; use visible tasks for client-only work (chart).
 
-### SolidStart / TanStack Start
-- Use Cloudflare presets (Vinxi) and avoid Node-specific dependencies.
-- For Start-based stacks, use API file routes or server functions for `/api/*` endpoints.
+Cloudflare integration support exists, but this repo's Qwik package line is
+beta. Keep its caveats split into Cloudflare support, framework maturity, and
+runtime proof status.
 
-## Benchmark-specific notes
+### Waku
 
-- Chart page intentionally supports:
-  - pan + zoom + crosshair
-  - timeframe switching
-  - indicator toggles (SMA/EMA/volume)
+Cloudflare integration support exists, but Waku remains alpha in this repo. Keep
+its caveats split into Cloudflare support, framework maturity, and runtime proof
+status. Its current benchmark implementation is classified as static-heavy in
+this repo until live probes prove a different route contract.
 
-These controls create repeatable user interactions so lab INP and long tasks can be compared across frameworks.
+### Wrapper And Worker Baselines
+
+React, Solid, Vue, Hono, and Hono-composite entries are useful baselines. They
+must not be ranked as native framework-runtime peers. Worker-first routing is
+expected for custom wrapper baselines when the Worker owns the document contract.
+
+## Trust Gates
+
+For canonical runs, use this minimum chain:
+
+1. Static verification passes, including `pnpm cloudflare:config-audit --fail-on-gaps`.
+2. The relevant framework build emits the Cloudflare Worker output path.
+3. Wrangler dry-run, preview, deploy, or live Workers verification exercises the
+   deployed Worker path.
+4. Contract report proves routes, APIs, cache headers, selectors, `server-timing`,
+   and Cloudflare config disclosure.
+5. Benchmark result verification checks provenance, row hashes, run order, and
+   contract output before any Markdown report is used for ranking.

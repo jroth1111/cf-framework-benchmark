@@ -417,6 +417,7 @@ function mediaPage() {
 }
 
 function matchHonoPage(pathname: string): HonoPageMatch | null {
+  pathname = pathname.replace(/\/+$/, "") || "/";
   if (pathname === "/") return { page: "home" };
   if (pathname === "/stays") return { page: "stays" };
   if (pathname === "/blog") return { page: "blog" };
@@ -455,6 +456,7 @@ function renderHonoPage(input: URL | Request | string) {
 }
 
 function pageCacheControl(pathname: string) {
+  pathname = pathname.replace(/\/+$/, "") || "/";
   if (pathname === "/stays" || pathname === "/blog") return CACHE.short;
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return CACHE.detail;
   return CACHE.noStore;

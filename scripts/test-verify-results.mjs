@@ -34,7 +34,8 @@ try {
         runOrder: { seed },
         provenance: {
           git,
-          hashes: { matrix: "m", targets: "t", lockfile: "l", contract: "c" },
+          hashes: { matrix: "m", targets: "t", lockfile: "l", contract: "c", cloudflareConfig: "cf" },
+          cloudflareAudit: { ok: true },
         },
         scoring: { model: "real-world-choice-v1" },
         failures: [],
@@ -66,7 +67,8 @@ try {
         runOrder: { seed },
         provenance: {
           git,
-          hashes: { matrix: "m", targets: "t", lockfile: "l", contract: "c" },
+          hashes: { matrix: "m", targets: "t", lockfile: "l", contract: "c", cloudflareConfig: "cf" },
+          cloudflareAudit: { ok: true },
         },
         scoring: { model: "real-world-choice-v1" },
         failures: [],

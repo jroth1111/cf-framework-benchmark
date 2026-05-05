@@ -43,6 +43,9 @@ await run("test:deploy-bench", "pnpm", ["test:deploy-bench"]);
 await run("test:bench-runner", "pnpm", ["test:bench-runner"]);
 await run("test:control-package", "pnpm", ["test:control-package"]);
 await run("test:verify-results", "pnpm", ["test:verify-results"]);
+await run("test:bench-stability", "pnpm", ["test:bench-stability"]);
+await run("test:cloudflare-config", "pnpm", ["test:cloudflare-config"]);
+await run("cloudflare:config-audit", "pnpm", ["cloudflare:config-audit", "--fail-on-gaps"]);
 await run("test:build-enabled", "pnpm", ["test:build-enabled"]);
 await run("build:enabled", "pnpm", ["build:enabled", ...matrixArgs]);
 

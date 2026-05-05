@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { buildCloudflareAudit } from '../../scripts/cloudflare-config-audit.mjs';
 import {
   DEFAULT_MATRIX_PATH,
   DEFAULT_TARGETS_PATH,
@@ -138,6 +139,8 @@ async function main() {
       requireEnabled: true,
     }),
   ]);
+  const cloudflareAudit = await buildCloudflareAudit({ cwd: path.resolve(BENCH_DIR, '..'), matrixPath });
+  const cloudflareByName = new Map(cloudflareAudit.frameworks.map((row) => [row.name, row]));
   const scenarios = suite.scenarios.map(mapScenario);
 
   const frameworks = [];
@@ -156,6 +159,7 @@ async function main() {
       delivery: 'workers',
       implementationKind: target.matrix?.implementationKind || 'native',
       tier: target.matrix?.tier || null,
+      cloudflare: cloudflareByName.get(target.framework) ?? null,
       features: { clientNav: false },
       scenarioContracts,
       deploy: target.matrix?.deploy || null,

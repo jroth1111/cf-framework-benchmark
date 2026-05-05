@@ -42,6 +42,13 @@ function expectHeaderIncludes(res, name, expected, label) {
   );
 }
 
+function expectBodyIncludes(html, expected, label) {
+  expect(
+    html.includes(expected),
+    `${label} missing expected dataset content ${JSON.stringify(expected)}`
+  );
+}
+
 function hasTestId(html, id) {
   const marker = String(id).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const regex = new RegExp(`data-testid=["']${marker}["']`);
@@ -100,10 +107,34 @@ async function fetchHtml(label, url) {
   return { res, text };
 }
 
+async function fetchHtmlStatus(label, url) {
+  let res;
+  try {
+    res = await fetchWithTimeout(url, {
+      headers: {
+        accept: "text/html",
+        "x-cf-bench-profile": "idiomatic",
+      },
+      redirect: "follow",
+    });
+  } catch (err) {
+    fail(`${label} request failed: ${err instanceof Error ? err.message : String(err)}`);
+    return null;
+  }
+  return { res, text: await res.text() };
+}
+
 function routeSample(route) {
   if (route === "/stays/:id") return "/stays/001";
   if (route === "/blog/:slug") return `/blog/${blogPosts[0]?.slug || "why-this-benchmark-exists"}`;
   return route;
+}
+
+function routeSamples(route) {
+  const sample = routeSample(route);
+  if (sample === "/") return [sample];
+  if (route === "/chart" || route === "/media") return [sample];
+  return [sample, `${sample}/`];
 }
 
 function requiredTestIdsForRoute(route) {
@@ -141,6 +172,19 @@ function expectedHtmlCache(route) {
       return "no-store";
     default:
       return null;
+  }
+}
+
+function expectedDatasetContent(route) {
+  switch (route) {
+    case "/stays":
+    case "/stays/:id":
+      return [listings[0]?.title].filter(Boolean);
+    case "/blog":
+    case "/blog/:slug":
+      return [blogPosts[0]?.title].filter(Boolean);
+    default:
+      return [];
   }
 }
 
@@ -244,18 +288,33 @@ async function runFramework(framework, requiredRoutes) {
   }
 
   for (const route of requiredRoutes) {
-    const sample = routeSample(route);
-    const page = await fetchHtml(`${framework.name} ${sample}`, `${baseUrl}${sample}`);
-    if (!page) continue;
+    for (const sample of routeSamples(route)) {
+      const page = await fetchHtml(`${framework.name} ${sample}`, `${baseUrl}${sample}`);
+      if (!page) continue;
 
-    const expectedCache = expectedHtmlCache(route);
-    if (expectedCache) {
-      expectHeaderIncludes(page.res, "cache-control", expectedCache, `${framework.name} ${sample}`);
-    }
+      const expectedCache = expectedHtmlCache(route);
+      if (expectedCache) {
+        expectHeaderIncludes(page.res, "cache-control", expectedCache, `${framework.name} ${sample}`);
+      }
 
-    for (const marker of requiredTestIdsForRoute(route)) {
-      expect(hasTestId(page.text, marker), `${framework.name} ${sample} missing data-testid=${marker}`);
+      for (const marker of requiredTestIdsForRoute(route)) {
+        expect(hasTestId(page.text, marker), `${framework.name} ${sample} missing data-testid=${marker}`);
+      }
+      for (const expected of expectedDatasetContent(route)) {
+        expectBodyIncludes(page.text, expected, `${framework.name} ${sample}`);
+      }
     }
+  }
+
+  const missingPage = await fetchHtmlStatus(
+    `${framework.name} unknown document route`,
+    `${baseUrl}/__cf_bench_missing_contract_route`
+  );
+  if (missingPage) {
+    expect(
+      missingPage.res.status === 404,
+      `${framework.name} unknown document route should not SPA/index shadow with 200 (got ${missingPage.res.status})`
+    );
   }
 }
 

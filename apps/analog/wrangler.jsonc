@@ -6,7 +6,9 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "cf-bench-analog",
 	"compatibility_date": "2026-03-06",
+	"compatibility_flags": ["nodejs_compat"],
 	"main": "worker/index.ts",
+	"vars": { "NODE_ENV": "production" },
 	"assets": {
 		"binding": "ASSETS",
 		"directory": "dist/analog/public"

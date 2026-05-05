@@ -1,0 +1,185 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-05-05",
+  "description": "Cloudflare support and benchmark interpretation metadata for framework matrix entries.",
+  "frameworks": {
+    "analog": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+      "adapter": "Angular/Analog Worker scaffold",
+      "cloudflareSupport": "experimental",
+      "maturity": "experimental",
+      "benchmarkMode": "experimental-blocked",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "angular": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/angular/",
+      "adapter": "Angular SSR Worker output",
+      "cloudflareSupport": "official-guide",
+      "maturity": "stable",
+      "benchmarkMode": "prerender/static-heavy",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "astro": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/astro/",
+      "adapter": "@astrojs/cloudflare",
+      "cloudflareSupport": "official-guide",
+      "maturity": "stable",
+      "benchmarkMode": "hybrid/prerender-static-heavy",
+      "verificationTarget": "wrangler/workerd",
+      "notes": "Astro 6 requires Node 22+ in Workers Builds."
+    },
+    "hono": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/hono/",
+      "adapter": "Hono Worker",
+      "cloudflareSupport": "official-guide",
+      "maturity": "stable",
+      "benchmarkMode": "worker-baseline",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "hono-solid": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/hono/",
+      "adapter": "Hono Worker plus Solid client assets",
+      "cloudflareSupport": "composition",
+      "maturity": "stable-composite",
+      "benchmarkMode": "worker-baseline-composite",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "hono-svelte": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/hono/",
+      "adapter": "Hono Worker plus Svelte client assets",
+      "cloudflareSupport": "composition",
+      "maturity": "scaffolded-composite",
+      "benchmarkMode": "worker-baseline-composite-disabled",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "hono-vue": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/hono/",
+      "adapter": "Hono Worker plus Vue client assets",
+      "cloudflareSupport": "composition",
+      "maturity": "stable-composite",
+      "benchmarkMode": "worker-baseline-composite",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "next": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/",
+      "adapter": "@opennextjs/cloudflare",
+      "cloudflareSupport": "official-guide",
+      "maturity": "stable-adapter",
+      "benchmarkMode": "full-stack-ssr-with-prerendered-blog",
+      "verificationTarget": "OpenNext Cloudflare build/preview/deploy"
+    },
+    "nuxt": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/nuxt/",
+      "adapter": "Nitro Cloudflare preset",
+      "cloudflareSupport": "official-guide",
+      "maturity": "stable",
+      "benchmarkMode": "full-stack-ssr",
+      "verificationTarget": "Nitro Cloudflare Worker output"
+    },
+    "qwik": {
+      "officialGuide": "https://developers.cloudflare.com/workers/frameworks/framework-guides/qwik/",
+      "adapter": "Qwik City Cloudflare output",
+      "cloudflareSupport": "official-guide",
+      "maturity": "beta",
+      "benchmarkMode": "framework-runtime-with-prerendered-blog",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "react": {
+      "officialGuide": "https://developers.cloudflare.com/workers/vite-plugin/tutorial/",
+      "adapter": "Custom Worker plus React/Vite assets",
+      "cloudflareSupport": "custom-worker",
+      "maturity": "stable-wrapper",
+      "benchmarkMode": "wrapper-baseline",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "react-router": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/react-router/",
+      "adapter": "Cloudflare Vite plugin",
+      "cloudflareSupport": "official-guide",
+      "maturity": "stable",
+      "benchmarkMode": "full-stack-ssr",
+      "verificationTarget": "Cloudflare Vite plugin Worker output",
+      "notes": "Cloudflare's React Router framework path is not the SPA or prerender mode."
+    },
+    "redwood": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+      "adapter": "RedwoodSDK Worker",
+      "cloudflareSupport": "workers-native-framework",
+      "maturity": "beta",
+      "benchmarkMode": "full-stack-ssr",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "solid": {
+      "officialGuide": "https://developers.cloudflare.com/workers/vite-plugin/tutorial/",
+      "adapter": "Custom Worker plus Solid/Vite assets",
+      "cloudflareSupport": "custom-worker",
+      "maturity": "stable-wrapper",
+      "benchmarkMode": "wrapper-baseline",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "solidstart": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+      "adapter": "SolidStart Worker scaffold",
+      "cloudflareSupport": "experimental",
+      "maturity": "experimental",
+      "benchmarkMode": "experimental-blocked",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "svelte": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/svelte/",
+      "adapter": "@sveltejs/adapter-cloudflare",
+      "cloudflareSupport": "official-guide",
+      "maturity": "stable",
+      "benchmarkMode": "full-stack-ssr",
+      "verificationTarget": "SvelteKit Cloudflare Worker output"
+    },
+    "tanstack-start": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+      "adapter": "TanStack Start Worker output",
+      "cloudflareSupport": "workers-compatible",
+      "maturity": "stable-adapter",
+      "benchmarkMode": "full-stack-ssr",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "tanstack-start-solid": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+      "adapter": "TanStack Start Solid Worker output",
+      "cloudflareSupport": "workers-compatible",
+      "maturity": "stable-adapter",
+      "benchmarkMode": "full-stack-ssr",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "vike": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+      "adapter": "Vike Worker output",
+      "cloudflareSupport": "workers-compatible",
+      "maturity": "stable",
+      "benchmarkMode": "prerender/static-heavy",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "vue": {
+      "officialGuide": "https://developers.cloudflare.com/workers/vite-plugin/tutorial/",
+      "adapter": "Custom Worker plus Vue/Vite assets",
+      "cloudflareSupport": "custom-worker",
+      "maturity": "stable-wrapper",
+      "benchmarkMode": "wrapper-baseline",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "vue-c3": {
+      "officialGuide": "https://developers.cloudflare.com/workers/vite-plugin/tutorial/",
+      "adapter": "Custom Worker plus Vue/Vite assets",
+      "cloudflareSupport": "custom-worker",
+      "maturity": "stable-wrapper",
+      "benchmarkMode": "wrapper-baseline",
+      "verificationTarget": "wrangler/workerd"
+    },
+    "waku": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/more-web-frameworks/waku/",
+      "adapter": "Waku Worker",
+      "cloudflareSupport": "official-guide",
+      "maturity": "alpha",
+      "benchmarkMode": "prerender/static-heavy-in-this-repo",
+      "verificationTarget": "wrangler/workerd"
+    }
+  }
+}

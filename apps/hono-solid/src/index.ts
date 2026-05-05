@@ -15,7 +15,12 @@ type ManifestEntry = {
 
 let clientManifestPromise: Promise<ManifestEntry> | null = null;
 
+function normalizeBenchPath(pathname: string) {
+  return pathname.replace(/\/+$/, "") || "/";
+}
+
 function cacheKind(pathname: string) {
+  pathname = normalizeBenchPath(pathname);
   if (pathname === "/stays" || pathname === "/blog") return "list";
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
   return null;
@@ -29,6 +34,7 @@ function cacheHeader(pathname: string, profile: string | null) {
 }
 
 function needsClient(pathname: string) {
+  pathname = normalizeBenchPath(pathname);
   return pathname === "/chart" || pathname === "/media";
 }
 
@@ -94,6 +100,7 @@ async function getClientManifest(env: Bindings, request: Request) {
 }
 
 async function renderDocument(pathname: string, env: Bindings, request: Request) {
+  pathname = normalizeBenchPath(pathname);
   const route = renderRoute(pathname);
   if (!route) return null;
 
@@ -142,9 +149,9 @@ app.all("*", async (c) => {
   if (!url.pathname.includes(".")) {
     const html = await renderDocument(url.pathname, c.env, c.req.raw);
     if (html) {
-      return new Response(html, {
-        status: 200,
-        headers: applyHtmlHeaders(null, url.pathname, c.req.header("x-cf-bench-profile") ?? null, start),
+        return new Response(html, {
+          status: 200,
+        headers: applyHtmlHeaders(null, normalizeBenchPath(url.pathname), c.req.header("x-cf-bench-profile") ?? null, start),
       });
     }
   }

@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
+import { buildCloudflareAudit } from '../../scripts/cloudflare-config-audit.mjs';
 
 const require = createRequire(import.meta.url);
 const BENCH_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -244,6 +245,37 @@ function hashFile(relativePath) {
   } catch {
     return null;
   }
+}
+
+function relativeRepoPath(filePath) {
+  if (!filePath) return null;
+  return path.relative(REPO_ROOT, filePath);
+}
+
+function stableCloudflareAuditInput(report) {
+  return {
+    schemaVersion: report.schemaVersion,
+    ok: report.ok,
+    gapCount: report.gapCount,
+    frameworkCount: report.frameworkCount,
+    enabledWorkersCount: report.enabledWorkersCount,
+    frameworks: report.frameworks.map((row) => ({
+      name: row.name,
+      tier: row.tier,
+      status: row.status,
+      benchmarkEnabled: row.benchmarkEnabled,
+      deployType: row.deployType,
+      cloudflare: row.cloudflare,
+      wrangler: row.wrangler
+        ? {
+            ...row.wrangler,
+            configPath: relativeRepoPath(row.wrangler.configPath),
+          }
+        : null,
+      gaps: row.gaps,
+      ok: row.ok,
+    })),
+  };
 }
 
 function hashRowsInput(row, gitInfo, runSeed) {
@@ -565,11 +597,12 @@ function scenarioContractForFramework(fw, scenarioName, scenarioType) {
   };
 }
 
-export function scenarioContractBucketKey({ delivery, implementationKind, tier, scenario, contract }) {
+export function scenarioContractBucketKey({ delivery, implementationKind, tier, cloudflareMode, scenario, contract }) {
   return [
     `delivery=${delivery || 'unknown'}`,
     `impl=${implementationKind || 'unknown'}`,
     `tier=${tier || 'unknown'}`,
+    `cf=${cloudflareMode || 'unknown'}`,
     `scenario=${scenario}`,
     `render=${contract.renderMode || 'unknown'}`,
     `data=${contract.initialData || 'unknown'}`,
@@ -581,10 +614,12 @@ function frameworkBucketKey(meta, scenarioNames, scenarioTypesByName) {
   const delivery = meta?.delivery ?? 'unknown';
   const implementationKind = meta?.implementationKind ?? 'unknown';
   const tier = meta?.tier ?? 'unknown';
+  const cloudflareMode = meta?.cloudflare?.wrangler?.assetRouting?.mode ?? 'unknown';
   const segments = [
     `delivery=${delivery}`,
     `impl=${implementationKind}`,
     `tier=${tier}`,
+    `cf=${cloudflareMode}`,
   ];
   for (const scenarioName of scenarioNames) {
     const contract = scenarioContractForFramework(meta, scenarioName, scenarioTypesByName.get(scenarioName));
@@ -1752,6 +1787,7 @@ async function main() {
       delivery,
       implementationKind,
       tier: meta?.tier ?? 'unknown',
+      cloudflareMode: meta?.cloudflare?.wrangler?.assetRouting?.mode ?? 'unknown',
       scenario,
       contract: scenarioContract,
     });
@@ -2177,6 +2213,8 @@ async function main() {
     warmupPaths,
     profileSettings,
   };
+  const cloudflareAudit = await buildCloudflareAudit({ cwd: REPO_ROOT });
+  const cloudflareAuditStable = stableCloudflareAuditInput(cloudflareAudit);
   const provenance = {
     git: gitInfo,
     dataset: datasetInfo,
@@ -2185,7 +2223,9 @@ async function main() {
       targets: hashFile('bench/targets.live.json'),
       lockfile: hashFile('pnpm-lock.yaml'),
       contract: hashFile('docs/contracts-v5.md') || hashFile('docs/contracts-v3.md'),
+      cloudflareConfig: sha256(cloudflareAuditStable),
     },
+    cloudflareAudit: cloudflareAuditStable,
     frameworkPackages,
     frameworkVersions,
     benchApi: benchApiByFramework,
@@ -2393,6 +2433,7 @@ async function main() {
   md += `| Matrix hash | ${provenance.hashes.matrix || '—'} |\n`;
   md += `| Targets hash | ${provenance.hashes.targets || '—'} |\n`;
   md += `| Contract hash | ${provenance.hashes.contract || '—'} |\n`;
+  md += `| Cloudflare config hash | ${provenance.hashes.cloudflareConfig || '—'} |\n`;
   md += `| Lockfile hash | ${provenance.hashes.lockfile || '—'} |\n`;
   md += `| Dataset | ${datasetInfo ? `${datasetInfo.name}@${datasetInfo.version}` : '—'} |\n\n`;
 

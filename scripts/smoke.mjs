@@ -75,6 +75,27 @@ async function gotoScenario(page, baseUrl, scenario) {
   }
 }
 
+async function assertVisibleLocator(page, selector, label) {
+  const locator = page.locator(selector).first();
+  await locator.waitFor({ state: "visible", timeout: timeoutMs });
+  const box = await locator.boundingBox();
+  if (!box || box.width <= 0 || box.height <= 0) {
+    throw new Error(`${label} selector ${selector} is not a visible, non-zero element`);
+  }
+}
+
+async function validateScenarioSurface(page, scenario, label) {
+  if (scenario.waitFor) {
+    await assertVisibleLocator(page, scenario.waitFor, label);
+  }
+}
+
+async function warmReloadDocumentScenario(page, scenario, label) {
+  if (scenario.type !== "document") return;
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await validateScenarioSurface(page, scenario, `${label} warm reload`);
+}
+
 async function waitForBenchHydration(page) {
   const settled = await page
     .waitForFunction(
@@ -96,9 +117,9 @@ async function waitForBenchHydration(page) {
 }
 
 async function runChartInteractions(page, scenario) {
-  await page.waitForSelector("[data-testid=chart-canvas]", { timeout: timeoutMs });
-  await page.waitForSelector("[data-testid=symbol-select]", { timeout: timeoutMs });
-  await page.waitForSelector("[data-testid=timeframe-select]", { timeout: timeoutMs });
+  await assertVisibleLocator(page, "[data-testid=chart-canvas]", "chart canvas");
+  await assertVisibleLocator(page, "[data-testid=symbol-select]", "chart symbol select");
+  await assertVisibleLocator(page, "[data-testid=timeframe-select]", "chart timeframe select");
   try {
     await page.waitForFunction(() => globalThis.__CF_BENCH__?.chart?.ready === true, { timeout: timeoutMs });
   } catch (err) {
@@ -114,6 +135,10 @@ async function runChartInteractions(page, scenario) {
 
   const symbolSelect = page.locator("[data-testid=symbol-select]");
   const timeframeSelect = page.locator("[data-testid=timeframe-select]");
+  const before = await page.evaluate(() => ({
+    symbol: document.querySelector('[data-testid="symbol-select"]')?.value ?? null,
+    timeframe: document.querySelector('[data-testid="timeframe-select"]')?.value ?? null,
+  }));
 
   try {
     await symbolSelect.selectOption(targetSymbol);
@@ -127,6 +152,14 @@ async function runChartInteractions(page, scenario) {
   } catch {
     const options = timeframeSelect.locator("option");
     if ((await options.count()) > 1) await timeframeSelect.selectOption({ index: 1 });
+  }
+
+  const after = await page.evaluate(() => ({
+    symbol: document.querySelector('[data-testid="symbol-select"]')?.value ?? null,
+    timeframe: document.querySelector('[data-testid="timeframe-select"]')?.value ?? null,
+  }));
+  if (after.symbol === before.symbol && after.timeframe === before.timeframe) {
+    throw new Error(`chart controls did not change state: ${JSON.stringify({ before, after })}`);
   }
 
   try {
@@ -150,13 +183,19 @@ async function runChartInteractions(page, scenario) {
 }
 
 async function runMediaInteractions(page) {
-  await page.waitForSelector("[data-testid=media-card]", { timeout: timeoutMs });
+  await assertVisibleLocator(page, "[data-testid=media-card]", "media card");
+  const before = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
   await page.locator("[data-testid=media-card]").first().click();
-  await page.waitForSelector("[data-testid=media-player]", { timeout: timeoutMs });
+  await assertVisibleLocator(page, "[data-testid=media-player]", "media player");
 
   const next = page.locator("[data-testid=media-next]");
   if (await next.count()) {
     await next.first().click();
+  }
+  await assertVisibleLocator(page, "[data-testid=media-player]", "media player after next");
+  const after = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
+  if (before && after && before === after) {
+    throw new Error("media interaction did not change player text");
   }
 
   try {
@@ -177,6 +216,8 @@ async function runFramework(framework) {
     console.log(`\n${framework.name}`);
     for (const scenario of scenarios) {
       await gotoScenario(page, baseUrl, scenario);
+      await validateScenarioSurface(page, scenario, `${framework.name} ${scenario.name}`);
+      await warmReloadDocumentScenario(page, scenario, `${framework.name} ${scenario.name}`);
       if (hasChartInteraction(scenario) || hasMediaInteraction(scenario)) {
         await waitForBenchHydration(page);
       }

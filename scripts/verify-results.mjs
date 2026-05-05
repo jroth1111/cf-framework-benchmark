@@ -31,9 +31,10 @@ export async function verifyResultPair(jsonPath, { requireRowHashes = true } = {
   if (result.provenance?.git?.dirty === true && !path.basename(jsonPath).includes(".dirty.")) {
     fail("dirty provenance written to non-.dirty result path", failures);
   }
-  for (const name of ["matrix", "targets", "lockfile", "contract"]) {
+  for (const name of ["matrix", "targets", "lockfile", "contract", "cloudflareConfig"]) {
     if (!result.provenance?.hashes?.[name]) fail(`missing provenance.hashes.${name}`, failures);
   }
+  if (!result.provenance?.cloudflareAudit?.ok) fail("missing or failing provenance.cloudflareAudit", failures);
   if (!result.scoring?.model) fail("missing scoring.model", failures);
 
   const rows = Array.isArray(result.rows) ? result.rows : [];

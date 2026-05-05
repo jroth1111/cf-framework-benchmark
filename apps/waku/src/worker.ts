@@ -4,7 +4,12 @@ type BenchEnv = Env & {
   ASSETS: Fetcher;
 };
 
+function normalizeBenchPath(pathname: string) {
+  return pathname.replace(/\/+$/, "") || "/";
+}
+
 function cacheKind(pathname: string) {
+  pathname = normalizeBenchPath(pathname);
   if (pathname === "/stays" || pathname === "/blog") return "list";
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
   return null;

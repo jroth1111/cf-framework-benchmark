@@ -8,8 +8,8 @@ function cacheKind(pathname: string) {
 
 function cacheHeader(pathname: string) {
   const kind = cacheKind(pathname);
-  if (kind === "detail") return "public, max-age=0, s-maxage=300";
-  if (kind === "list") return "public, max-age=0, s-maxage=60";
+  if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=60";
+  if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=30";
   return "no-store";
 }
 
@@ -29,7 +29,7 @@ export default {
       headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
     }
 
-    return new Response(await response.text(), {
+    return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
       headers,

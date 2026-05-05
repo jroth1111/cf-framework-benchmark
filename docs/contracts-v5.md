@@ -20,6 +20,13 @@ runtime classes.
 - The shared dataset in `packages/dataset` is the content source for every app.
 - Required APIs, routes, selectors, and cache behavior are part of the benchmark
   contract, not optional app details.
+- Cloudflare config disclosure is part of the runtime contract. Each enabled
+  Workers target must pass `pnpm cloudflare:config-audit -- --fail-on-gaps` so
+  the result records the adapter, support/maturity label, Wrangler entrypoint,
+  Static Assets routing mode, compatibility flags, and observability setting.
+- A route served asset-first, Worker-first, or Worker-only is not silently
+  equivalent. Scoreboards may compare those routes only when the route contract
+  and Cloudflare config mode are compatible or explicitly bucketed.
 
 ## Entry Classes
 
@@ -127,7 +134,8 @@ Diagnostic runs must use suffixed filenames or explicit flags.
 - Markdown reports must be verifiable from JSON results.
 - Each result row must carry a provenance hash derived from raw metrics, commit,
   seed, framework, scenario, phase, and iteration.
-- The runner must record matrix, targets, contract, and lockfile hashes.
+- The runner must record matrix, targets, contract, Cloudflare config audit, and
+  lockfile hashes.
 - Run order must be randomized with a recorded deterministic seed.
 - Outlier and scoring policy must live in code and be written into reports.
 - Tier changes must be reviewed through matrix drift checks.

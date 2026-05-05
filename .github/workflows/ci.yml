@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches:
+      - master
       - main
 
 jobs:
@@ -28,9 +29,6 @@ jobs:
 
       - name: Dataset tests
         run: pnpm test:dataset
-
-      - name: Build
-        run: pnpm -r build
 
       - name: Static verification
         run: pnpm verify:static

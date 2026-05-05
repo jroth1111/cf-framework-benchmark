@@ -120,6 +120,7 @@ async function main() {
       url: target.url,
       delivery: 'workers',
       implementationKind: target.matrix?.implementationKind || 'native',
+      tier: target.matrix?.tier || null,
       features: { clientNav: false },
       scenarioContracts,
       deploy: target.matrix?.deploy || null,

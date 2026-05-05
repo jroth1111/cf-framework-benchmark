@@ -2067,6 +2067,21 @@ async function main() {
     rows: all
   };
 
+  const CANONICAL_SUFFIXES = ['.smoke.', '.dirty.', '.flame.', '.stability.'];
+  const isCanonical = !CANONICAL_SUFFIXES.some((s) => path.basename(outPath).includes(s));
+  const allowDirtyProvenance = flag('--allow-dirty-provenance');
+  if (isCanonical && gitInfo?.dirty && !allowDirtyProvenance) {
+    throw new Error(
+      `Refusing to write canonical results to ${outPath}: git working tree is dirty.\n` +
+      `Commit or stash changes before running a canonical benchmark, or:\n` +
+      `  - Use a suffixed output path (e.g. results.v4.<suite>.dirty.json)\n` +
+      `  - Pass --allow-dirty-provenance to override this check`
+    );
+  }
+  if (isCanonical && gitInfo?.dirty && allowDirtyProvenance) {
+    console.warn(`\n⚠️  WARNING: Writing canonical results with dirty working tree (--allow-dirty-provenance set).`);
+  }
+
   await fs.writeFile(outPath, JSON.stringify(out, null, 2));
   console.log(`\n✅ Results written to ${outPath}`);
   console.log(`Run duration: ${(durationMs / 1000).toFixed(1)}s`);
@@ -2077,7 +2092,7 @@ async function main() {
   md += `Generated: ${runEndedAt}\n`;
   md += `Run started: ${runStartedAt}\n`;
   md += `Duration: ${(durationMs / 1000).toFixed(1)}s\n`;
-  md += `Iterations: ${iterationsLabel}\n`;
+  md += `Iterations: ${iterationsLabel}${iterationsArg ? ` (**overridden via --iterations ${iterationsArg}**)` : ''}\n`;
   md += `Warmup: ${warmupEnabled ? 'enabled' : 'disabled'}\n\n`;
   md += `Profiles: ${profileNames.join(', ')}\n\n`;
   md += `Failures: ${failures.length}\n\n`;
@@ -2203,7 +2218,8 @@ async function main() {
   md += `| Git commit | ${gitInfo?.commit || '—'} |\n`;
   md += `| Git branch | ${gitInfo?.branch || '—'} |\n`;
   md += `| Git describe | ${gitInfo?.describe || '—'} |\n`;
-  md += `| Git dirty | ${gitInfo ? (gitInfo.dirty ? 'true' : 'false') : '—'} |\n`;
+  md += `| Git dirty | ${gitInfo ? (gitInfo.dirty ? '**true (NON-CANONICAL)**' : 'false') : '—'} |\n`;
+  md += `| Iterations override | ${iterationsArg ? `**--iterations ${iterationsArg} (overrides profile defaults)**` : 'none'} |\n`;
   md += `| Dataset | ${datasetInfo ? `${datasetInfo.name}@${datasetInfo.version}` : '—'} |\n\n`;
 
   md += `### Framework versions\n\n`;

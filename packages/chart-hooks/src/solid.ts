@@ -10,7 +10,6 @@ import {
   startChartSwitch,
   markChartReady,
   markChartError,
-  updateChartCoreMetrics,
 } from "@cf-bench/bench-types";
 import { DEFAULT_CHART_CONFIG } from "@cf-bench/bench-config";
 import { fetchCandles, calculatePoints } from "./shared";

@@ -1797,34 +1797,17 @@ async function main() {
       console.log(`\n▶ ${fw.name} (${fw.url}) · ${sc.name} [${i + 1}/${profileIterations}]`);
 
       const ctx = await browser.newContext({ viewport: VIEWPORT, extraHTTPHeaders: benchHeaders });
-      await ctx.addInitScript({ content: initScript });
-      const page = await ctx.newPage();
-      const throttleApplied = await applyThrottling(page, throttling);
+      try {
+        await ctx.addInitScript({ content: initScript });
+        const page = await ctx.newPage();
+        const throttleApplied = await applyThrottling(page, throttling);
 
-      const cold = await runScenario(
-        page,
-        fw,
-        sc,
-        i,
-        'cold',
-        bundleSizes,
-        profile,
-        throttling,
-        timeoutScale,
-        throttleApplied,
-        flamegraphs
-      );
-      all.push(cold);
-      recordFailure(cold);
-
-      let warm = null;
-      if (!cold.skipped) {
-        warm = await runScenario(
+        const cold = await runScenario(
           page,
           fw,
           sc,
           i,
-          'warm',
+          'cold',
           bundleSizes,
           profile,
           throttling,
@@ -1832,23 +1815,42 @@ async function main() {
           throttleApplied,
           flamegraphs
         );
-        all.push(warm);
-        recordFailure(warm);
+        all.push(cold);
+        recordFailure(cold);
+
+        let warm = null;
+        if (!cold.skipped) {
+          warm = await runScenario(
+            page,
+            fw,
+            sc,
+            i,
+            'warm',
+            bundleSizes,
+            profile,
+            throttling,
+            timeoutScale,
+            throttleApplied,
+            flamegraphs
+          );
+          all.push(warm);
+          recordFailure(warm);
+        }
+
+        const coldTtfb = cold.synthetic?.nav?.ttfb?.toFixed?.(1) ?? '—';
+        const coldLcp = cold.synthetic?.cwv?.lcp?.value?.toFixed?.(1) ?? '—';
+        const coldTbt = cold.synthetic?.longTasks?.tbt?.toFixed?.(1) ?? '—';
+        const warmTtfb = warm?.synthetic?.nav?.ttfb?.toFixed?.(1) ?? '—';
+        const warmLcp = warm?.synthetic?.cwv?.lcp?.value?.toFixed?.(1) ?? '—';
+        const warmTbt = warm?.synthetic?.longTasks?.tbt?.toFixed?.(1) ?? '—';
+        const js = formatBytes(cold.synthetic?.resources?.js || 0);
+        console.log(
+          `  cold: ttfb=${coldTtfb}ms lcp=${coldLcp}ms tbt=${coldTbt}ms js=${js}` +
+            (warm ? ` · warm: ttfb=${warmTtfb}ms lcp=${warmLcp}ms tbt=${warmTbt}ms` : '')
+        );
+      } finally {
+        await ctx.close();
       }
-
-      const coldTtfb = cold.synthetic?.nav?.ttfb?.toFixed?.(1) ?? '—';
-      const coldLcp = cold.synthetic?.cwv?.lcp?.value?.toFixed?.(1) ?? '—';
-      const coldTbt = cold.synthetic?.longTasks?.tbt?.toFixed?.(1) ?? '—';
-      const warmTtfb = warm?.synthetic?.nav?.ttfb?.toFixed?.(1) ?? '—';
-      const warmLcp = warm?.synthetic?.cwv?.lcp?.value?.toFixed?.(1) ?? '—';
-      const warmTbt = warm?.synthetic?.longTasks?.tbt?.toFixed?.(1) ?? '—';
-      const js = formatBytes(cold.synthetic?.resources?.js || 0);
-      console.log(
-        `  cold: ttfb=${coldTtfb}ms lcp=${coldLcp}ms tbt=${coldTbt}ms js=${js}` +
-          (warm ? ` · warm: ttfb=${warmTtfb}ms lcp=${warmLcp}ms tbt=${warmTbt}ms` : '')
-      );
-
-      await ctx.close();
     }
   }
 

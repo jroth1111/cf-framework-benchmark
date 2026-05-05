@@ -323,7 +323,7 @@ class CandleChart {
       return;
     }
 
-    const count = clamp(this.viewportCount, 30, len);
+    const count = clamp(this.viewportCount, Math.min(30, len), len);
     const end = clamp(this.viewportEnd || len, count, len);
     const start = Math.max(0, end - count);
     const view = candles.slice(start, end);

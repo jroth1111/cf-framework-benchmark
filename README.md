@@ -112,7 +112,8 @@ Profiles:
 - `--profile parity` (forces chart data fetches to `no-store`)
 - `--profile idiomatic` (uses framework defaults)
 - `--profile mobile-cold` (fast-4g throttling + CPU slowdown, warmup disabled)
-- `--profile both` (default)
+- `--profile both` (parity + idiomatic only)
+- default (no flag): runs all three profiles
 
 This produces:
 

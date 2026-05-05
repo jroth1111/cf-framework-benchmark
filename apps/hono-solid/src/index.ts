@@ -28,8 +28,10 @@ function cacheKind(pathname: string) {
 
 function cacheHeader(pathname: string, profile: string | null) {
   const kind = cacheKind(pathname);
-  if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
-  if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
+  if (profile === "idiomatic" || profile === "mobile-cold") {
+    if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
+    if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
+  }
   return "no-store";
 }
 

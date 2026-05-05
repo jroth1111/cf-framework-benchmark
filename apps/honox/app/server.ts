@@ -35,13 +35,24 @@ export default {
 		if (contract) return contract;
 
 		const start = performance.now();
-		const response = await honoxApp.fetch(request, env, ctx);
+		const url = new URL(request.url);
+		const normalizedPathname = url.pathname.replace(/\/+$/, "") || "/";
+		const routeRequest =
+			normalizedPathname === url.pathname
+				? request
+				: new Request(new URL(`${normalizedPathname}${url.search}`, url).toString(), {
+						method: request.method,
+						headers: request.headers,
+						body: request.method === "GET" || request.method === "HEAD" ? undefined : request.body,
+						redirect: request.redirect,
+						signal: request.signal,
+					});
+		const response = await honoxApp.fetch(routeRequest, env, ctx);
 
 		const contentType = response.headers.get("content-type") ?? "";
 		if (!contentType.includes("text/html")) return response;
 
-		const url = new URL(request.url);
-		const kind = benchmarkPageKind(url.pathname);
+		const kind = benchmarkPageKind(normalizedPathname);
 		const profile = request.headers.get("x-cf-bench-profile");
 		const headers = new Headers(response.headers);
 		headers.set("cache-control", benchmarkPageCache(profile, kind));

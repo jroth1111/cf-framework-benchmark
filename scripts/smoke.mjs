@@ -246,12 +246,21 @@ async function clickMediaAndWaitForChange(page, locator, beforeText, beforeMedia
   throw new Error(`${label} media interaction did not change player text or id: ${JSON.stringify({ beforeText, beforeMediaId, last })}`);
 }
 
+async function waitForMediaCardCount(page) {
+  const cards = page.locator("[data-testid=media-card]");
+  const deadline = Date.now() + timeoutMs;
+  let lastCount = 0;
+  while (Date.now() < deadline) {
+    lastCount = await cards.count();
+    if (lastCount === BENCH_MEDIA_PAGE_SIZE) return;
+    await page.waitForTimeout(100);
+  }
+  throw new Error(`media-card count mismatch: ${lastCount}/${BENCH_MEDIA_PAGE_SIZE}`);
+}
+
 async function runMediaInteractions(page) {
   await assertVisibleLocator(page, "[data-testid=media-card]", "media card");
-  const mediaCardCount = await page.locator("[data-testid=media-card]").count();
-  if (mediaCardCount !== BENCH_MEDIA_PAGE_SIZE) {
-    throw new Error(`media-card count mismatch: ${mediaCardCount}/${BENCH_MEDIA_PAGE_SIZE}`);
-  }
+  await waitForMediaCardCount(page);
   const before = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
   const beforeId = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
   const cards = page.locator("[data-testid=media-card]");

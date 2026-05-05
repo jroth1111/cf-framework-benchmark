@@ -110,6 +110,7 @@ function StayDetailPage({ params, response }: PageProps) {
         Back to stays
       </a>
       <div className="section stack">
+        <h1 className="h1">{listing.title}</h1>
         <div className="card">
           <p className="muted small">
             {listing.city}, {listing.country} • {listing.neighborhood}
@@ -158,6 +159,7 @@ function BlogPostPage({ params, response }: PageProps) {
         Back to blog
       </a>
       <div className="section stack">
+        <h1 className="h1">{post.title}</h1>
         <p className="muted small">
           {post.dateISO} • {post.readingMinutes} min read
         </p>

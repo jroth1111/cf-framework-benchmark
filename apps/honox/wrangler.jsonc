@@ -10,7 +10,7 @@
 	"compatibility_flags": ["nodejs_als"],
 	"assets": {
 		"binding": "ASSETS",
-		"directory": "./dist/static",
+		"directory": "./dist",
 		"not_found_handling": "none",
 		"html_handling": "drop-trailing-slash",
 		"run_worker_first": [

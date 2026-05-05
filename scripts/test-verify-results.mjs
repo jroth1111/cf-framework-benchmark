@@ -34,7 +34,8 @@ try {
         runOrder: { seed },
         provenance: {
           git,
-          hashes: { matrix: "m", targets: "t", lockfile: "l", contract: "c", cloudflareConfig: "cf", cloudflareOptimization: "cfo" },
+          hashes: { matrix: "m", targets: "t", lockfile: "l", contract: "c", cloudflarePlatform: "cfp", cloudflareConfig: "cf", cloudflareOptimization: "cfo" },
+          cloudflarePlatform: { activeEra: "pingora-cache-2026-05-04" },
           cloudflareAudit: { ok: true },
           cloudflareOptimizationAudit: { ok: true },
         },
@@ -68,7 +69,8 @@ try {
         runOrder: { seed },
         provenance: {
           git,
-          hashes: { matrix: "m", targets: "t", lockfile: "l", contract: "c", cloudflareConfig: "cf", cloudflareOptimization: "cfo" },
+          hashes: { matrix: "m", targets: "t", lockfile: "l", contract: "c", cloudflarePlatform: "cfp", cloudflareConfig: "cf", cloudflareOptimization: "cfo" },
+          cloudflarePlatform: { activeEra: "pingora-cache-2026-05-04" },
           cloudflareAudit: { ok: true },
           cloudflareOptimizationAudit: { ok: true },
         },

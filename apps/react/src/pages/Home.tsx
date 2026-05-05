@@ -22,7 +22,7 @@ export function Home() {
             </div>
 
             <h2 style={{ marginTop: 24 }}>Featured Stays</h2>
-            <div className="grid-3">
+            <div className="grid cols-3">
                 {featured.map((l) => (
                     <Link key={l.id} to={`/stays/${l.id}`} className="card listing-card">
                         <h3 className="listing-title">{l.title}</h3>

@@ -11,7 +11,7 @@ export function Stays() {
             <h1 className="h1">Stays</h1>
             <p className="muted">Airbnb-style listing index rendered by React on Workers.</p>
 
-            <div className="grid-3">
+            <div className="grid cols-3">
                 {results.map((l) => (
                     <Link key={l.id} to={`/stays/${l.id}`} data-testid="stay-card" className="card listing-card">
                         <h3 className="listing-title">{l.title}</h3>

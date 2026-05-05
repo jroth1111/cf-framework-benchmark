@@ -9,7 +9,10 @@
     "https://developers.cloudflare.com/changelog/post/2026-02-18-cfworker-server-timing/",
     "https://opennext.js.org/cloudflare/caching",
     "https://opennext.js.org/cloudflare/perf",
-    "https://github.com/cloudflare/vinext"
+    "https://github.com/cloudflare/vinext",
+    "https://developers.cloudflare.com/changelog/post/2026-05-04-pingora-powers-cache/",
+    "https://developers.cloudflare.com/cache/advanced-configuration/early-hints/",
+    "https://developers.cloudflare.com/changelog/post/2025-12-19-tanstack-start-prerendering/"
   ],
   "sourceRequirements": [
     {
@@ -43,6 +46,21 @@
       "class": "trace-correlation"
     },
     {
+      "id": "platform-era-disclosure",
+      "source": "Cloudflare platform changes such as Workers CPU/runtime fixes and Pingora cache rollout materially affect benchmark interpretation across run dates.",
+      "class": "platform-era-disclosure"
+    },
+    {
+      "id": "early-hints-link-evidence",
+      "source": "HTTP 103 Early Hints and final Link headers can affect perceived load and should be recorded before enabling framework-specific head().links optimizations.",
+      "class": "early-hints-link-evidence"
+    },
+    {
+      "id": "tanstack-prerender-mode",
+      "source": "TanStack Start supports static prerendering on Cloudflare Workers and should be measured as a separate prerender/static contract, not merged into the runtime SSR row.",
+      "class": "tanstack-prerender-mode"
+    },
+    {
       "id": "vinext-diagnostic",
       "source": "Vinext is useful as a Cloudflare-owned Vite/Next diagnostic comparator, but must stay excluded from framework ranking.",
       "class": "vinext-diagnostic"
@@ -55,6 +73,9 @@
     "opennext-cache-mode",
     "workerd-local-harness",
     "trace-correlation",
+    "platform-era-disclosure",
+    "early-hints-link-evidence",
+    "tanstack-prerender-mode",
     "vinext-diagnostic"
   ],
   "rankingPolicy": {
@@ -86,6 +107,25 @@
         }
       },
       "purpose": "Measure the CDN/static-assets ceiling for wrapper and Worker-baseline apps without changing their source routes."
+    },
+    {
+      "id": "wrapper-spa-fallback-no-worker",
+      "class": "asset-routing-experiment",
+      "status": "diagnostic-only",
+      "frameworks": ["react", "solid", "vue", "vue-c3", "hono-solid", "hono-vue"],
+      "ranking": "diagnostic-only",
+      "configPatch": {
+        "assets": {
+          "run_worker_first": ["/api/*"],
+          "not_found_handling": "single-page-application"
+        },
+        "compatibility_date": "2025-04-01"
+      },
+      "contractAssertion": {
+        "documentRoutes": "navigation misses may serve index.html without invoking the Worker and must not be used for canonical document-route rankings",
+        "apiRoutes": "/api/* remains Worker-owned and must continue to pass API contract tests"
+      },
+      "purpose": "Catalog the SPA-fallback configuration that can look fast by bypassing the Worker on document routes."
     },
     {
       "id": "wrapper-worker-first-contract-routes",
@@ -152,9 +192,43 @@
       "class": "trace-correlation",
       "status": "implemented",
       "frameworks": "all-live-results",
-      "capturedHeaders": ["cf-ray", "cf-cache-status", "server-timing", "cache-control", "age", "date"],
-      "derivedFields": ["colo", "serverTiming"],
+      "capturedHeaders": ["cf-ray", "cf-cache-status", "server-timing", "cache-control", "link", "age", "date"],
+      "derivedFields": ["colo", "serverTiming", "linkHeader", "http103EarlyHints"],
       "purpose": "Make edge location and cache state explicit in row hashes and aggregate result summaries."
+    },
+    {
+      "id": "cloudflare-platform-era-provenance",
+      "class": "platform-era-disclosure",
+      "status": "implemented",
+      "frameworks": "all-live-results",
+      "provenanceFile": "bench/cloudflare-platform-eras.json",
+      "capturedFields": ["activeEra", "eras[].effectiveAt", "eras[].source", "eras[].benchmarkImpact"],
+      "purpose": "Keep platform rollouts such as Workers CPU fixes and Pingora cache behavior in result provenance and hashes."
+    },
+    {
+      "id": "early-hints-link-header-capture",
+      "class": "early-hints-link-evidence",
+      "status": "implemented",
+      "frameworks": "all-live-results",
+      "capturedHeaders": ["link"],
+      "capturedCdpEvents": ["Network.responseReceivedExtraInfo statusCode=103"],
+      "purpose": "Record final Link headers and HTTP 103 Early Hints evidence before ranking framework-level preloading changes."
+    },
+    {
+      "id": "tanstack-start-prerender-contract",
+      "class": "tanstack-prerender-mode",
+      "status": "defined",
+      "frameworks": ["tanstack-start", "tanstack-start-solid"],
+      "ranking": "optimized-only",
+      "configPatch": {
+        "tanstackStart": {
+          "prerender": {
+            "enabled": true
+          }
+        }
+      },
+      "bucket": "framework-prerender",
+      "purpose": "Measure TanStack Start's Cloudflare prerender support separately from the canonical framework-runtime SSR entries."
     },
     {
       "id": "vinext-diagnostic-comparator",

@@ -21,7 +21,7 @@ export const onGet: RequestHandler = async ({ json, headers, url }) => {
   const pageSize = Number(url.searchParams.get("pageSize") || "20");
 
   headers.set("content-type", "application/json; charset=utf-8");
-  headers.set("cache-control", "public, max-age=0, s-maxage=60");
+  headers.set("cache-control", "public, max-age=0, s-maxage=60, stale-while-revalidate=300");
   headers.set("server-timing", serverTiming(start));
 
   json(200, queryMedia({

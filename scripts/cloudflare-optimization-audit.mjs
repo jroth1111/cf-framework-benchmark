@@ -115,7 +115,7 @@ function findBoundaryLeaks(appDir, sources) {
 
 function isPrefetchDisclosureLine(line) {
   if (!/modulepreload|rel=["']preload["']/.test(line)) return false;
-  return /_RE\b|RegExp|\.replace|replace\(|CLIENT_.*RE|\\s\*<link|\/\\s\*</.test(line);
+  return /_RE\b|RegExp|\.replace|replace\(|CLIENT_.*RE|\\s\*<link|\/\\s\*<|links\.push/.test(line);
 }
 
 function prefetchHitsForSource(sourceFile) {
@@ -291,6 +291,8 @@ function summarizeOptimizationVariants(doc) {
       status: variant.status,
       frameworks: variant.frameworks,
       ranking: variant.ranking ?? null,
+      bucket: variant.bucket ?? null,
+      provenanceFile: variant.provenanceFile ?? null,
     })),
   };
 }
@@ -330,11 +332,32 @@ function validateOptimizationVariants(doc) {
   }
 
   const traceVariant = variants.find((variant) => variant?.class === "trace-correlation");
-  if (!arrayIncludesAll(traceVariant?.capturedHeaders, ["cf-ray", "server-timing", "cf-cache-status"])) {
+  if (!arrayIncludesAll(traceVariant?.capturedHeaders, ["cf-ray", "server-timing", "cf-cache-status", "link"])) {
     gaps.push("missing-trace-correlation-headers");
   }
-  if (!arrayIncludesAll(traceVariant?.derivedFields, ["colo", "serverTiming"])) {
+  if (!arrayIncludesAll(traceVariant?.derivedFields, ["colo", "serverTiming", "linkHeader", "http103EarlyHints"])) {
     gaps.push("missing-trace-correlation-derived-fields");
+  }
+
+  const platformEra = variants.find((variant) => variant?.class === "platform-era-disclosure");
+  if (platformEra?.provenanceFile !== "bench/cloudflare-platform-eras.json") {
+    gaps.push("missing-platform-era-provenance-file");
+  }
+
+  const earlyHints = variants.find((variant) => variant?.class === "early-hints-link-evidence");
+  if (!arrayIncludesAll(earlyHints?.capturedHeaders, ["link"])) {
+    gaps.push("missing-early-hints-link-header-capture");
+  }
+  if (!arrayIncludesAll(earlyHints?.capturedCdpEvents, ["Network.responseReceivedExtraInfo statusCode=103"])) {
+    gaps.push("missing-early-hints-cdp-event-capture");
+  }
+
+  const tanstackPrerender = variants.find((variant) => variant?.class === "tanstack-prerender-mode");
+  if (!arrayIncludesAll(tanstackPrerender?.frameworks, ["tanstack-start", "tanstack-start-solid"])) {
+    gaps.push("missing-tanstack-prerender-frameworks");
+  }
+  if (tanstackPrerender?.ranking !== "optimized-only" || tanstackPrerender?.bucket !== "framework-prerender") {
+    gaps.push("tanstack-prerender-not-optimized-prerender-bucket");
   }
 
   const workerdVariant = variants.find((variant) => variant?.class === "workerd-local-harness");

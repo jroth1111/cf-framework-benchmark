@@ -17,6 +17,7 @@ build
 .svelte-kit
 .qwik-city
 .vite
+.astro
 .tsbuildinfo
 
 # Environment variables
@@ -73,6 +74,7 @@ tmp/
 bench/results
 bench/results*.json
 bench/results*.md
+bench/contract-report.json
 bench-output.log
 *.log
 

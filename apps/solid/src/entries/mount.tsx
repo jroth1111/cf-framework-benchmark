@@ -1,12 +1,13 @@
 import type { JSX } from "solid-js";
-import { hydrate } from "solid-js/web";
+import { render } from "solid-js/web";
 import "../main.css";
 
 export function mountPage(renderPage: () => JSX.Element) {
   const el = document.getElementById("app");
   if (!el) throw new Error("Missing #app");
 
-  hydrate(renderPage, el);
+  el.textContent = "";
+  render(renderPage, el);
 
   requestAnimationFrame(() => {
     const w = window as any;

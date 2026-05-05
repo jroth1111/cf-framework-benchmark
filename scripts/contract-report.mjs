@@ -131,6 +131,7 @@ async function probeHtml({ framework, baseUrl, route, path }) {
       "cache-control": res.headers.get("cache-control") || "",
       "server-timing": res.headers.get("server-timing") || "",
       "cf-ray": res.headers.get("cf-ray") || "",
+      link: res.headers.get("link") || "",
     };
     text = await res.text();
   } catch (err) {
@@ -200,6 +201,7 @@ async function probeUnknownRoute({ framework, baseUrl }) {
       "cache-control": res.headers.get("cache-control") || "",
       "server-timing": res.headers.get("server-timing") || "",
       "cf-ray": res.headers.get("cf-ray") || "",
+      link: res.headers.get("link") || "",
     };
     await res.arrayBuffer();
   } catch (err) {
@@ -229,6 +231,7 @@ async function probeApi({ framework, baseUrl, path, expectedStatus = 200 }) {
       "content-type": res.headers.get("content-type") || "",
       "cache-control": res.headers.get("cache-control") || "",
       "server-timing": res.headers.get("server-timing") || "",
+      link: res.headers.get("link") || "",
     };
     const text = await res.text();
     body = text ? JSON.parse(text) : null;

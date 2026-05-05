@@ -16,6 +16,9 @@ for (const requiredClass of [
   "opennext-cache-mode",
   "workerd-local-harness",
   "trace-correlation",
+  "platform-era-disclosure",
+  "early-hints-link-evidence",
+  "tanstack-prerender-mode",
   "vinext-diagnostic",
 ]) {
   assert.ok(
@@ -30,7 +33,20 @@ assert.equal(
   "Vinext diagnostic comparator must stay excluded from ranking"
 );
 assert.ok(report.traceCorrelation.capturedHeaders.includes("cf-ray"));
+assert.ok(report.traceCorrelation.capturedHeaders.includes("link"));
 assert.ok(report.traceCorrelation.derivedFields.includes("colo"));
+assert.ok(report.traceCorrelation.derivedFields.includes("linkHeader"));
+assert.ok(report.traceCorrelation.derivedFields.includes("http103EarlyHints"));
+assert.equal(
+  report.optimizationVariants.variants.find((variant) => variant.id === "cloudflare-platform-era-provenance")?.provenanceFile,
+  "bench/cloudflare-platform-eras.json",
+  "Cloudflare platform era provenance must be tracked"
+);
+assert.equal(
+  report.optimizationVariants.variants.find((variant) => variant.id === "tanstack-start-prerender-contract")?.bucket,
+  "framework-prerender",
+  "TanStack prerender support must stay in the prerender bucket"
+);
 
 const byName = new Map(report.rows.map((row) => [row.name, row]));
 

@@ -98,12 +98,22 @@ optimization variants that came out of GitHub/source research:
   R2/regional cache configurations.
 - Workerd-local startup probes using `wrangler check startup`.
 - Trace/colo correlation fields for live result rows.
+- Link header and HTTP 103 Early Hints evidence for preload-sensitive runs.
+- Cloudflare platform-era provenance for Workers CPU/runtime and Pingora cache
+  changes that affect cross-date timing interpretation.
+- TanStack Start prerendering as an optimized-only prerender/static contract.
 - Vinext as an excluded diagnostic comparator, not a framework peer.
 
 Use optimization changes only inside comparable buckets. For example, disabling
 unbounded prefetch is a fair same-contract change, while converting a runtime
 SSR route into static output changes the route contract and belongs in the
 prerender/static bucket.
+
+The active platform-era catalog lives in
+`bench/cloudflare-platform-eras.json`. Do not compare results across platform
+eras as if the Workers runtime and cache behavior were unchanged. The May 2026
+Pingora cache rollout is especially relevant for `stale-while-revalidate`,
+TTFB, and bypass streaming interpretation.
 
 ## Framework Notes
 
@@ -144,6 +154,13 @@ its caveats split into Cloudflare support, framework maturity, and runtime proof
 status. Its current benchmark implementation is classified as static-heavy in
 this repo until live probes prove a different route contract.
 
+### TanStack Start
+
+The canonical TanStack Start rows remain framework-runtime SSR entries. Native
+Workers prerendering support is valuable, but it changes the route/render
+contract and belongs in an optimized-only `framework-prerender` variant rather
+than the headline runtime bucket.
+
 ### Wrapper And Worker Baselines
 
 React, Solid, Vue, Hono, and Hono-composite entries are useful baselines. They
@@ -163,5 +180,6 @@ For canonical runs, use this minimum chain:
 5. Benchmark result verification checks provenance, row hashes, run order, and
    contract output before any Markdown report is used for ranking.
 6. Live result rows include Cloudflare trace metadata (`cf-ray`, derived colo,
-   cache status, cache-control, age, date, and parsed `server-timing`) so edge
-   placement and cache outliers are visible in JSON, Markdown, and row hashes.
+   cache status, cache-control, Link headers, HTTP 103 Early Hints evidence,
+   age, date, and parsed `server-timing`) so edge placement, preloading, and
+   cache outliers are visible in JSON, Markdown, and row hashes.

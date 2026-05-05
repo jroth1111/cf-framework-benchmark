@@ -69,12 +69,15 @@ export function useChart(options: {
   const symbols = chartSymbols as readonly string[];
   const timeframes = [...chartTimeframes] as readonly string[];
 
-  // Load data when symbol or timeframe changes
-  createEffect(async () => {
+  let requestId = 0;
+
+  // Load data when symbol or timeframe changes.
+  createEffect(() => {
     const sym = symbol();
     const tf = timeframe();
 
     if (!sym || !tf || !fetchArmed()) return;
+    const currentRequest = ++requestId;
 
     setStatus("loading");
     setError(null);
@@ -82,17 +85,21 @@ export function useChart(options: {
 
     const points = calculatePoints(tf);
 
-    try {
-      const chartData = await fetchCandles(sym, tf, points);
-      setData(chartData);
-      markChartReady(sym, tf);
-      setStatus("ready");
-    } catch (e) {
-      const errorObj = e instanceof Error ? e : new Error(String(e));
-      setError(errorObj);
-      markChartError(errorObj);
-      setStatus("error");
-    }
+    void (async () => {
+      try {
+        const chartData = await fetchCandles(sym, tf, points);
+        if (currentRequest !== requestId) return;
+        setData(chartData);
+        markChartReady(sym, tf);
+        setStatus("ready");
+      } catch (e) {
+        if (currentRequest !== requestId) return;
+        const errorObj = e instanceof Error ? e : new Error(String(e));
+        setError(errorObj);
+        markChartError(errorObj);
+        setStatus("error");
+      }
+    })();
   });
 
   return {

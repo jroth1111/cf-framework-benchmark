@@ -1,9 +1,15 @@
 import Link from "next/link";
+import type { Viewport } from "next";
 import "./globals.css";
 import { HydrationMarker } from "./hydration-marker";
 
 export const metadata = {
   title: "CF Bench — Next.js",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

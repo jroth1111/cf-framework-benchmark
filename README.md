@@ -7,7 +7,7 @@ Framework entries are classified before they are ranked:
 | Tier | Entries | Ranking policy |
 | --- | --- | --- |
 | `framework-runtime` | Next.js, Nuxt, React Router, RedwoodSDK, SvelteKit, TanStack Start | Headline tables, bucketed by route/render/data/hydration contract. |
-| `framework-prerender` | Angular, Astro, Vike, Waku | Ranked separately from runtime SSR entries. |
+| `framework-prerender` | Angular, Astro, Vike, Waku; TanStack Start prerender variant defined but disabled | Ranked separately from runtime SSR entries. |
 | `wrapper-baseline` | React, Solid, Vue | Custom Worker + frontend library baselines; not framework-runtime peers. |
 | `worker-baseline` | Hono, Hono + frontend composites | Worker/Hono baselines; useful context, not framework-runtime rankings. |
 | `framework-experimental` | Analog, Qwik, SolidStart variants, incomplete composites | Excluded until the matrix marks them benchmark-enabled. |
@@ -163,8 +163,11 @@ prefetch mode disclosure, server/client boundary leak scans, explicit benchmark
 disclosures, `/chart` + `/media` route/client-work evidence, and the tracked
 optimization-variant catalog in `bench/cloudflare-optimization-variants.json`.
 Benchmark rows also carry Cloudflare trace metadata (`cf-ray`, derived colo,
-cache status, cache-control, age, date, and parsed `server-timing`) so edge
-placement and cache outliers are part of result provenance.
+cache status, cache-control, Link headers, HTTP 103 Early Hints evidence, age,
+date, and parsed `server-timing`) so edge placement, preloading, and cache
+outliers are part of result provenance. Platform-era changes such as Workers CPU
+runtime fixes and the Pingora cache rollout are tracked in
+`bench/cloudflare-platform-eras.json` and hashed into result provenance.
 
 ## Directory layout
 

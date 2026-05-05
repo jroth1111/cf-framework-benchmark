@@ -26,6 +26,6 @@ export const onGet: RequestHandler = async ({ params, json, headers }) => {
     return;
   }
 
-  headers.set("cache-control", "public, max-age=0, s-maxage=300");
+  headers.set("cache-control", "public, max-age=0, s-maxage=300, stale-while-revalidate=600");
   json(200, { listing });
 };

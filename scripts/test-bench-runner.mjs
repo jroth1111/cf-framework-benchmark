@@ -145,4 +145,42 @@ assert.notEqual(
   "row provenance hash should include Cloudflare trace metadata"
 );
 
+assert.notEqual(
+  provenanceHashForRow(
+    {
+      framework: "demo",
+      profile: "parity",
+      phase: "cold",
+      scenario: "home",
+      iteration: 1,
+      ok: true,
+      status: 200,
+      headers: { link: "</asset.css>; rel=preload; as=style" },
+      earlyHints: [{ status: 103, link: "</asset.css>; rel=preload; as=style" }],
+      serverMetrics: { ttfb: 10 },
+      synthetic: { nav: { ttfb: 10 } },
+    },
+    { commit: "abc123" },
+    "seed"
+  ),
+  provenanceHashForRow(
+    {
+      framework: "demo",
+      profile: "parity",
+      phase: "cold",
+      scenario: "home",
+      iteration: 1,
+      ok: true,
+      status: 200,
+      headers: {},
+      earlyHints: [],
+      serverMetrics: { ttfb: 10 },
+      synthetic: { nav: { ttfb: 10 } },
+    },
+    { commit: "abc123" },
+    "seed"
+  ),
+  "row provenance hash should include Link and HTTP 103 Early Hints evidence"
+);
+
 console.log("bench runner regression tests passed");

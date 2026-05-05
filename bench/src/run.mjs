@@ -13,6 +13,7 @@ import { buildOptimizationAudit } from '../../scripts/cloudflare-optimization-au
 const require = createRequire(import.meta.url);
 const BENCH_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const REPO_ROOT = path.resolve(BENCH_ROOT, '..');
+const CLOUDFLARE_PLATFORM_ERAS_PATH = 'bench/cloudflare-platform-eras.json';
 
 const DEFAULT_OUT = new URL('../results.v4.json', import.meta.url);
 const NON_CANONICAL_RESULT_SUFFIXES = ['.smoke.', '.dirty.', '.flame.', '.stability.'];
@@ -341,6 +342,7 @@ function hashRowsInput(row, gitInfo, runSeed) {
     error: row.error ?? null,
     headers: row.headers ?? null,
     trace: row.trace ?? null,
+    earlyHints: row.earlyHints ?? null,
     serverMetrics: row.serverMetrics ?? null,
     clientMetrics: row.clientMetrics ?? null,
     memory: row.memory ?? null,
@@ -366,6 +368,10 @@ async function readJsonFile(filePath) {
   } catch {
     return null;
   }
+}
+
+async function collectCloudflarePlatformEras() {
+  return await readJsonFile(path.join(REPO_ROOT, CLOUDFLARE_PLATFORM_ERAS_PATH));
 }
 
 async function collectFrameworkPackages(frameworks) {
@@ -455,8 +461,9 @@ async function applyThrottling(page, throttling) {
 const FRAMEWORK_VERSION_KEYS = {
   react: ['react', 'react-dom', 'react-router-dom', 'vite'],
   astro: ['astro'],
-  next: ['next', 'react', 'react-dom'],
-  'tanstack-start': ['@tanstack/react-start', '@tanstack/react-router', 'react', 'react-dom', 'vinxi', 'vite'],
+  next: ['next', '@opennextjs/cloudflare', 'react', 'react-dom'],
+  'tanstack-start': ['@tanstack/react-start', '@tanstack/react-router', '@cloudflare/vite-plugin', 'react', 'react-dom', 'vinxi', 'vite'],
+  'tanstack-start-solid': ['@tanstack/solid-start', '@tanstack/solid-router', '@cloudflare/vite-plugin', 'solid-js', 'vite'],
   svelte: ['@sveltejs/kit', 'svelte', '@sveltejs/adapter-cloudflare', 'vite'],
   qwik: ['@qwik.dev/core', '@qwik.dev/router', 'vite'],
   solid: ['solid-js', 'vite'],
@@ -485,6 +492,17 @@ function extractColo(cfRay) {
   const idx = cfRay.lastIndexOf('-');
   if (idx === -1 || idx === cfRay.length - 1) return null;
   return cfRay.slice(idx + 1);
+}
+
+function headerValue(headers, name) {
+  if (!headers || !name) return null;
+  const lower = name.toLowerCase();
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() !== lower) continue;
+    if (Array.isArray(value)) return value.join(', ');
+    return value == null ? null : String(value);
+  }
+  return null;
 }
 
 function summarizeHeaderValues(rows, key) {
@@ -517,6 +535,8 @@ function summarizeTraceCorrelation(rows) {
     cacheStatus: 0,
     serverTiming: 0,
     cacheControl: 0,
+    link: 0,
+    earlyHints: 0,
     age: 0,
     date: 0,
   };
@@ -528,6 +548,8 @@ function summarizeTraceCorrelation(rows) {
     if (trace.cacheStatus) headerCoverage.cacheStatus += 1;
     if (Array.isArray(trace.serverTiming) && trace.serverTiming.length) headerCoverage.serverTiming += 1;
     if (trace.cacheControl) headerCoverage.cacheControl += 1;
+    if (trace.link) headerCoverage.link += 1;
+    if (Array.isArray(row?.earlyHints) && row.earlyHints.length) headerCoverage.earlyHints += 1;
     if (trace.age) headerCoverage.age += 1;
     if (trace.date) headerCoverage.date += 1;
     if (!trace.colo) continue;
@@ -616,15 +638,16 @@ function parseServerTiming(value) {
 }
 
 function cloudflareTraceMetadata(headers = {}) {
-  const cfRay = headers['cf-ray'] ?? null;
-  const serverTimingHeader = headers['server-timing'] ?? null;
+  const cfRay = headerValue(headers, 'cf-ray');
+  const serverTimingHeader = headerValue(headers, 'server-timing');
   return {
     cfRay,
     colo: extractColo(cfRay),
-    cacheStatus: headers['cf-cache-status'] ?? null,
-    cacheControl: headers['cache-control'] ?? null,
-    age: headers.age ?? null,
-    date: headers.date ?? null,
+    cacheStatus: headerValue(headers, 'cf-cache-status'),
+    cacheControl: headerValue(headers, 'cache-control'),
+    link: headerValue(headers, 'link'),
+    age: headerValue(headers, 'age'),
+    date: headerValue(headers, 'date'),
     serverTiming: parseServerTiming(serverTimingHeader),
   };
 }
@@ -871,10 +894,33 @@ async function startCdpMetrics(page) {
     const client = await page.context().newCDPSession(page);
     await client.send('Performance.enable');
     const baseline = await client.send('Performance.getMetrics');
-    return { client, baseline };
+    const earlyHints = [];
+    try {
+      await client.send('Network.enable');
+      client.on('Network.responseReceivedExtraInfo', (params) => {
+        const statusCode = Number(params?.statusCode);
+        if (statusCode !== 103) return;
+        const headers = params?.headers ?? {};
+        earlyHints.push({
+          status: statusCode,
+          requestId: params?.requestId ?? null,
+          link: headerValue(headers, 'link'),
+        });
+      });
+    } catch {
+      // CDP network events are provenance-only; keep the benchmark running if
+      // the browser build does not expose them.
+    }
+    return { client, baseline, earlyHints };
   } catch {
     return null;
   }
+}
+
+function earlyHintsForCdp(cdp) {
+  return Array.isArray(cdp?.earlyHints)
+    ? cdp.earlyHints.filter((item) => item?.status === 103)
+    : [];
 }
 
 async function endCdpMetrics(cdp) {
@@ -1276,12 +1322,13 @@ async function fetchBenchApi(browser, fw) {
       data,
       trace,
       headers: {
-        'server-timing': headers['server-timing'],
+        'server-timing': headerValue(headers, 'server-timing'),
         serverTiming: trace.serverTiming,
-        'cf-cache-status': headers['cf-cache-status'],
-        'cf-ray': headers['cf-ray'],
-        'cache-control': headers['cache-control'],
-        date: headers['date'],
+        'cf-cache-status': headerValue(headers, 'cf-cache-status'),
+        'cf-ray': headerValue(headers, 'cf-ray'),
+        'cache-control': headerValue(headers, 'cache-control'),
+        link: headerValue(headers, 'link'),
+        date: headerValue(headers, 'date'),
       },
     };
   } catch (err) {
@@ -1411,14 +1458,16 @@ async function runScenario(
           navAttempts,
           clientNavMs: end - start,
           trace,
+          earlyHints: earlyHintsForCdp(cdp),
           headers: {
-            'server-timing': headers['server-timing'],
+            'server-timing': headerValue(headers, 'server-timing'),
             serverTiming,
-            'cf-cache-status': headers['cf-cache-status'],
-            'cf-ray': headers['cf-ray'],
-            'cache-control': headers['cache-control'],
-            age: headers['age'],
-            date: headers['date'],
+            'cf-cache-status': headerValue(headers, 'cf-cache-status'),
+            'cf-ray': headerValue(headers, 'cf-ray'),
+            'cache-control': headerValue(headers, 'cache-control'),
+            link: headerValue(headers, 'link'),
+            age: headerValue(headers, 'age'),
+            date: headerValue(headers, 'date'),
           },
           serverMetrics,
           ...data,
@@ -1480,14 +1529,16 @@ async function runScenario(
         status,
         navAttempts,
         trace,
+        earlyHints: earlyHintsForCdp(cdp),
         headers: {
-          'server-timing': headers['server-timing'],
+          'server-timing': headerValue(headers, 'server-timing'),
           serverTiming,
-          'cf-cache-status': headers['cf-cache-status'],
-          'cf-ray': headers['cf-ray'],
-          'cache-control': headers['cache-control'],
-          age: headers['age'],
-          date: headers['date'],
+          'cf-cache-status': headerValue(headers, 'cf-cache-status'),
+          'cf-ray': headerValue(headers, 'cf-ray'),
+          'cache-control': headerValue(headers, 'cache-control'),
+          link: headerValue(headers, 'link'),
+          age: headerValue(headers, 'age'),
+          date: headerValue(headers, 'date'),
         },
         serverMetrics,
         ...data,
@@ -1661,6 +1712,7 @@ async function main() {
   const frameworkPackages = await collectFrameworkPackages(frameworks);
   const frameworkVersions = pickFrameworkVersions(frameworkPackages);
   const datasetInfo = await collectDatasetInfo();
+  const cloudflarePlatform = await collectCloudflarePlatformEras();
   const gitInfo = getGitInfo();
   const allowDirtyProvenance = flag('--allow-dirty-provenance');
   const provenanceGate = assertCanonicalResultWritable({ outPath, gitInfo, allowDirtyProvenance });
@@ -2212,6 +2264,7 @@ async function main() {
   const traceCorrelation = summarizeTraceCorrelation(all);
   const cacheStatusSummary = summarizeHeaderValues(all, 'cf-cache-status');
   const cacheControlSummary = summarizeHeaderValues(all, 'cache-control');
+  const linkHeaderSummary = summarizeHeaderValues(all, 'link');
   const serverTimingSummary = summarizeServerTiming(all);
   const flamegraphCaptures = all
     .filter((row) => row?.flamegraph?.path)
@@ -2324,9 +2377,11 @@ async function main() {
       targets: hashFile('bench/targets.live.json'),
       lockfile: hashFile('pnpm-lock.yaml'),
       contract: hashFile('docs/contracts-v5.md') || hashFile('docs/contracts-v3.md'),
+      cloudflarePlatform: hashFile(CLOUDFLARE_PLATFORM_ERAS_PATH),
       cloudflareConfig: sha256(cloudflareAuditStable),
       cloudflareOptimization: sha256(cloudflareOptimizationAuditStable),
     },
+    cloudflarePlatform,
     cloudflareAudit: cloudflareAuditStable,
     cloudflareOptimizationAudit: cloudflareOptimizationAuditStable,
     frameworkPackages,
@@ -2369,6 +2424,7 @@ async function main() {
     traceCorrelation,
     cacheStatusSummary,
     cacheControlSummary,
+    linkHeaderSummary,
     serverTimingSummary,
     iterations,
     iterationsByProfile,
@@ -2537,6 +2593,8 @@ async function main() {
   md += `| Matrix hash | ${provenance.hashes.matrix || '—'} |\n`;
   md += `| Targets hash | ${provenance.hashes.targets || '—'} |\n`;
   md += `| Contract hash | ${provenance.hashes.contract || '—'} |\n`;
+  md += `| Cloudflare platform hash | ${provenance.hashes.cloudflarePlatform || '—'} |\n`;
+  md += `| Cloudflare platform era | ${provenance.cloudflarePlatform?.activeEra || '—'} |\n`;
   md += `| Cloudflare config hash | ${provenance.hashes.cloudflareConfig || '—'} |\n`;
   md += `| Cloudflare optimization hash | ${provenance.hashes.cloudflareOptimization || '—'} |\n`;
   md += `| Lockfile hash | ${provenance.hashes.lockfile || '—'} |\n`;
@@ -2634,6 +2692,19 @@ async function main() {
   const cacheControlEntries = Object.entries(cacheControlSummary).sort(([a], [b]) => a.localeCompare(b));
   if (cacheControlEntries.length) {
     for (const [val, count] of cacheControlEntries) {
+      md += `| ${val} | ${count} |\n`;
+    }
+  } else {
+    md += `| — | 0 |\n`;
+  }
+  md += '\n';
+
+  md += `### Link headers\n\n`;
+  md += `| Value | Count |\n`;
+  md += `|-------|------:|\n`;
+  const linkHeaderEntries = Object.entries(linkHeaderSummary).sort(([a], [b]) => a.localeCompare(b));
+  if (linkHeaderEntries.length) {
+    for (const [val, count] of linkHeaderEntries) {
       md += `| ${val} | ${count} |\n`;
     }
   } else {

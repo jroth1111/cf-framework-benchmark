@@ -87,6 +87,19 @@ function htmlHeaders(pathname: string, profile: string | null, start: number) {
   });
 }
 
+function buildLinkHeader(head: string): string | null {
+  const links: string[] = [];
+  for (const m of head.matchAll(/<link ([^>]+)>/g)) {
+    const attrs = m[1] ?? "";
+    const rel = attrs.match(/\brel="([^"]+)"/)?.[1];
+    const href = attrs.match(/\bhref="([^"]+)"/)?.[1];
+    if (!rel || !href) continue;
+    if (rel === "stylesheet") links.push(`<${href}>; rel=preload; as=style`);
+    else if (rel === "modulepreload") links.push(`<${href}>; rel=modulepreload; as=script`);
+  }
+  return links.length ? links.join(", ") : null;
+}
+
 const APP_HTML_PLACEHOLDER = "__CF_BENCH_APP_HTML__";
 const CLIENT_ASSETS_RE = /__CF_BENCH_CLIENT_ASSETS_START__[\s\S]*?__CF_BENCH_CLIENT_ASSETS_END__/;
 const CLIENT_MODULE_SCRIPT_RE = /\s*<script type="module" crossorigin src="\/assets\/index-[^"]+\.js"><\/script>/g;
@@ -196,10 +209,13 @@ async function renderDocument(request: Request, env: Bindings) {
   const includeClient = needsClient(pathname);
   const { head, tail } = resolveShellParts(shell, pathname, includeClient);
   const appStream = await render(pathname);
+  const headers = htmlHeaders(pathname, request.headers.get("x-cf-bench-profile"), start);
+  const link = buildLinkHeader(head);
+  if (link) headers.set("link", link);
 
   return new Response(createDocumentStream(head, appStream, tail), {
     status: 200,
-    headers: htmlHeaders(pathname, request.headers.get("x-cf-bench-profile"), start),
+    headers,
   });
 }
 

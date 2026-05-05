@@ -301,6 +301,33 @@
       }
     },
     {
+      "name": "tanstack-start-prerender",
+      "c3Template": "tanstack-start",
+      "benchmarkVariantOf": "tanstack-start",
+      "tier": "framework-prerender",
+      "status": "blocked",
+      "benchmarkEnabled": false,
+      "blockedReason": "Coverage row for TanStack Start native prerender mode; enable only after a distinct prerender Worker target is built, deployed, and passes v5 live contracts.",
+      "appDir": "apps/tanstack-start",
+      "scenarioContracts": {
+        "mpa_airbnb": {
+          "home": { "renderMode": "prerender" },
+          "stays": { "renderMode": "prerender" },
+          "stay_detail": { "renderMode": "prerender" },
+          "blog": { "renderMode": "prerender" },
+          "blog_post": { "renderMode": "prerender" }
+        },
+        "spa_trading_media": {
+          "chart": { "renderMode": "prerender" },
+          "media": { "renderMode": "prerender" }
+        }
+      },
+      "deploy": {
+        "type": "workers",
+        "command": "pnpm -C apps/tanstack-start run deploy"
+      }
+    },
+    {
       "name": "tanstack-start-solid",
       "c3Template": "tanstack-start",
       "benchmarkVariantOf": "tanstack-start",

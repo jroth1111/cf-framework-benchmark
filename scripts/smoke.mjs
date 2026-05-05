@@ -77,11 +77,19 @@ async function gotoScenario(page, baseUrl, scenario) {
 
 async function assertVisibleLocator(page, selector, label) {
   const locator = page.locator(selector).first();
-  await locator.waitFor({ state: "visible", timeout: timeoutMs });
-  const box = await locator.boundingBox();
-  if (!box || box.width <= 0 || box.height <= 0) {
-    throw new Error(`${label} selector ${selector} is not a visible, non-zero element`);
+  const deadline = Date.now() + timeoutMs;
+  let lastBox = null;
+  while (Date.now() < deadline) {
+    try {
+      await locator.waitFor({ state: "visible", timeout: Math.min(1000, Math.max(1, deadline - Date.now())) });
+      lastBox = await locator.boundingBox();
+      if (lastBox && lastBox.width > 0 && lastBox.height > 0) return;
+    } catch {
+      lastBox = null;
+    }
+    await page.waitForTimeout(100);
   }
+  throw new Error(`${label} selector ${selector} is not a visible, non-zero element: ${JSON.stringify(lastBox)}`);
 }
 
 async function validateScenarioSurface(page, scenario, label) {
@@ -96,15 +104,18 @@ async function warmReloadDocumentScenario(page, scenario, label) {
   await validateScenarioSurface(page, scenario, `${label} warm reload`);
 }
 
-async function waitForBenchHydration(page) {
+async function waitForBenchHydration(page, scenario) {
+  const waitsForMedia = hasMediaInteraction(scenario);
   const settled = await page
     .waitForFunction(
-      () => {
+      ({ waitsForMedia }) => {
         const hydration = globalThis.__CF_BENCH__?.hydration;
-        if (globalThis.__CF_BENCH__?.chart?.ready === true || globalThis.__CF_BENCH__?.media?.ready === true) return true;
+        if (!waitsForMedia && globalThis.__CF_BENCH__?.chart?.ready === true) return true;
+        if (waitsForMedia && globalThis.__CF_BENCH__?.media?.ready === true) return true;
         if (!hydration) return true;
         return Number.isFinite(hydration.endMs) || hydration.endMs === null;
       },
+      { waitsForMedia },
       { timeout: timeoutMs }
     )
     .then(() => true)
@@ -113,6 +124,9 @@ async function waitForBenchHydration(page) {
   if (!settled) {
     const observed = await page.evaluate(() => globalThis.__CF_BENCH__ ?? null).catch(() => null);
     throw new Error(`hydration marker did not settle before interaction: ${JSON.stringify(observed)}`);
+  }
+  if (waitsForMedia) {
+    await page.waitForTimeout(250);
   }
 }
 
@@ -182,15 +196,43 @@ async function runChartInteractions(page, scenario) {
   }
 }
 
+async function waitForMediaReady(page) {
+  try {
+    await page.waitForFunction(() => globalThis.__CF_BENCH__?.media?.ready === true, { timeout: timeoutMs });
+  } catch (err) {
+    const observed = await page.evaluate(() => globalThis.__CF_BENCH__ ?? null).catch(() => null);
+    throw new Error(`media ready marker missing: ${JSON.stringify(observed)}; ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+async function waitForMediaChange(page, beforeText, beforeMediaId, label) {
+  const deadline = Date.now() + timeoutMs;
+  let last = { text: null, id: null };
+  while (Date.now() < deadline) {
+    last.text = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
+    last.id = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
+    if (beforeText ? last.text && last.text !== beforeText : last.id && last.id !== beforeMediaId) return;
+    await page.waitForTimeout(100);
+  }
+  throw new Error(`${label} media interaction did not change player text or id: ${JSON.stringify({ beforeText, beforeMediaId, last })}`);
+}
+
 async function runMediaInteractions(page) {
   await assertVisibleLocator(page, "[data-testid=media-card]", "media card");
   const before = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
-  await page.locator("[data-testid=media-card]").first().click();
+  const beforeId = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
+  const cards = page.locator("[data-testid=media-card]");
+  const targetCard = (await cards.count()) > 1 ? cards.nth(1) : cards.first();
+  await targetCard.click();
   await assertVisibleLocator(page, "[data-testid=media-player]", "media player");
+  await waitForMediaChange(page, before, beforeId, "media-card");
 
   const next = page.locator("[data-testid=media-next]");
   if (await next.count()) {
+    const beforeNext = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
+    const beforeNextId = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
     await next.first().click();
+    await waitForMediaChange(page, beforeNext, beforeNextId, "media-next");
   }
   await assertVisibleLocator(page, "[data-testid=media-player]", "media player after next");
   const after = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
@@ -198,12 +240,7 @@ async function runMediaInteractions(page) {
     throw new Error("media interaction did not change player text");
   }
 
-  try {
-    await page.waitForFunction(() => globalThis.__CF_BENCH__?.media?.ready === true, { timeout: timeoutMs });
-  } catch (err) {
-    const observed = await page.evaluate(() => globalThis.__CF_BENCH__ ?? null).catch(() => null);
-    throw new Error(`media ready marker missing: ${JSON.stringify(observed)}; ${err instanceof Error ? err.message : String(err)}`);
-  }
+  await waitForMediaReady(page);
 }
 
 async function runFramework(framework) {
@@ -219,7 +256,7 @@ async function runFramework(framework) {
       await validateScenarioSurface(page, scenario, `${framework.name} ${scenario.name}`);
       await warmReloadDocumentScenario(page, scenario, `${framework.name} ${scenario.name}`);
       if (hasChartInteraction(scenario) || hasMediaInteraction(scenario)) {
-        await waitForBenchHydration(page);
+        await waitForBenchHydration(page, scenario);
       }
       if (hasChartInteraction(scenario)) await runChartInteractions(page, scenario);
       if (hasMediaInteraction(scenario)) await runMediaInteractions(page);

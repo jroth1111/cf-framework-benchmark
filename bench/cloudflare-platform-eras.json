@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-05-05",
+  "activeEra": "pingora-cache-2026-05-04",
+  "eras": [
+    {
+      "id": "workers-cpu-gap-closure-2025-10-14",
+      "effectiveAt": "2025-10-14",
+      "source": "https://blog.cloudflare.com/unpacking-cloudflare-workers-cpu-performance-benchmarks/",
+      "summary": "Cloudflare shipped Workers CPU/runtime improvements covering request scheduling under CPU bursts, V8 garbage collection settings, OpenNext buffer copies, stream high-watermarks, V8 JSON.parse behavior, Node.js math behavior, and framework benchmark configuration fixes.",
+      "benchmarkImpact": [
+        "Do not compare pre- and post-era CPU-heavy SSR results as equivalent runtime conditions.",
+        "Keep OpenNext and Node compatibility versions in result provenance when interpreting Next.js rows."
+      ]
+    },
+    {
+      "id": "pingora-cache-2026-05-04",
+      "effectiveAt": "2026-05-04",
+      "source": "https://developers.cloudflare.com/changelog/post/2026-05-04-pingora-powers-cache/",
+      "summary": "Cloudflare cache is powered by Pingora, including async stale-while-revalidate and unbuffered bypass behavior.",
+      "benchmarkImpact": [
+        "Record cache-control, cf-cache-status, age, and date headers for live rows.",
+        "Treat cache-era differences as benchmark provenance for TTFB and cache-hit interpretation."
+      ]
+    }
+  ]
+}

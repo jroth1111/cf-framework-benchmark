@@ -1,6 +1,15 @@
 <script lang="ts">
   import type { BlogPost } from "@cf-bench/dataset";
+  import { onMount } from "svelte";
+
   export let data: { post: BlogPost | undefined };
+
+  onMount(() => {
+    const w = window as any;
+    w.__CF_BENCH__ = w.__CF_BENCH__ || {};
+    const hydration = (w.__CF_BENCH__.hydration = w.__CF_BENCH__.hydration || {});
+    hydration.endMs = performance.now();
+  });
 </script>
 
 {#if data.post}

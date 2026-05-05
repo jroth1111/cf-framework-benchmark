@@ -1,8 +1,8 @@
-import { queryMedia } from "@cf-bench/dataset";
+import { BENCH_MEDIA_PAGE_SIZE, queryMedia } from "@cf-bench/dataset";
 import { MediaClientEntry } from "./MediaClientEntry";
 
 export default function MediaPage() {
-  const items = queryMedia({ pageSize: 12 }).results;
+  const items = queryMedia({ pageSize: BENCH_MEDIA_PAGE_SIZE }).results;
 
   return (
     <>

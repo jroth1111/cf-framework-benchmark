@@ -33,6 +33,7 @@ const suitesDir = toAbsolutePath(argValue("--suites-dir", null), DEFAULT_SUITES_
 const only = parseCsvSet(argValue("--only", ""));
 const suiteNames = parseCsvSet(argValue("--suites", "mpa_airbnb,spa_trading_media"));
 const outPath = argValue("--out", path.join(process.cwd(), "bench", "results.remote.json"));
+const wptRuns = Math.max(1, Number(argValue("--runs", process.env.WPT_RUNS || "3")));
 
 if (!apiKey) {
   console.error("Missing WebPageTest API key. Set WPT_API_KEY or pass --api-key.");
@@ -61,8 +62,8 @@ async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function runWptTest(url, location) {
-  const testUrl = `${endpoint}/runtest.php?f=json&k=${encodeURIComponent(apiKey)}&runs=1&fvonly=1&location=${encodeURIComponent(location)}&url=${encodeURIComponent(url)}`;
+async function runWptTest(url, location, runs) {
+  const testUrl = `${endpoint}/runtest.php?f=json&k=${encodeURIComponent(apiKey)}&runs=${encodeURIComponent(String(runs))}&fvonly=1&location=${encodeURIComponent(location)}&url=${encodeURIComponent(url)}`;
   const res = await fetch(testUrl);
   const data = await res.json();
   if (data.statusCode !== 200 || !data.data?.jsonUrl) {
@@ -91,6 +92,41 @@ function pickMetric(obj, keys) {
   return null;
 }
 
+function median(values) {
+  const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function firstViewRuns(data) {
+  const runs = data?.data?.runs && typeof data.data.runs === "object" ? data.data.runs : {};
+  return Object.entries(runs)
+    .map(([runId, run]) => ({ runId, firstView: run?.firstView ?? null }))
+    .filter((run) => run.firstView);
+}
+
+function metricsForFirstView(firstView) {
+  return {
+    ttfb: pickMetric(firstView, ["TTFB", "ttfb"]),
+    fcp: pickMetric(firstView, [
+      "firstContentfulPaint",
+      "FirstContentfulPaint",
+      "chromeUserTiming.firstContentfulPaint",
+    ]),
+    lcp: pickMetric(firstView, [
+      "largestContentfulPaint",
+      "LargestContentfulPaint",
+      "chromeUserTiming.LargestContentfulPaint",
+    ]),
+    cls: pickMetric(firstView, [
+      "CumulativeLayoutShift",
+      "CLS",
+      "chromeUserTiming.CumulativeLayoutShift",
+    ]),
+  };
+}
+
 function canonicalRegionForLocation(location) {
   const locationId = String(location).split(/[.:]/)[0];
   return CANONICAL_WPT_LOCATIONS.find((entry) => entry.location.startsWith(`${locationId}:`))?.region ?? null;
@@ -107,32 +143,24 @@ for (const fw of frameworks) {
     for (const location of locations) {
       console.log(`WPT: ${fw.name} ${scenario.name} @ ${location}`);
       try {
-        const data = await runWptTest(url, location);
-        const firstView = data.data.runs["1"].firstView;
+        const data = await runWptTest(url, location, wptRuns);
+        const runMetrics = firstViewRuns(data).map((run) => ({
+          runId: run.runId,
+          metrics: metricsForFirstView(run.firstView),
+        }));
+        const metricKeys = ["ttfb", "fcp", "lcp", "cls"];
         const record = {
           framework: fw.name,
           scenario: scenario.name,
           region: canonicalRegionForLocation(location),
           location,
           url,
-          metrics: {
-            ttfb: pickMetric(firstView, ["TTFB", "ttfb"]),
-            fcp: pickMetric(firstView, [
-              "firstContentfulPaint",
-              "FirstContentfulPaint",
-              "chromeUserTiming.firstContentfulPaint",
-            ]),
-            lcp: pickMetric(firstView, [
-              "largestContentfulPaint",
-              "LargestContentfulPaint",
-              "chromeUserTiming.LargestContentfulPaint",
-            ]),
-            cls: pickMetric(firstView, [
-              "CumulativeLayoutShift",
-              "CLS",
-              "chromeUserTiming.CumulativeLayoutShift",
-            ]),
-          },
+          requestedRuns: wptRuns,
+          completedRuns: runMetrics.length,
+          metrics: Object.fromEntries(
+            metricKeys.map((key) => [key, median(runMetrics.map((run) => run.metrics[key]))])
+          ),
+          runs: runMetrics,
           raw: {
             testId: data.data.id,
             summary: data.data.summary,
@@ -159,6 +187,7 @@ await fs.writeFile(
     {
       ts: new Date().toISOString(),
       canonicalLocations: CANONICAL_WPT_LOCATIONS,
+      requestedRuns: wptRuns,
       results,
     },
     null,

@@ -79,7 +79,14 @@ content, not hidden placeholders.
 | `/media` | `data-testid="media-card"`, `media-player`, `media-next` |
 
 The contract reporter must reject responses that satisfy selectors with empty,
-invisible, or shell-only markup when the route claims rendered content.
+invisible, or shell-only markup when the route claims rendered content. Live
+browser smoke must also reject workload drift: `/media` must expose exactly
+`BENCH_MEDIA_PAGE_SIZE` `media-card` items in the route DOM, and `/chart` must
+expose every shared chart symbol and timeframe option in the route DOM.
+Framework-runtime and framework-prerender routes whose matrix contract declares
+`hydrationModel: framework` must also include script evidence in the HTML
+response; route-level script suppression is an optimized/bucket-changing
+behavior, not a canonical framework-hydration row.
 
 ## API Contract
 

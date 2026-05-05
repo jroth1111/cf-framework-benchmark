@@ -1,5 +1,6 @@
 import {
   blogPosts,
+  BENCH_MEDIA_PAGE_SIZE,
   chartSymbols,
   chartTimeframes,
   formatUsd,
@@ -15,6 +16,7 @@ import {
 
 export {
   blogPosts,
+  BENCH_MEDIA_PAGE_SIZE,
   chartSymbols,
   chartTimeframes,
   formatUsd,

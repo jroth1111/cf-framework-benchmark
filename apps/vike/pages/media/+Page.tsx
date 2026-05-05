@@ -78,7 +78,14 @@ export default function Page() {
           <div data-testid="media-player">
             {selected ? (
               <>
-                <img className="media-player-image" src={selected.thumbnail} alt={selected.title} />
+                <img
+                  className="media-player-image"
+                  src={selected.thumbnail}
+                  alt={selected.title}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                />
                 <h3>{selected.title}</h3>
                 <p className="muted small">
                   {selected.channel} • {selected.views.toLocaleString()} views

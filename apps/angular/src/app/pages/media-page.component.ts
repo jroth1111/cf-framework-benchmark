@@ -1,6 +1,6 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, PLATFORM_ID, inject } from '@angular/core';
-import { queryMedia, type MediaItem } from '@cf-bench/dataset';
+import { BENCH_MEDIA_PAGE_SIZE, queryMedia, type MediaItem } from '@cf-bench/dataset';
 import { type BenchmarkMetrics, type MediaMetrics } from '@cf-bench/bench-types';
 
 function ensureBenchRoot() {
@@ -47,7 +47,14 @@ function ensureBenchMedia() {
       <div class="card detail-panel">
         <h2>Player</h2>
         <div data-testid="media-player" class="player-shell" *ngIf="selected as active; else emptyState">
-          <img class="player-image" [src]="active.thumbnail" [alt]="active.title" />
+          <img
+            class="player-image"
+            [src]="active.thumbnail"
+            [alt]="active.title"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+          />
           <h3>{{ active.title }}</h3>
           <p class="muted small">{{ active.channel }} · {{ formatViews(active.views) }} views</p>
           <p class="muted">{{ active.description }}</p>
@@ -69,7 +76,7 @@ function ensureBenchMedia() {
 export class MediaPageComponent {
   private readonly platformId = inject(PLATFORM_ID);
 
-  readonly items: MediaItem[] = queryMedia({ pageSize: 30 }).results;
+  readonly items: MediaItem[] = queryMedia({ pageSize: BENCH_MEDIA_PAGE_SIZE }).results;
   selectedIndex = 0;
 
   constructor() {

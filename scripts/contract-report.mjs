@@ -86,6 +86,10 @@ function hasTestId(html, id) {
   return new RegExp(`data-testid=["']${marker}["']`).test(html);
 }
 
+function hasScriptHydrationEvidence(html) {
+  return /<script\b/i.test(html);
+}
+
 function expectedDatasetContent(route) {
   switch (route) {
     case "/stays":
@@ -109,10 +113,22 @@ async function fetchWithTimeout(url, init = {}) {
   }
 }
 
-async function probeHtml({ framework, baseUrl, route, path }) {
+function routeContractForFramework(framework, suiteByRoute, route) {
+  const suiteScenario = suiteByRoute.get(route);
+  if (!suiteScenario) return null;
+  return framework.matrix?.scenarioContracts?.[suiteScenario.suiteId]?.[suiteScenario.scenarioName] ?? null;
+}
+
+function shouldRequireFrameworkHydration(framework, contract) {
+  const tier = String(framework.matrix?.tier || "");
+  return tier.startsWith("framework-") && contract?.hydrationModel === "framework";
+}
+
+async function probeHtml({ framework, baseUrl, route, path, suiteByRoute }) {
   const url = `${baseUrl}${path}`;
   const expectedCache = expectedHtmlCache(route);
   const requiredTestIds = requiredTestIdsForRoute(route);
+  const routeContract = routeContractForFramework(framework, suiteByRoute, route);
   const checks = [];
   let status = null;
   let headers = {};
@@ -136,7 +152,7 @@ async function probeHtml({ framework, baseUrl, route, path }) {
     text = await res.text();
   } catch (err) {
     checks.push({ name: "request", ok: false, detail: err instanceof Error ? err.message : String(err) });
-    return { framework, route, path, url, status, headers, checks, ok: false };
+    return { framework: framework.name, route, path, url, status, headers, checks, ok: false };
   }
 
   checks.push({ name: "status", ok: status >= 200 && status < 400, detail: String(status) });
@@ -160,6 +176,13 @@ async function probeHtml({ framework, baseUrl, route, path }) {
   for (const testId of requiredTestIds) {
     checks.push({ name: `selector:${testId}`, ok: hasTestId(text, testId), detail: testId });
   }
+  if (shouldRequireFrameworkHydration(framework, routeContract)) {
+    checks.push({
+      name: "hydration:script-evidence",
+      ok: hasScriptHydrationEvidence(text),
+      detail: routeContract?.hydrationModel || "unknown",
+    });
+  }
   for (const expected of expectedDatasetContent(route)) {
     checks.push({
       name: `dataset-content:${expected}`,
@@ -174,13 +197,14 @@ async function probeHtml({ framework, baseUrl, route, path }) {
   });
 
   return {
-    framework,
+    framework: framework.name,
     route,
     path,
     url,
     status,
     headers,
     requiredTestIds,
+    routeContract,
     ok: checks.every((check) => check.ok),
     checks,
   };
@@ -264,6 +288,15 @@ const frameworks = await resolveLiveTargets({
 });
 const suites = await Promise.all([...suiteNames].map((name) => loadSuite(name, suitesDir)));
 const requiredRoutes = [...new Set(suites.flatMap((suite) => suite.requiredRoutes))];
+const suiteByRoute = new Map();
+for (const suite of suites) {
+  for (const scenario of suite.scenarios) {
+    const route = requiredRoutes.find((candidate) => routeSample(candidate) === scenario.path);
+    if (route && !suiteByRoute.has(route)) {
+      suiteByRoute.set(route, { suiteId: suite.id, scenarioName: scenario.name });
+    }
+  }
+}
 const cloudflareAudit = await buildCloudflareAudit({ matrixPath });
 const cloudflareByName = new Map(cloudflareAudit.frameworks.map((row) => [row.name, row]));
 
@@ -289,7 +322,7 @@ for (const framework of frameworks) {
 
   for (const route of requiredRoutes) {
     for (const sample of routeSamples(route)) {
-      routes.push(await probeHtml({ framework: framework.name, baseUrl, route, path: sample }));
+      routes.push(await probeHtml({ framework, baseUrl, route, path: sample, suiteByRoute }));
     }
   }
   routes.push(await probeUnknownRoute({ framework: framework.name, baseUrl }));

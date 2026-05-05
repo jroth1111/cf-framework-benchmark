@@ -57,7 +57,10 @@ assert.ok(next.startupProbe.includes("wrangler check startup"));
 assert.ok(next.workerdLocalHarness.startup.includes("wrangler check startup"));
 assert.deepEqual(next.cloudflare.wrangler.compatibilityFlags, ["nodejs_compat", "nodejs_als", "global_fetch_strictly_public"]);
 assert.ok(next.disclosures.includes("nodejs-compat-startup-surface"));
-assert.ok(next.disclosures.includes("startup-size-needs-build-output"));
+assert.ok(
+  next.workerEntrypoint.status === "present" || next.disclosures.includes("startup-size-needs-build-output"),
+  "Next should either expose a built Worker entrypoint or disclose that startup size needs build output"
+);
 assert.deepEqual(
   next.openNextCacheModes.map((mode) => mode.id).sort(),
   ["opennext-r2-regional-cache", "opennext-static-assets-cache"],

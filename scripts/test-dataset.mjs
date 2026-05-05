@@ -1,4 +1,4 @@
-import { blogPosts, generateCandles, listings, mediaItems, queryMedia } from "../packages/dataset/src/index.js";
+import { BENCH_MEDIA_PAGE_SIZE, blogPosts, generateCandles, listings, mediaItems, queryMedia } from "../packages/dataset/src/index.js";
 
 const failures = [];
 
@@ -31,6 +31,7 @@ assert(blogSlugs.every((slug) => slug && typeof slug === "string"), "blog slugs 
 assert(Array.isArray(mediaItems), "mediaItems should be an array");
 assert(mediaItems.length === 120, `mediaItems length expected 120, got ${mediaItems.length}`);
 assert(unique(mediaItems.map((m) => m.id)), "media ids should be unique");
+assert(BENCH_MEDIA_PAGE_SIZE === 30, `BENCH_MEDIA_PAGE_SIZE expected 30, got ${BENCH_MEDIA_PAGE_SIZE}`);
 
 const mediaPageA = queryMedia({ page: 2, pageSize: 10 });
 const mediaPageB = queryMedia({ page: 2, pageSize: 10 });

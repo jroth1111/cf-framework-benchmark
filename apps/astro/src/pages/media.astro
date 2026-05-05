@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import { BENCH_MEDIA_PAGE_SIZE } from "@cf-bench/dataset";
 
 export const prerender = true;
 ---
@@ -25,7 +26,7 @@ export const prerender = true;
     </div>
   </div>
 
-  <script>
+  <script define:vars={{ mediaPageSize: BENCH_MEDIA_PAGE_SIZE }}>
     (() => {
       const state = {
         items: [],
@@ -51,7 +52,7 @@ export const prerender = true;
           return;
         }
         playerEl.innerHTML = `
-          <img src="${item.thumbnail}" alt="${item.title}" style="width:100%;max-height:280px;object-fit:cover;border-radius:10px" />
+          <img src="${item.thumbnail}" alt="${item.title}" loading="eager" decoding="async" fetchpriority="high" style="width:100%;max-height:280px;object-fit:cover;border-radius:10px" />
           <h3>${item.title}</h3>
           <p class="muted small">${item.channel} • ${item.views.toLocaleString()} views</p>
           <p class="muted">${item.description}</p>
@@ -92,7 +93,7 @@ export const prerender = true;
         renderFeed();
       });
 
-      fetch("/api/media?pageSize=30")
+      fetch(`/api/media?pageSize=${mediaPageSize}`)
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return res.json();

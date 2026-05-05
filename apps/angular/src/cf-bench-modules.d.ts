@@ -109,6 +109,7 @@ declare module '@cf-bench/dataset' {
   export function getPost(slug: string): BlogPost | undefined;
 
   export const mediaItems: MediaItem[];
+  export const BENCH_MEDIA_PAGE_SIZE: 30;
   export function getMedia(id: string): MediaItem | undefined;
   export function queryMedia(params?: {
     channel?: string;

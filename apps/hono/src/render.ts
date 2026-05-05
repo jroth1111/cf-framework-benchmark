@@ -1,4 +1,5 @@
 import {
+  BENCH_MEDIA_PAGE_SIZE,
   blogPosts,
   chartSymbols,
   formatUsd,
@@ -404,7 +405,7 @@ function mediaPage() {
           }
 
           nextNode.addEventListener('click', nextItem);
-          fetch('/api/media?pageSize=30')
+          fetch('/api/media?pageSize=${BENCH_MEDIA_PAGE_SIZE}')
             .then(function (res) { return res.json(); })
             .then(function (payload) {
               items = Array.isArray(payload && payload.results) ? payload.results : [];

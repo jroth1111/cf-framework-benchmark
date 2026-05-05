@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import { chartSymbols, chartTimeframes } from "@cf-bench/dataset";
 
 export const prerender = true;
 ---
@@ -8,12 +9,16 @@ export const prerender = true;
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="pill">
         <span class="muted small">Symbol</span>
-        <select data-testid="symbol-select" class="input" style="width:140px"></select>
+        <select data-testid="symbol-select" class="input" style="width:140px">
+          {chartSymbols.map((symbol) => <option value={symbol}>{symbol}</option>)}
+        </select>
       </div>
 
       <div class="pill">
         <span class="muted small">Timeframe</span>
-        <select data-testid="timeframe-select" class="input" style="width:120px"></select>
+        <select data-testid="timeframe-select" class="input" style="width:120px">
+          {chartTimeframes.map((timeframe) => <option value={timeframe} selected={timeframe === "1h"}>{timeframe}</option>)}
+        </select>
       </div>
 
       <div style="display:flex;align-items:center;gap:10px">

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { Route } from "./+types/media";
-import { queryMedia } from "../lib/data";
+import { BENCH_MEDIA_PAGE_SIZE, queryMedia } from "../lib/data";
 
 function ensureBenchMedia() {
   const w = window as any;
@@ -10,7 +10,7 @@ function ensureBenchMedia() {
 }
 
 export function loader() {
-  return queryMedia({ pageSize: 30 });
+  return queryMedia({ pageSize: BENCH_MEDIA_PAGE_SIZE });
 }
 
 export function shouldRevalidate() {
@@ -83,6 +83,9 @@ export default function MediaRoute({ loaderData }: Route.ComponentProps) {
                 <img
                   src={selected.thumbnail}
                   alt={selected.title}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
                   style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 10 }}
                 />
                 <h3>{selected.title}</h3>

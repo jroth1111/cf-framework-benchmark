@@ -186,6 +186,8 @@ For more stable comparisons:
 - Keep a clean git tree for canonical unsuffixed result files.
 - Reuse or record the `--seed` value when reproducing a run.
 - Run at least **10 iterations**; use **30** for canonical public reports.
+- Remote WebPageTest confirmation uses multiple first-view runs per location by
+  default (`pnpm bench:remote -- --runs 3`) and records per-run metrics plus p50s.
 - Compare medians with dispersion (`p95`, `IQR`) rather than single-millisecond p50 differences.
 - Do not compare across tiers or contract buckets.
 - Report MEL, US, and EU remote runs separately; geography is part of Workers performance, not noise to average away.

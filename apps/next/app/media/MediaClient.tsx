@@ -73,6 +73,9 @@ export function MediaClient({ items }: { items: MediaItem[] }) {
               <img
                 src={selected.thumbnail}
                 alt={selected.title}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
                 style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 10 }}
               />
               <h3>{selected.title}</h3>

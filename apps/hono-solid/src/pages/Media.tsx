@@ -1,5 +1,5 @@
 import { createMemo, createSignal, For, onMount, Show } from "solid-js";
-import { queryMedia, type MediaItem } from "@cf-bench/dataset";
+import { BENCH_MEDIA_PAGE_SIZE, queryMedia, type MediaItem } from "@cf-bench/dataset";
 import { Layout } from "../components/Layout";
 
 function ensureBenchMedia() {
@@ -10,7 +10,7 @@ function ensureBenchMedia() {
 }
 
 export function Media(props: { initialItems?: MediaItem[] }) {
-  const initialItems = props.initialItems ?? queryMedia({ pageSize: 30 }).results;
+  const initialItems = props.initialItems ?? queryMedia({ pageSize: BENCH_MEDIA_PAGE_SIZE }).results;
   const [items] = createSignal<MediaItem[]>(initialItems);
   const [selectedIndex, setSelectedIndex] = createSignal<number | null>(null);
   const [showPoster, setShowPoster] = createSignal(false);
@@ -87,9 +87,9 @@ export function Media(props: { initialItems?: MediaItem[] }) {
                     <img
                       src={item().thumbnail}
                       alt={item().title}
-                      loading="lazy"
+                      loading="eager"
                       decoding="async"
-                      fetchpriority="low"
+                      fetchpriority="high"
                       style="width:100%;max-height:280px;object-fit:cover;border-radius:10px"
                     />
                   </Show>

@@ -21,6 +21,7 @@
     "test:cloudflare-config": "node scripts/test-cloudflare-config-audit.mjs",
     "test:cloudflare-optimization": "node scripts/test-cloudflare-optimization-audit.mjs",
     "test:build-enabled": "node --check scripts/build-enabled.mjs",
+    "check:startup": "node scripts/check-worker-startup.mjs",
     "test:contracts": "node scripts/contract-tests.mjs",
     "cloudflare:config-audit": "node scripts/cloudflare-config-audit.mjs",
     "cloudflare:optimization-audit": "node scripts/cloudflare-optimization-audit.mjs",

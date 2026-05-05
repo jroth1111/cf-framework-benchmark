@@ -1,5 +1,8 @@
 import {
+  BENCH_MEDIA_PAGE_SIZE,
   blogPosts,
+  chartSymbols,
+  chartTimeframes,
   formatUsd,
   getListing,
   getPost,
@@ -170,13 +173,18 @@ function renderPost(slug: string) {
 }
 
 function renderChart() {
+  const symbolOptions = chartSymbols.map((symbol) => `<option value="${esc(symbol)}">${esc(symbol)}</option>`).join("");
+  const timeframeOptions = chartTimeframes
+    .map((timeframe) => `<option value="${esc(timeframe)}"${timeframe === "1h" ? " selected" : ""}>${esc(timeframe)}</option>`)
+    .join("");
+
   return layout(
     "Chart (SPA-like)",
     `
       <div id="chart-root">
         <div class="controls card" style="margin-bottom:16px">
-          <label>Symbol <select data-testid="symbol-select"><option>BTC</option></select></label>
-          <label>Timeframe <select data-testid="timeframe-select"><option>1h</option></select></label>
+          <label>Symbol <select data-testid="symbol-select">${symbolOptions}</select></label>
+          <label>Timeframe <select data-testid="timeframe-select">${timeframeOptions}</select></label>
         </div>
         <div class="card"><canvas data-testid="chart-canvas" width="900" height="420"></canvas></div>
       </div>
@@ -185,7 +193,7 @@ function renderChart() {
 }
 
 function renderMedia() {
-  const cards = queryMedia({ pageSize: 12 }).results
+  const cards = queryMedia({ pageSize: BENCH_MEDIA_PAGE_SIZE }).results
     .map(
       (item) => `
         <button class="card" type="button" data-testid="media-card" data-media-id="${esc(item.id)}">

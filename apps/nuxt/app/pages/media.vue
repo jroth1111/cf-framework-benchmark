@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { MediaItem } from "@cf-bench/dataset";
-import { queryMedia } from "@cf-bench/dataset";
+import { BENCH_MEDIA_PAGE_SIZE, queryMedia } from "@cf-bench/dataset";
 
 useBenchPage("media");
 
-const { data } = await useAsyncData("bench-media", async () => queryMedia({ pageSize: 12 }));
+const { data } = await useAsyncData("bench-media", async () => queryMedia({ pageSize: BENCH_MEDIA_PAGE_SIZE }));
 const items = computed(() => data.value?.results || []);
 const selectedIndex = ref(0);
 const selected = computed<MediaItem | null>(() => items.value[selectedIndex.value] ?? null);
@@ -81,9 +81,9 @@ function nextItem() {
             <img
               :src="selected.thumbnail"
               :alt="selected.title"
-              loading="lazy"
+              loading="eager"
               decoding="async"
-              fetchpriority="low"
+              fetchpriority="high"
               style="width: 100%; max-height: 280px; object-fit: cover; border-radius: 10px"
             />
             <h3>{{ selected.title }}</h3>

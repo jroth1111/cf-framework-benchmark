@@ -51,5 +51,6 @@ await run("cloudflare:config-audit", "pnpm", ["cloudflare:config-audit", "--fail
 await run("cloudflare:optimization-audit", "pnpm", ["cloudflare:optimization-audit", "--fail-on-gaps"]);
 await run("test:build-enabled", "pnpm", ["test:build-enabled"]);
 await run("build:enabled", "pnpm", ["build:enabled", ...matrixArgs]);
+await run("check:startup", "pnpm", ["check:startup", ...matrixArgs]);
 
 console.log("\nStatic verification passed.");

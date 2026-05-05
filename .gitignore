@@ -75,6 +75,7 @@ bench/results
 bench/results*.json
 bench/results*.md
 bench/contract-report.json
+bench/flamegraphs/
 bench-output.log
 *.log
 

@@ -423,6 +423,8 @@ const mediaTitleFragments = [
 ];
 
 /** @type {MediaItem[]} */
+export const BENCH_MEDIA_PAGE_SIZE = 30;
+
 export const mediaItems = (() => {
   const out = [];
   const baseTs = Date.UTC(2025, 5, 1, 0, 0, 0, 0);

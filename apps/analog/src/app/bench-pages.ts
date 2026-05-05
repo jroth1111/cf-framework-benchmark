@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
+  BENCH_MEDIA_PAGE_SIZE,
   blogPosts,
   chartSymbols,
   chartTimeframes,
@@ -519,9 +520,9 @@ export class ChartPageComponent implements OnDestroy {
             class="player-image"
             [src]="active.thumbnail"
             [alt]="active.title"
-            loading="lazy"
+            loading="eager"
             decoding="async"
-            fetchpriority="low"
+            fetchpriority="high"
           />
           <h3>{{ active.title }}</h3>
           <p class="muted small">{{ active.channel }} · {{ formatViews(active.views) }} views</p>
@@ -545,7 +546,7 @@ export class ChartPageComponent implements OnDestroy {
 export class MediaPageComponent {
   private readonly platformId = inject(PLATFORM_ID);
 
-  readonly items: MediaItem[] = queryMedia({ pageSize: 20 }).results;
+  readonly items: MediaItem[] = queryMedia({ pageSize: BENCH_MEDIA_PAGE_SIZE }).results;
   selectedIndex: number | null = null;
   showPoster = false;
 

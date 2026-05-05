@@ -1,5 +1,5 @@
 import type { MediaItem } from "@cf-bench/dataset";
-import { queryMedia } from "@cf-bench/dataset";
+import { BENCH_MEDIA_PAGE_SIZE, queryMedia } from "@cf-bench/dataset";
 import { computed, defineComponent, h, onMounted, ref } from "vue";
 
 function ensureBenchMedia() {
@@ -12,7 +12,7 @@ function ensureBenchMedia() {
 export default defineComponent({
 	name: "MediaPage",
 	setup() {
-		const items = queryMedia({ pageSize: 12 }).results;
+		const items = queryMedia({ pageSize: BENCH_MEDIA_PAGE_SIZE }).results;
 		const selectedIndex = ref(0);
 		const selected = computed<MediaItem | null>(() => items[selectedIndex.value] ?? null);
 
@@ -87,9 +87,9 @@ export default defineComponent({
 										h("img", {
 											src: selected.value.thumbnail,
 											alt: selected.value.title,
-											loading: "lazy",
+											loading: "eager",
 											decoding: "async",
-											fetchpriority: "low",
+											fetchpriority: "high",
 											style: {
 												width: "100%",
 												maxHeight: "280px",

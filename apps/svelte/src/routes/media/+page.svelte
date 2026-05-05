@@ -86,6 +86,9 @@
         <img
           src={selected.thumbnail}
           alt={selected.title}
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
           style="width:100%;max-height:280px;object-fit:cover;border-radius:10px"
         />
         <h3>{selected.title}</h3>

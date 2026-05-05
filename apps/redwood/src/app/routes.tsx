@@ -1,6 +1,6 @@
 import type React from "react";
 
-import { blogPosts, chartSymbols, getListing, getPost, queryListings, queryMedia } from "../../../../packages/dataset/src/index.js";
+import { BENCH_MEDIA_PAGE_SIZE, blogPosts, chartSymbols, getListing, getPost, queryListings, queryMedia } from "../../../../packages/dataset/src/index.js";
 import { route, type Route } from "rwsdk/router";
 
 type PageProps = {
@@ -268,7 +268,7 @@ chart.switchDurationMs = chart.switchDurationMs || 1;
 }
 
 function MediaPage({ rw }: PageProps) {
-  const mediaItems = queryMedia({ page: 1, pageSize: 18 }).results;
+  const mediaItems = queryMedia({ page: 1, pageSize: BENCH_MEDIA_PAGE_SIZE }).results;
   const initialItem = mediaItems[0] ?? null;
 
   const mediaScript = `
@@ -283,7 +283,7 @@ function renderPlayer() {
   const item = items[selected];
   if (!item || !playerNode) return;
   playerNode.innerHTML =
-    '<img class="player-image" src="' + item.thumbnail + '" alt="' + item.title.replaceAll('"', '&quot;') + '">' +
+    '<img class="player-image" src="' + item.thumbnail + '" alt="' + item.title.replaceAll('"', '&quot;') + '" loading="eager" decoding="async" fetchpriority="high">' +
     '<div><strong>' + item.title + '</strong></div>' +
     '<div class="muted small">' + item.channel + ' • ' + item.publishedISO + '</div>' +
     '<p class="muted">' + item.description + '</p>';
@@ -343,7 +343,14 @@ media.ready = true;
           <div className="media-player" data-testid="media-player" id="media-player">
             {initialItem ? (
               <>
-                <img className="player-image" src={initialItem.thumbnail} alt={initialItem.title} />
+                <img
+                  className="player-image"
+                  src={initialItem.thumbnail}
+                  alt={initialItem.title}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                />
                 <div>
                   <strong>{initialItem.title}</strong>
                 </div>

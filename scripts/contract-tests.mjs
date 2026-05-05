@@ -55,6 +55,10 @@ function hasTestId(html, id) {
   return regex.test(html);
 }
 
+function hasScriptHydrationEvidence(html) {
+  return /<script\b/i.test(html);
+}
+
 async function fetchWithTimeout(url, init = {}) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -300,6 +304,16 @@ async function runFramework(framework, requiredRoutes) {
       for (const marker of requiredTestIdsForRoute(route)) {
         expect(hasTestId(page.text, marker), `${framework.name} ${sample} missing data-testid=${marker}`);
       }
+      const suiteScenario = suiteByRoute.get(route);
+      const routeContract = suiteScenario
+        ? framework.matrix?.scenarioContracts?.[suiteScenario.suiteId]?.[suiteScenario.scenarioName]
+        : null;
+      if (String(framework.matrix?.tier || "").startsWith("framework-") && routeContract?.hydrationModel === "framework") {
+        expect(
+          hasScriptHydrationEvidence(page.text),
+          `${framework.name} ${sample} missing framework hydration script evidence`
+        );
+      }
       for (const expected of expectedDatasetContent(route)) {
         expectBodyIncludes(page.text, expected, `${framework.name} ${sample}`);
       }
@@ -328,6 +342,15 @@ const frameworks = await resolveLiveTargets({
 
 const suites = await Promise.all([...suiteNames].map((name) => loadSuite(name, suitesDir)));
 const requiredRoutes = [...new Set(suites.flatMap((suite) => suite.requiredRoutes))];
+const suiteByRoute = new Map();
+for (const suite of suites) {
+  for (const scenario of suite.scenarios) {
+    const route = requiredRoutes.find((candidate) => routeSample(candidate) === scenario.path);
+    if (route && !suiteByRoute.has(route)) {
+      suiteByRoute.set(route, { suiteId: suite.id, scenarioName: scenario.name });
+    }
+  }
+}
 
 if (!requiredRoutes.length) {
   throw new Error("No required routes resolved from selected suites.");

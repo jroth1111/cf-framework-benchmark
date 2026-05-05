@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { queryMedia } from "@cf-bench/dataset";
+import { BENCH_MEDIA_PAGE_SIZE, queryMedia } from "@cf-bench/dataset";
 
 function ensureBenchMedia() {
   const w = window as any;
@@ -9,7 +9,7 @@ function ensureBenchMedia() {
 }
 
 export function Media() {
-  const initialItems = queryMedia({ pageSize: 30 }).results;
+  const initialItems = queryMedia({ pageSize: BENCH_MEDIA_PAGE_SIZE }).results;
   const [items] = useState(initialItems);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const status = items.length ? "ready" : "error";
@@ -78,6 +78,9 @@ export function Media() {
                 <img
                   src={selected.thumbnail}
                   alt={selected.title}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
                   style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 10 }}
                 />
                 <h3>{selected.title}</h3>

@@ -1,9 +1,9 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@qwik.dev/core";
-import { queryMedia } from "@cf-bench/dataset";
+import { BENCH_MEDIA_PAGE_SIZE, queryMedia } from "@cf-bench/dataset";
 import { routeLoader$ } from "@qwik.dev/router";
 
 export const useMediaItems = routeLoader$(() => {
-  return queryMedia({ pageSize: 30 }).results;
+  return queryMedia({ pageSize: BENCH_MEDIA_PAGE_SIZE }).results;
 });
 
 function getBenchMedia() {
@@ -75,6 +75,9 @@ export default component$(() => {
                 <img
                   src={selected.thumbnail}
                   alt={selected.title}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
                   style="width:100%;max-height:280px;object-fit:cover;border-radius:10px"
                 />
                 <h3>{selected.title}</h3>

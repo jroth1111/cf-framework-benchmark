@@ -9,6 +9,7 @@ import {
   resolveLiveTargets,
   toAbsolutePath,
 } from "../bench/src/config-v4.mjs";
+import { BENCH_MEDIA_PAGE_SIZE, chartSymbols, chartTimeframes } from "../packages/dataset/src/index.js";
 
 const require = createRequire(new URL("../bench/package.json", import.meta.url));
 const { chromium } = require("playwright");
@@ -134,6 +135,18 @@ async function runChartInteractions(page, scenario) {
   await assertVisibleLocator(page, "[data-testid=chart-canvas]", "chart canvas");
   await assertVisibleLocator(page, "[data-testid=symbol-select]", "chart symbol select");
   await assertVisibleLocator(page, "[data-testid=timeframe-select]", "chart timeframe select");
+  const chartOptionCounts = await page.evaluate(() => ({
+    symbols: document.querySelectorAll('[data-testid="symbol-select"] option').length,
+    timeframes: document.querySelectorAll('[data-testid="timeframe-select"] option').length,
+  }));
+  if (chartOptionCounts.symbols !== chartSymbols.length || chartOptionCounts.timeframes !== chartTimeframes.length) {
+    throw new Error(
+      `chart workload option count mismatch: ${JSON.stringify({
+        observed: chartOptionCounts,
+        expected: { symbols: chartSymbols.length, timeframes: chartTimeframes.length },
+      })}`
+    );
+  }
   try {
     await page.waitForFunction(() => globalThis.__CF_BENCH__?.chart?.ready === true, { timeout: timeoutMs });
   } catch (err) {
@@ -219,6 +232,10 @@ async function waitForMediaChange(page, beforeText, beforeMediaId, label) {
 
 async function runMediaInteractions(page) {
   await assertVisibleLocator(page, "[data-testid=media-card]", "media card");
+  const mediaCardCount = await page.locator("[data-testid=media-card]").count();
+  if (mediaCardCount !== BENCH_MEDIA_PAGE_SIZE) {
+    throw new Error(`media-card count mismatch: ${mediaCardCount}/${BENCH_MEDIA_PAGE_SIZE}`);
+  }
   const before = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
   const beforeId = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
   const cards = page.locator("[data-testid=media-card]");

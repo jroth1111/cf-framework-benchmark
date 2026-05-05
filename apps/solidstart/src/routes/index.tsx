@@ -1,5 +1,11 @@
 import { Home } from "../../../solid/src/pages/Home";
+import { BenchHeaders } from "../lib/headers";
 
 export default function IndexPage() {
-  return <Home />;
+  return (
+    <>
+      <BenchHeaders cacheControl="no-store" />
+      <Home />
+    </>
+  );
 }

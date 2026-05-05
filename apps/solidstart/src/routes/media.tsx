@@ -1,4 +1,5 @@
 import { lazy } from "solid-js";
+import { BenchHeaders } from "../lib/headers";
 
 const Media = lazy(async () => {
   const mod = await import("../../../solid/src/pages/Media");
@@ -6,5 +7,10 @@ const Media = lazy(async () => {
 });
 
 export default function MediaPage() {
-  return <Media />;
+  return (
+    <>
+      <BenchHeaders cacheControl="no-store" />
+      <Media />
+    </>
+  );
 }

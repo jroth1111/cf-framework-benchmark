@@ -1,7 +1,13 @@
 import { useParams } from "@solidjs/router";
 import { BlogPost } from "../../../../solid/src/pages/BlogPost";
+import { BenchHeaders } from "../../lib/headers";
 
 export default function BlogPostPage() {
   const params = useParams<{ slug: string }>();
-  return <BlogPost slug={params.slug} />;
+  return (
+    <>
+      <BenchHeaders cacheControl="public, max-age=0, s-maxage=300" />
+      <BlogPost slug={params.slug} />
+    </>
+  );
 }

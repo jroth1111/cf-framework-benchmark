@@ -1,4 +1,5 @@
 import { lazy } from "solid-js";
+import { BenchHeaders } from "../lib/headers";
 
 const Chart = lazy(async () => {
   const mod = await import("../../../solid/src/pages/Chart");
@@ -6,5 +7,10 @@ const Chart = lazy(async () => {
 });
 
 export default function ChartPage() {
-  return <Chart />;
+  return (
+    <>
+      <BenchHeaders cacheControl="no-store" />
+      <Chart />
+    </>
+  );
 }

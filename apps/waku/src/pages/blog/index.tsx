@@ -3,11 +3,11 @@ import { blogPosts } from '@cf-bench/dataset';
 export default async function BlogPage() {
   return (
     <>
-      <title>CF Bench Waku Blog</title>
+      <title>CF Bench Blog</title>
       <section className="hero">
         <p className="eyebrow">Articles</p>
         <h1 className="h1">Blog</h1>
-        <p className="muted">Static benchmark posts rendered by Waku.</p>
+        <p className="muted">Static benchmark posts with shared selectors and dataset values.</p>
       </section>
       <section className="grid cols-2 section">
         {blogPosts.map((post) => (

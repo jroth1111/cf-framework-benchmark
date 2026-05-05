@@ -7,7 +7,7 @@ export const RouterHead = component$(() => {
 
   return (
     <>
-      <title>{head.title || "CF Bench — Qwik"}</title>
+      <title>{head.title || "CF Bench"}</title>
       {head.meta.map((m) => (
         <meta key={m.key} {...m} />
       ))}

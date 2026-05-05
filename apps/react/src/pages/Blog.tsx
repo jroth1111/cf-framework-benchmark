@@ -5,16 +5,14 @@ export function Blog() {
     return (
         <>
             <h1 className="h1">Blog</h1>
-            <p className="muted">SSG-style blog index (static data, bundled at build time).</p>
 
-            <div className="blog-list" style={{ marginTop: 24 }}>
+            <div className="grid cols-2">
                 {blogPosts.map((post) => (
                     <Link
                         key={post.slug}
                         to={`/blog/${post.slug}`}
                         className="card blog-card"
                         data-testid="blog-post-card"
-                        style={{ marginBottom: 16, padding: 16 }}
                     >
                         <h2>{post.title}</h2>
                         <p className="muted small">

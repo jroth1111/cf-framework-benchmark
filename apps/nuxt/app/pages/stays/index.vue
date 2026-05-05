@@ -11,7 +11,7 @@ const data = queryListings({ page, pageSize: 12 });
 <template>
   <div>
     <h1 class="h1">Stays</h1>
-    <p class="muted">Airbnb-style listing index served by Nuxt SSR on Workers.</p>
+    <p class="muted">Airbnb-style listing index served on Cloudflare Workers.</p>
 
     <div class="grid cols-3" style="margin-top: 12px">
       <NuxtLink

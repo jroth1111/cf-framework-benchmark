@@ -7,7 +7,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "CF Bench — TanStack Start" },
+      { title: "CF Bench" },
     ],
   }),
   component: RootComponent,
@@ -33,9 +33,7 @@ function RootComponent() {
 
           <main className="container">
             <Outlet />
-            <div className="footer">
-              TanStack Start variant • stays SSR loader, blog route pre-render friendly, chart client component.
-            </div>
+            <div className="footer">Benchmark route surface on Cloudflare Workers.</div>
           </main>
         </div>
         <Scripts />

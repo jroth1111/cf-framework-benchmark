@@ -23,7 +23,7 @@ function esc(value: unknown) {
     .replaceAll("'", "&#39;");
 }
 
-function layout(title: string, body: string, footer = "SolidJS + Vite variant â€¢ /chart is SPA-like, blog is SSG pages, stays are multi-page routes.") {
+function layout(title: string, body: string, footer = "Benchmark route surface on Cloudflare Workers.") {
   return `
     <header class="container nav">
       <a class="brand" href="/">CF Bench</a>
@@ -42,29 +42,16 @@ function layout(title: string, body: string, footer = "SolidJS + Vite variant â€
 }
 
 function renderHome() {
-  const featured = queryListings({ pageSize: 6 }).results
-    .map(
-      (listing) => `
-        <a href="/stays/${listing.id}" class="card">
-          <div style="font-weight:700;">${esc(listing.title)}</div>
-          <div class="small muted">${esc(listing.city)}, ${esc(listing.country)}</div>
-          <div style="margin-top:8px;"><strong>${esc(formatUsd(listing.pricePerNight))}</strong> <span class="muted small">/ night</span></div>
-        </a>
-      `
-    )
-    .join("");
-
   return layout(
     "Framework benchmark harness",
     `
       <h1 class="h1">Framework benchmark harness</h1>
       <div class="grid cols-3">
-        <div class="card"><h2>SPA-like</h2><p class="muted">Interactive chart with symbol switching and media interactions.</p><a class="btn" href="/chart">Open chart</a></div>
-        <div class="card"><h2>App pages</h2><p class="muted">Listings index + detail pages rendered on the worker.</p><a class="btn" href="/stays">Browse stays</a></div>
-        <div class="card"><h2>SSG-like blog</h2><p class="muted">Document pages with benchmark markers and shared content.</p><a class="btn" href="/blog">Read blog</a></div>
+        <div class="card"><h2>SPA-like</h2><p class="muted">Interactive chart with symbol switching.</p><a class="btn" href="/chart">Open chart</a></div>
+        <div class="card"><h2>App pages</h2><p class="muted">Listings index + detail pages.</p><a class="btn" href="/stays">Browse stays</a></div>
+        <div class="card"><h2>SSG blog</h2><p class="muted">Prerendered route content.</p><a class="btn" href="/blog">Read blog</a></div>
+        <div class="card"><h2>Media feed</h2><p class="muted">Feed browsing and player interactions.</p><a class="btn" href="/media">Open media</a></div>
       </div>
-      <h2 style="margin-top:24px;">Featured stays</h2>
-      <div class="grid cols-3">${featured}</div>
     `
   );
 }
@@ -92,7 +79,7 @@ function renderStays() {
 
   return layout(
     "Stays",
-    `<h1 class="h1">Stays</h1><p class="muted">Airbnb-style listing index rendered by Solid on Workers.</p><div class="grid cols-2">${cards}</div>`
+    `<h1 class="h1">Stays</h1><p class="muted">Airbnb-style listing index.</p><div class="grid cols-3">${cards}</div>`
   );
 }
 

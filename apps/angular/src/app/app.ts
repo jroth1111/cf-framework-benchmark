@@ -18,11 +18,10 @@ export class App implements AfterViewInit {
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly navItems = [
-    { label: 'Home', href: '/' },
     { label: 'Stays', href: '/stays' },
-    { label: 'Blog', href: '/blog' },
     { label: 'Chart', href: '/chart' },
     { label: 'Media', href: '/media' },
+    { label: 'Blog', href: '/blog' },
   ];
 
   ngAfterViewInit() {

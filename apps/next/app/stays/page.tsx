@@ -1,49 +1,16 @@
 import Link from "next/link";
-import { listings, formatUsd } from "@cf-bench/dataset";
+import { queryListings, formatUsd } from "@cf-bench/dataset";
 
-export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const params = await searchParams;
-  const city = typeof params.city === "string" ? params.city : "";
-  const maxRaw = typeof params.max === "string" ? params.max : "";
-  const maxNum = maxRaw ? Number(maxRaw) : null;
-
-  const cities = Array.from(new Set(listings.map((l) => l.city))).sort();
-
-  const filtered = listings.filter((l) => {
-    if (city && l.city !== city) return false;
-    if (maxNum != null && Number.isFinite(maxNum) && l.pricePerNight > maxNum) return false;
-    return true;
-  });
+export default function Page() {
+  const listings = queryListings({ page: 1, pageSize: 12 }).results;
 
   return (
     <>
       <h1 className="h1">Stays</h1>
+      <p className="muted">Airbnb-style listing index.</p>
 
-      <form method="get" action="/stays" className="card" style={{ padding: 14, marginBottom: 14 }}>
-        <div className="grid cols-3">
-          <div>
-            <div className="small muted">City</div>
-            <select className="input" name="city" defaultValue={city}>
-              <option value="">Any</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <div className="small muted">Max price</div>
-            <input className="input" name="max" defaultValue={maxRaw} placeholder="e.g. 250" inputMode="numeric" />
-          </div>
-          <div style={{ display: "flex", alignItems: "end" }}>
-            <button className="btn" type="submit">Apply</button>
-          </div>
-        </div>
-      </form>
-
-      <div className="grid cols-2">
-        {filtered.map((l) => (
+      <div className="grid cols-3">
+        {listings.map((l) => (
           <Link
             key={l.id}
             data-testid="stay-card"

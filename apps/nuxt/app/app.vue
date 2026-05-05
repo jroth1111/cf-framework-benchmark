@@ -11,7 +11,7 @@
     </header>
     <main class="container">
       <NuxtPage />
-      <div class="footer">Nuxt variant • Workers SSR pages and Nitro APIs for the benchmark contract.</div>
+      <div class="footer">Benchmark route surface on Cloudflare Workers.</div>
     </main>
   </div>
 </template>

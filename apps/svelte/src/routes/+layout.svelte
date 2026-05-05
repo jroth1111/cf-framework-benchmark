@@ -29,7 +29,5 @@
 
 <main class="container">
   <slot />
-  <div class="footer">
-    SvelteKit variant • stays SSR, blog prerender, chart client-side canvas. (v2)
-  </div>
+  <div class="footer">Benchmark route surface on Cloudflare Workers.</div>
 </main>

@@ -19,7 +19,7 @@ export default function StaysRoute({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <h1 className="h1">Stays</h1>
-      <p className="muted">Airbnb-style listing index served by route loaders on Workers.</p>
+      <p className="muted">Airbnb-style listing index.</p>
       <div className="grid cols-3" style={{ marginTop: 12 }}>
         {loaderData.results.map((listing) => (
           <Link
@@ -30,11 +30,12 @@ export default function StaysRoute({ loaderData }: Route.ComponentProps) {
           >
             <div style={{ fontWeight: 700 }}>{listing.title}</div>
             <div className="small muted">
-              {listing.city}, {listing.country} • {listing.bedrooms} bd • {listing.baths} ba
+              {listing.city}, {listing.country} • {listing.bedrooms} bd • {listing.baths} ba • up to {listing.maxGuests} guests
             </div>
             <div style={{ marginTop: 8 }}>
               <strong>{formatUsd(listing.pricePerNight)}</strong> <span className="muted small">/ night</span>
             </div>
+            <div className="muted small" style={{ marginTop: 10 }}>{listing.summary}</div>
           </Link>
         ))}
       </div>

@@ -10,7 +10,6 @@ import { blogPosts, type BlogPost } from '@cf-bench/dataset';
   template: `
     <section class="page-copy">
       <h1 class="h1">Blog</h1>
-      <p class="muted">Static benchmark posts rendered by Angular SSR.</p>
     </section>
 
     <section class="blog-list">

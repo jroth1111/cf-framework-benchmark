@@ -42,7 +42,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </header>
       <main className="container">
         {children}
-        <div className="footer">Vike benchmark route surface on Cloudflare Workers.</div>
+        <div className="footer">Benchmark route surface on Cloudflare Workers.</div>
       </main>
     </>
   );

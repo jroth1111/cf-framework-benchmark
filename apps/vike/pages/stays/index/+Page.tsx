@@ -6,7 +6,7 @@ export default function Page() {
   return (
     <>
       <h1 className="h1">Stays</h1>
-      <p className="muted">Airbnb-style listing index rendered by Vike for Cloudflare Workers.</p>
+      <p className="muted">Airbnb-style listing index served on Cloudflare Workers.</p>
       <div className="grid cols-3">
         {results.map((listing) => (
           <a key={listing.id} href={`/stays/${listing.id}`} data-testid="stay-card" className="card listing-card">

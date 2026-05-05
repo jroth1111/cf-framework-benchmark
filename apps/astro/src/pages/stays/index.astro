@@ -1,45 +1,16 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { listings, formatUsd } from "@cf-bench/dataset";
+import { queryListings, formatUsd } from "@cf-bench/dataset";
 
 export const prerender = false;
 
-const city = Astro.url.searchParams.get("city") ?? "";
-const max = Astro.url.searchParams.get("max") ?? "";
-const maxNum = max ? Number(max) : null;
-
-const cities = Array.from(new Set(listings.map((l) => l.city))).sort();
-
-const filtered = listings.filter((l) => {
-  if (city && l.city !== city) return false;
-  if (maxNum != null && Number.isFinite(maxNum) && l.pricePerNight > maxNum) return false;
-  return true;
-});
+const listings = queryListings({ page: 1, pageSize: 12 }).results;
 ---
 <Base title="Stays">
-  <form method="get" action="/stays" class="card" style="padding:14px;margin-bottom:14px">
-    <div class="grid cols-3">
-      <div>
-        <div class="small muted">City</div>
-        <select class="input" name="city">
-          <option value="" selected={!city}>Any</option>
-          {cities.map((c) => (
-            <option value={c} selected={c === city}>{c}</option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <div class="small muted">Max price</div>
-        <input class="input" name="max" value={max} placeholder="e.g. 250" inputmode="numeric" />
-      </div>
-      <div style="display:flex;align-items:end">
-        <button class="btn" type="submit">Apply</button>
-      </div>
-    </div>
-  </form>
+  <p class="muted">Airbnb-style listing index.</p>
 
-  <div class="grid cols-2">
-    {filtered.map((l) => (
+  <div class="grid cols-3">
+    {listings.map((l) => (
       <a class="card" data-testid="stay-card" href={`/stays/${l.id}`} style="padding:14px;display:block">
         <div style="display:flex;justify-content:space-between;gap:12px">
           <div>

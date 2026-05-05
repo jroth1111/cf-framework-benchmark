@@ -4,7 +4,7 @@ export default function Page() {
   return (
     <>
       <h1 className="h1">Blog</h1>
-      <p className="muted">Static benchmark content rendered to raw HTML by Vike.</p>
+      <p className="muted">Static benchmark content with shared selectors and dataset values.</p>
       <div className="grid cols-2">
         {blogPosts.map((post) => (
           <a key={post.slug} href={`/blog/${post.slug}`} className="card blog-card" data-testid="blog-post-card">

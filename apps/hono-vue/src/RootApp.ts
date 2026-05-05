@@ -17,7 +17,7 @@ export default defineComponent({
 				]),
 				h("main", { class: "container" }, [
 					h(RouterView),
-					h("div", { class: "footer" }, "Hono + Vue variant. Hono owns routing while Vue renders the benchmark UI."),
+					h("div", { class: "footer" }, "Benchmark route surface on Cloudflare Workers."),
 				]),
 			]);
 	},

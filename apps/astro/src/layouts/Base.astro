@@ -22,9 +22,7 @@ const { title } = Astro.props;
     <main class="container">
       <h1 class="h1">{title}</h1>
       <slot />
-      <div class="footer">
-        Astro variant • stays are SSR on the edge, blog is prerendered, chart is client-side canvas.
-      </div>
+      <div class="footer">Benchmark route surface on Cloudflare Workers.</div>
     </main>
     <script>
       (() => {

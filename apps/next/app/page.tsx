@@ -17,12 +17,12 @@ export default function Page() {
         </div>
         <div className="card" style={{ padding: 16 }}>
           <h2>SSG blog</h2>
-          <p className="muted">Prerendered at build time.</p>
+          <p className="muted">Prerendered route content.</p>
           <Link className="btn" href="/blog" prefetch={false}>Read blog</Link>
         </div>
         <div className="card" style={{ padding: 16 }}>
           <h2>Media feed</h2>
-          <p className="muted">YouTube-like browse and player interactions.</p>
+          <p className="muted">Feed browsing and player interactions.</p>
           <Link className="btn" href="/media" prefetch={false}>Open media</Link>
         </div>
       </div>

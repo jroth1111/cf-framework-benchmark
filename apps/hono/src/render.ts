@@ -1,6 +1,7 @@
 import {
   blogPosts,
   chartSymbols,
+  formatUsd,
   getListing,
   getPost,
   queryListings,
@@ -61,26 +62,49 @@ function shell(title: string, body: string, extraHead = "") {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${esc(title)}</title>
     <style>
-      :root { color-scheme: light; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif; }
+      :root {
+        --bg: #0b0d12;
+        --panel: #111827;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --border: rgba(255, 255, 255, 0.12);
+        --accent: #7c3aed;
+        --accent2: #22c55e;
+        --radius: 14px;
+        --shadow: 0 10px 25px rgba(0,0,0,0.35);
+        --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        color-scheme: dark;
+        font-family: var(--sans);
+      }
       * { box-sizing: border-box; }
-      body { margin: 0; background: #f7f9fc; color: #16202a; }
-      a { color: #0f3d7a; text-decoration: none; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 600px at 20% -10%, rgba(124, 58, 237, 0.35), transparent 55%),
+                    radial-gradient(900px 500px at 90% 0%, rgba(34, 197, 94, 0.22), transparent 50%),
+                    var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+      }
+      a { color: inherit; text-decoration: none; }
+      a:hover { text-decoration: underline; }
       .container { width: min(1100px, calc(100% - 32px)); margin: 0 auto; }
-      .nav { display: flex; gap: 14px; align-items: center; padding: 14px 0; }
-      .nav a { padding: 8px 12px; background: #fff; border: 1px solid #d7dde7; border-radius: 999px; }
-      .brand { font-weight: 700; }
-      .card { background: #fff; border: 1px solid #d7dde7; border-radius: 12px; padding: 14px; }
-      .grid { display: grid; gap: 12px; }
-      .grid.cols-2 { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-      .grid.cols-3 { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-      .muted { color: #5c6b7a; }
-      .small { font-size: 12px; }
-      .h1 { margin: 8px 0 14px; font-size: 30px; line-height: 1.2; }
-      .pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid #d7dde7; border-radius: 999px; background: #fff; }
-      .btn { cursor: pointer; border: 1px solid #d7dde7; border-radius: 10px; padding: 10px 12px; background: #fff; }
-      .input { border: 1px solid #c9d2df; border-radius: 8px; padding: 8px 10px; background: #fff; }
-      .footer { margin: 22px 0 36px; font-size: 12px; color: #5c6b7a; }
-      canvas { background: #0f1620; display: block; width: 100%; height: 100%; border-radius: 12px; border: 1px solid #d7dde7; }
+      .nav { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 18px 0; }
+      .nav a.brand { font-weight: 700; letter-spacing: 0.2px; text-decoration: none; }
+      .nav .links { display: flex; flex-wrap: wrap; gap: 12px; }
+      .card { background: rgba(17, 24, 39, 0.55); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
+      .grid { display: grid; gap: 14px; }
+      .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      @media (max-width: 860px) { .grid.cols-2, .grid.cols-3 { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
+      .muted { color: var(--muted); }
+      .small { font-size: 13px; }
+      .h1 { font-size: 40px; line-height: 1.08; margin: 18px 0 10px; }
+      .pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 999px; background: rgba(17, 24, 39, 0.55); box-shadow: var(--shadow); }
+      .btn { cursor: pointer; font: inherit; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: rgba(124, 58, 237, 0.18); color: var(--text); }
+      .input, select { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.25); color: var(--text); }
+      .footer { margin: 36px 0 40px; color: var(--muted); font-size: 13px; }
+      canvas { background: #0f1620; display: block; width: 100%; height: 100%; border-radius: 12px; border: 1px solid var(--border); }
     </style>
     <script>
       (function () {
@@ -94,15 +118,17 @@ function shell(title: string, body: string, extraHead = "") {
   </head>
   <body>
     <header class="container nav">
-      <a class="brand" href="/">CF Bench (hono)</a>
-      <a href="/stays">Stays</a>
-      <a href="/chart">Chart</a>
-      <a href="/media">Media</a>
-      <a href="/blog">Blog</a>
+      <a class="brand" href="/">CF Bench</a>
+      <nav class="links">
+        <a class="pill" href="/stays">Stays</a>
+        <a class="pill" href="/chart">Chart</a>
+        <a class="pill" href="/media">Media</a>
+        <a class="pill" href="/blog">Blog</a>
+      </nav>
     </header>
     <main class="container">
       ${body}
-      <div class="footer">Hono benchmark route surface rendered directly in the Worker runtime.</div>
+      <div class="footer">Benchmark route surface on Cloudflare Workers.</div>
     </main>
     <script>
       (function () {
@@ -118,13 +144,14 @@ function shell(title: string, body: string, extraHead = "") {
 
 function homePage() {
   return shell(
-    "hono benchmark",
+    "Framework benchmark harness",
     `
       <h1 class="h1">Framework benchmark harness</h1>
       <div class="grid cols-3">
-        <div class="card"><h2>MPA listing flow</h2><p class="muted">Listing index + detail routes.</p><p><a class="pill" href="/stays">Open stays</a></p></div>
-        <div class="card"><h2>SPA chart flow</h2><p class="muted">Interactive chart controls + canvas.</p><p><a class="pill" href="/chart">Open chart</a></p></div>
-        <div class="card"><h2>Media feed flow</h2><p class="muted">Open + next interactions with markers.</p><p><a class="pill" href="/media">Open media</a></p></div>
+        <div class="card"><h2>SPA-like</h2><p class="muted">Interactive chart with symbol switching.</p><p><a class="btn" href="/chart">Open chart</a></p></div>
+        <div class="card"><h2>App pages</h2><p class="muted">Listings index + detail pages.</p><p><a class="btn" href="/stays">Browse stays</a></p></div>
+        <div class="card"><h2>SSG blog</h2><p class="muted">Prerendered route content.</p><p><a class="btn" href="/blog">Read blog</a></p></div>
+        <div class="card"><h2>Media feed</h2><p class="muted">Feed browsing and player interactions.</p><p><a class="btn" href="/media">Open media</a></p></div>
       </div>
     `
   );
@@ -138,10 +165,11 @@ function staysPage(input: URL | Request | string) {
   const cards = data.results
     .map(
       (listing) => `
-    <a class="card" data-testid="stay-card" href="/stays/${esc(listing.id)}">
+    <a class="card" data-testid="stay-card" href="/stays/${esc(listing.id)}" style="display:block">
       <div style="font-weight:700">${esc(listing.title)}</div>
-      <div class="small muted">${esc(listing.city)}, ${esc(listing.country)} • ${esc(listing.bedrooms)} bd • ${esc(listing.baths)} ba</div>
-      <div style="margin-top:8px"><strong>$${esc(listing.pricePerNight)}</strong> <span class="muted small">/ night</span></div>
+      <div class="small muted">${esc(listing.city)}, ${esc(listing.country)} • ${esc(listing.bedrooms)} bd • ${esc(listing.baths)} ba • up to ${esc(listing.maxGuests)} guests</div>
+      <div style="margin-top:8px"><strong>${esc(formatUsd(listing.pricePerNight))}</strong> <span class="muted small">/ night</span></div>
+      <div class="muted small" style="margin-top:10px">${esc(listing.summary)}</div>
     </a>`
     )
     .join("");
@@ -151,7 +179,7 @@ function staysPage(input: URL | Request | string) {
     `
       <h1 class="h1">Stays</h1>
       <p class="muted">Airbnb-style listing index.</p>
-      <div class="grid cols-2" style="margin-top:12px">${cards}</div>
+      <div class="grid cols-3" style="margin-top:12px">${cards}</div>
     `
   );
 }

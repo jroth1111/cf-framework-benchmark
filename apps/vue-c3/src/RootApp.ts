@@ -17,7 +17,7 @@ export default defineComponent({
 				]),
 				h("main", { class: "container" }, [
 					h(RouterView),
-					h("div", { class: "footer" }, "Vue C3 variant. Request-time SSR on Cloudflare Workers with client hydration."),
+					h("div", { class: "footer" }, "Benchmark route surface on Cloudflare Workers."),
 				]),
 			]);
 	},

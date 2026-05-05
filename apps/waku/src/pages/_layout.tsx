@@ -8,7 +8,7 @@ type RootLayoutProps = { children: ReactNode };
 export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <>
-      <meta name="description" content="Waku Cloudflare Workers benchmark app." />
+      <meta name="description" content="Cloudflare Workers benchmark app." />
       <script
         dangerouslySetInnerHTML={{
           __html:
@@ -16,31 +16,30 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         }}
       />
       <HydrationMarker />
-      <div className="page-shell">
-        <header className="shell-header">
-          <div>
-            <p className="eyebrow">Cloudflare Workers matrix</p>
-            <a className="brand" href="/">
-              Waku benchmark app
-            </a>
-          </div>
-          <nav className="nav">
-            <a className="nav-link" href="/stays">
+      <div>
+        <header className="container nav">
+          <a className="brand" href="/">
+            CF Bench
+          </a>
+          <nav className="links">
+            <a className="pill" href="/stays">
               Stays
             </a>
-            <a className="nav-link" href="/blog">
-              Blog
-            </a>
-            <a className="nav-link" href="/chart">
+            <a className="pill" href="/chart">
               Chart
             </a>
-            <a className="nav-link" href="/media">
+            <a className="pill" href="/media">
               Media
+            </a>
+            <a className="pill" href="/blog">
+              Blog
             </a>
           </nav>
         </header>
-        <main>{children}</main>
-        <p className="footer">Waku static benchmark route surface deployed to Cloudflare Workers.</p>
+        <main className="container">
+          {children}
+          <p className="footer">Benchmark route surface on Cloudflare Workers.</p>
+        </main>
       </div>
     </>
   );

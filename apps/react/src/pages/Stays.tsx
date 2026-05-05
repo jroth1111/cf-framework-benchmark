@@ -9,14 +9,14 @@ export function Stays() {
     return (
         <>
             <h1 className="h1">Stays</h1>
-            <p className="muted">Airbnb-style listing index rendered by React on Workers.</p>
+            <p className="muted">Airbnb-style listing index.</p>
 
             <div className="grid cols-3">
                 {results.map((l) => (
                     <Link key={l.id} to={`/stays/${l.id}`} data-testid="stay-card" className="card listing-card">
                         <h3 className="listing-title">{l.title}</h3>
                         <p className="muted small">
-                            {l.city}, {l.country}
+                            {l.city}, {l.country} • {l.bedrooms} bd • {l.baths} ba • up to {l.maxGuests} guests
                         </p>
                         <p className="listing-price">
                             {formatUsd(l.pricePerNight)} <span className="muted">/ night</span>
@@ -25,6 +25,7 @@ export function Stays() {
                             <span>{l.rating} ★</span>
                             <span>{l.reviews} reviews</span>
                         </div>
+                        <p className="muted small">{l.summary}</p>
                     </Link>
                 ))}
             </div>

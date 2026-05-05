@@ -12,7 +12,7 @@ const featured = listings.slice(0, 6);
     <div class="grid cols-3">
       <div class="card">
         <h2>MPA stays flow</h2>
-        <p class="muted">Listing index and detail routes rendered by Nuxt on Workers.</p>
+        <p class="muted">Listing index and detail routes served on Cloudflare Workers.</p>
         <p><NuxtLink class="pill" no-prefetch to="/stays">Open stays</NuxtLink></p>
       </div>
       <div class="card">

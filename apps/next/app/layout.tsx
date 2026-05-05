@@ -4,7 +4,7 @@ import "./globals.css";
 import { HydrationMarker } from "./hydration-marker";
 
 export const metadata = {
-  title: "CF Bench — Next.js",
+  title: "CF Bench",
 };
 
 export const viewport: Viewport = {
@@ -28,9 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <main className="container">
           {children}
-          <div className="footer">
-            Next.js variant • stays SSR (server components), blog SSG, chart client component.
-          </div>
+          <div className="footer">Benchmark route surface on Cloudflare Workers.</div>
         </main>
         <HydrationMarker />
       </body>

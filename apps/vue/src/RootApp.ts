@@ -33,7 +33,7 @@ export default defineComponent({
 				]),
 				h("main", { class: "container" }, [
 					h(RouterView),
-					h("div", { class: "footer" }, "Vue variant. Request-time SSR on Cloudflare Workers with client hydration."),
+					h("div", { class: "footer" }, "Benchmark route surface on Cloudflare Workers."),
 				]),
 			]);
 	},

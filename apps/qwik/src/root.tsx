@@ -34,9 +34,7 @@ export default component$(() => {
 
         <main class="container">
           <RouterOutlet />
-          <div class="footer">
-            Qwik City variant • stays SSR, blog static generation, chart uses visible task.
-          </div>
+          <div class="footer">Benchmark route surface on Cloudflare Workers.</div>
         </main>
 
       </body>

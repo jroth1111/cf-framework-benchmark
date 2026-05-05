@@ -1,53 +1,46 @@
 import { Link } from "react-router";
-import { formatUsd, listings } from "../lib/data";
 
 export default function HomeRoute() {
   return (
     <>
-      <h1 className="h1">Cloudflare Framework Benchmark</h1>
+      <h1 className="h1">Framework benchmark harness</h1>
       <div className="grid cols-3">
         <div className="card">
-          <h2>MPA stays flow</h2>
-          <p className="muted">Listing index and detail routes rendered by React Router on Workers.</p>
+          <h2>SPA-like</h2>
+          <p className="muted">Interactive chart with symbol switching.</p>
           <p>
-            <Link className="pill" prefetch="intent" to="/stays">
-              Open stays
-            </Link>
-          </p>
-        </div>
-        <div className="card">
-          <h2>SPA chart flow</h2>
-          <p className="muted">Interactive chart controls and canvas measurements.</p>
-          <p>
-            <Link className="pill" to="/chart">
+            <Link className="btn" to="/chart">
               Open chart
             </Link>
           </p>
         </div>
         <div className="card">
-          <h2>Media flow</h2>
-          <p className="muted">Open and next interactions with benchmark markers.</p>
+          <h2>App pages</h2>
+          <p className="muted">Listings index + detail pages.</p>
           <p>
-            <Link className="pill" to="/media">
+            <Link className="btn" prefetch="intent" to="/stays">
+              Browse stays
+            </Link>
+          </p>
+        </div>
+        <div className="card">
+          <h2>SSG blog</h2>
+          <p className="muted">Prerendered route content.</p>
+          <p>
+            <Link className="btn" prefetch="intent" to="/blog">
+              Read blog
+            </Link>
+          </p>
+        </div>
+        <div className="card">
+          <h2>Media feed</h2>
+          <p className="muted">Feed browsing and player interactions.</p>
+          <p>
+            <Link className="btn" to="/media">
               Open media
             </Link>
           </p>
         </div>
-      </div>
-
-      <h2 style={{ marginTop: 24 }}>Featured stays</h2>
-      <div className="grid cols-3">
-        {listings.slice(0, 6).map((listing) => (
-          <Link key={listing.id} className="card" to={`/stays/${listing.id}`}>
-            <div style={{ fontWeight: 700 }}>{listing.title}</div>
-            <div className="small muted">
-              {listing.city}, {listing.country}
-            </div>
-            <div style={{ marginTop: 8 }}>
-              <strong>{formatUsd(listing.pricePerNight)}</strong> <span className="muted small">/ night</span>
-            </div>
-          </Link>
-        ))}
       </div>
     </>
   );

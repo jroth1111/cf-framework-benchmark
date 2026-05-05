@@ -6,7 +6,7 @@ export default async function MediaPage() {
 
   return (
     <>
-      <title>CF Bench Waku Media</title>
+      <title>CF Bench Media</title>
       <section className="hero">
         <p className="eyebrow">Media</p>
         <h1 className="h1">Media feed</h1>

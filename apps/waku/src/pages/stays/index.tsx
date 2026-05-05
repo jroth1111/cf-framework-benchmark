@@ -5,11 +5,11 @@ export default async function StaysPage() {
 
   return (
     <>
-      <title>CF Bench Waku Stays</title>
+      <title>CF Bench Stays</title>
       <section className="hero">
         <p className="eyebrow">Listings</p>
         <h1 className="h1">Stays</h1>
-        <p className="muted">Airbnb-style listing cards rendered by Waku at build time.</p>
+        <p className="muted">Airbnb-style listing cards served on Cloudflare Workers.</p>
       </section>
       <section className="grid cols-2 section">
         {listings.map((listing) => (

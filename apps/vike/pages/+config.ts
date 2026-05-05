@@ -6,8 +6,8 @@ import vikeReact from "vike-react/config";
 // https://vike.dev/config
 
 export default {
-  title: "CF Bench | Vike",
-  description: "Cloudflare Workers benchmark implementation built with Vike.",
+  title: "CF Bench",
+  description: "Cloudflare Workers benchmark implementation.",
   prerender: true,
   prefetchStaticAssets: false,
 

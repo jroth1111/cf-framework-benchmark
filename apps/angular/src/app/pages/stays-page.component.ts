@@ -10,7 +10,7 @@ import { formatUsd, queryListings, type Listing } from '@cf-bench/dataset';
   template: `
     <section class="page-copy">
       <h1 class="h1">Stays</h1>
-      <p class="muted">Airbnb-style listing index rendered by Angular on Workers.</p>
+      <p class="muted">Airbnb-style listing index.</p>
     </section>
 
     <section class="grid cols-3">
@@ -21,7 +21,10 @@ import { formatUsd, queryListings, type Listing } from '@cf-bench/dataset';
         data-testid="stay-card"
       >
         <h2 class="listing-title">{{ listing.title }}</h2>
-        <p class="muted small">{{ listing.city }}, {{ listing.country }}</p>
+        <p class="muted small">
+          {{ listing.city }}, {{ listing.country }} • {{ listing.bedrooms }} bd • {{ listing.baths }} ba • up to
+          {{ listing.maxGuests }} guests
+        </p>
         <p class="listing-price">
           {{ formatPrice(listing.pricePerNight) }} <span class="muted">/ night</span>
         </p>
@@ -29,6 +32,7 @@ import { formatUsd, queryListings, type Listing } from '@cf-bench/dataset';
           <span>{{ listing.rating }} ★</span>
           <span>{{ listing.reviews }} reviews</span>
         </div>
+        <p class="muted small">{{ listing.summary }}</p>
       </a>
     </section>
   `,

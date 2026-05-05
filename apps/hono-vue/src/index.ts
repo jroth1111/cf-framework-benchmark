@@ -76,7 +76,7 @@ function pageTitle(pathname: string) {
   const blogMatch = pathname.match(/^\/blog\/([^/]+)$/);
   const blogSlug = blogMatch?.[1] ?? "";
   if (blogSlug) return getPost(blogSlug)?.title ?? "Post not found";
-  return "Hono + Vue Benchmark";
+  return "CF Bench";
 }
 
 function htmlHeaders(pathname: string, profile: string | null, start: number) {

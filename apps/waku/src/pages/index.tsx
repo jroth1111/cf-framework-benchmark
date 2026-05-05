@@ -1,18 +1,18 @@
 export default async function HomePage() {
   return (
     <>
-      <title>CF Bench Waku</title>
+      <title>CF Bench</title>
       <section className="hero">
         <p className="eyebrow">Cloudflare Workers benchmark</p>
-        <h1 className="h1">Waku on Workers</h1>
+        <h1 className="h1">Cloudflare Framework Benchmark</h1>
         <p className="muted">
-          Static Waku routes for stays, blog, chart, and media with client hydration on the interactive pages.
+          Shared benchmark routes for stays, blog, chart, and media on Cloudflare Workers.
         </p>
       </section>
       <section className="grid cols-3 section">
         <a className="card feature-card" href="/stays">
           <strong>Stays flow</strong>
-          <p className="muted">Multi-page listing index and detail routes rendered by Waku.</p>
+          <p className="muted">Multi-page listing index and detail routes with shared benchmark data.</p>
         </a>
         <a className="card feature-card" href="/chart">
           <strong>Chart flow</strong>

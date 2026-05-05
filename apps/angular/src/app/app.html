@@ -1,24 +1,22 @@
-<div class="shell">
-  <header class="shell-header">
-    <div>
-      <p class="eyebrow">Cloudflare Workers matrix</p>
-      <a routerLink="/" class="brand">Angular benchmark app</a>
-    </div>
+<div>
+  <header class="container nav">
+    <a routerLink="/" class="brand">CF Bench</a>
 
-    <nav class="nav">
+    <nav class="links">
       <a
         *ngFor="let item of navItems"
         [routerLink]="item.href"
-        routerLinkActive="nav-link-active"
+        routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: item.href === '/' }"
-        class="nav-link"
+        class="pill"
       >
         {{ item.label }}
       </a>
     </nav>
   </header>
 
-  <main class="shell-main">
+  <main class="container">
     <router-outlet></router-outlet>
+    <div class="footer">Benchmark route surface on Cloudflare Workers.</div>
   </main>
 </div>

@@ -16,9 +16,7 @@ export function Layout(props: { title: string; children: JSX.Element }) {
       <main class="container">
         <h1 class="h1">{props.title}</h1>
         {props.children}
-        <div class="footer">
-          SolidJS + Vite variant • <span class="kbd">/chart</span> is SPA-like, blog is SSG pages, stays are multi-page routes.
-        </div>
+        <div class="footer">Benchmark route surface on Cloudflare Workers.</div>
       </main>
     </div>
   );

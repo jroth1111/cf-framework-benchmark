@@ -17,9 +17,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </header>
             <main className="container">
                 {children}
-                <div className="footer">
-                    React SPA variant • client-side routing via react-router-dom.
-                </div>
+                <div className="footer">Benchmark route surface on Cloudflare Workers.</div>
             </main>
         </>
     );

@@ -7,9 +7,9 @@ export function Stays() {
 
   return (
     <Layout title="Stays">
-      <p class="muted">Airbnb-style listing index rendered by Solid on Workers.</p>
+      <p class="muted">Airbnb-style listing index.</p>
 
-      <div class="grid cols-2">
+      <div class="grid cols-3">
         <For each={listings}>
           {(listing) => (
             <a

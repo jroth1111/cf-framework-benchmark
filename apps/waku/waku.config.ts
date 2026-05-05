@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { babel } from '@rolldown/plugin-babel';
+import babel from '@rolldown/plugin-babel';
 import { defineConfig } from 'waku/config';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));

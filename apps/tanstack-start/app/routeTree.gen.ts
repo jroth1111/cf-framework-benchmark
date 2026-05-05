@@ -99,10 +99,10 @@ export interface FileRoutesByFullPath {
   '/api/prices': typeof ApiPricesRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/stays/$id': typeof StaysIdRoute
-  '/blog': typeof BlogIndexRoute
-  '/stays': typeof StaysIndexRoute
+  '/blog/': typeof BlogIndexRoute
+  '/stays/': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
-  '/api/listings': typeof ApiListingsIndexRoute
+  '/api/listings/': typeof ApiListingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -147,10 +147,10 @@ export interface FileRouteTypes {
     | '/api/prices'
     | '/blog/$slug'
     | '/stays/$id'
-    | '/blog'
-    | '/stays'
+    | '/blog/'
+    | '/stays/'
     | '/api/listings/$id'
-    | '/api/listings'
+    | '/api/listings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -225,14 +225,14 @@ declare module '@tanstack/react-router' {
     '/stays/': {
       id: '/stays/'
       path: '/stays'
-      fullPath: '/stays'
+      fullPath: '/stays/'
       preLoaderRoute: typeof StaysIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog/': {
       id: '/blog/'
       path: '/blog'
-      fullPath: '/blog'
+      fullPath: '/blog/'
       preLoaderRoute: typeof BlogIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -281,7 +281,7 @@ declare module '@tanstack/react-router' {
     '/api/listings/': {
       id: '/api/listings/'
       path: '/api/listings'
-      fullPath: '/api/listings'
+      fullPath: '/api/listings/'
       preLoaderRoute: typeof ApiListingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }

@@ -25,12 +25,14 @@ export default defineComponent({
 							{
 								default: () => [
 									h("div", { style: { fontWeight: "700" } }, listing.title),
-									h("div", { class: "small muted" }, `${listing.city}, ${listing.country} • ${listing.bedrooms} bd • ${listing.baths} ba`),
+									h("div", { class: "small muted" }, `${listing.city}, ${listing.country} • ${listing.bedrooms} bd • ${listing.baths} ba • up to ${listing.maxGuests} guests`),
 									h("div", { style: { marginTop: "8px" } }, [
 										h("strong", formatUsd(listing.pricePerNight)),
 										" ",
 										h("span", { class: "muted small" }, "/ night"),
 									]),
+									h("div", { class: "small muted", style: { marginTop: "6px" } }, `★ ${listing.rating} (${listing.reviews} reviews)`),
+									h("p", { class: "muted small" }, listing.summary),
 								],
 							},
 						),

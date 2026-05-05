@@ -69,3 +69,4 @@ coverage
 .dev.vars*
 !.dev.vars.example
 !.env.example
+public/assets/chart-client.js

@@ -9,6 +9,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
+    "prebuild": "esbuild src/app/client/chart-client.ts --bundle --format=esm --target=es2022 --outfile=public/assets/chart-client.js --minify",
+    "predev": "esbuild src/app/client/chart-client.ts --bundle --format=esm --target=es2022 --outfile=public/assets/chart-client.js",
     "build": "vite build",
     "dev": "vite dev",
     "dev:init": "rw-scripts dev-init",
@@ -24,7 +26,10 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@cf-bench/bench-config": "workspace:*",
     "@cf-bench/bench-contract": "workspace:*",
+    "@cf-bench/bench-types": "workspace:*",
+    "@cf-bench/chart-core": "workspace:*",
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "react-server-dom-webpack": "19.2.5",
@@ -38,6 +43,7 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.1",
     "babel-plugin-react-compiler": "1.0.0",
+    "esbuild": "0.28.0",
     "typescript": "6.0.3",
     "vite": "8.0.10",
     "wrangler": "4.87.0"

@@ -12,7 +12,7 @@ export default function Page() {
           <a key={listing.id} href={`/stays/${listing.id}`} data-testid="stay-card" className="card listing-card">
             <h2 className="listing-title">{listing.title}</h2>
             <p className="muted small">
-              {listing.city}, {listing.country}
+              {listing.city}, {listing.country} • {listing.bedrooms} bd • {listing.baths} ba • up to {listing.maxGuests} guests
             </p>
             <p>
               <strong>{formatUsd(listing.pricePerNight)}</strong> <span className="muted">/ night</span>
@@ -23,6 +23,7 @@ export default function Page() {
               <span>{listing.bedrooms} bd</span>
               <span>{listing.baths} ba</span>
             </div>
+            <p className="muted small">{listing.summary}</p>
           </a>
         ))}
       </div>

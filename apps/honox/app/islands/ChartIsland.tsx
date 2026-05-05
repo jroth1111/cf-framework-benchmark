@@ -1,7 +1,20 @@
 import { useState, useEffect, useRef } from "hono/jsx";
-import { chartSymbols } from "@cf-bench/dataset";
+import { getChartPoints } from "@cf-bench/bench-config";
+import { createChart, type ChartInstance } from "@cf-bench/chart-core";
+import {
+	startChartSwitch,
+	markChartReady,
+	markChartError,
+	updateChartCoreMetrics,
+} from "@cf-bench/bench-types";
+import { chartSymbols, chartTimeframes } from "@cf-bench/dataset";
 
-const TIMEFRAMES = ["1m", "5m", "15m", "1h", "4h", "1d"];
+type Indicators = {
+	sma20: boolean;
+	sma50: boolean;
+	ema20: boolean;
+	volume: boolean;
+};
 
 declare global {
 	interface Window {
@@ -12,88 +25,81 @@ declare global {
 				symbol?: string;
 				timeframe?: string;
 			};
-			chartCore?: { lastDrawMs?: number };
+			chartCore?: { lastDrawMs?: number; drawCount?: number; pointCount?: number; indicatorCount?: number };
 			hydration?: { startMs?: number; endMs?: number };
 		};
-	}
-}
-
-function drawChart(canvas: HTMLCanvasElement) {
-	const ctx = canvas.getContext("2d");
-	if (!ctx) return;
-	const { width, height } = canvas;
-	ctx.clearRect(0, 0, width, height);
-	ctx.fillStyle = "#0f1620";
-	ctx.fillRect(0, 0, width, height);
-	const bars = 90;
-	for (let i = 0; i < bars; i++) {
-		const x = (i * width) / bars;
-		const base = Math.sin(i / 5) * 28 + Math.cos(i / 9) * 18;
-		const open = height / 2 + base;
-		const close = open + (Math.random() - 0.5) * 26;
-		const high = Math.min(open, close) - (6 + Math.random() * 10);
-		const low = Math.max(open, close) + (6 + Math.random() * 10);
-		ctx.strokeStyle = close >= open ? "#2ed273" : "#ef5d5d";
-		ctx.beginPath();
-		ctx.moveTo(x + 4, high);
-		ctx.lineTo(x + 4, low);
-		ctx.stroke();
-		ctx.fillStyle = close >= open ? "#2ed273" : "#ef5d5d";
-		ctx.fillRect(x + 1, Math.min(open, close), 6, Math.max(2, Math.abs(close - open)));
 	}
 }
 
 export default function ChartIsland() {
 	const [symbol, setSymbol] = useState(chartSymbols[0]);
 	const [timeframe, setTimeframe] = useState("1h");
+	const [indicators, setIndicators] = useState<Indicators>({
+		sma20: true,
+		sma50: false,
+		ema20: false,
+		volume: true,
+	});
+	const [status, setStatus] = useState("Loading candles...");
 	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const chartRef = useRef<ChartInstance | null>(null);
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
 
-		const w = (globalThis as typeof globalThis & { __CF_BENCH__: Window["__CF_BENCH__"] }).__CF_BENCH__ =
-			(globalThis as typeof globalThis & { __CF_BENCH__: Window["__CF_BENCH__"] }).__CF_BENCH__ || {};
-		const chart = (w.chart = w.chart || {});
-		const core = (w.chartCore = w.chartCore || {});
+		if (!chartRef.current) {
+			chartRef.current = createChart(canvas, {
+				initialViewport: 180,
+				onStats: (stats) => updateChartCoreMetrics(stats),
+			});
+		}
 
-		const started = performance.now();
-		drawChart(canvas);
-		requestAnimationFrame(() => {
-			core.lastDrawMs = Math.max(1, performance.now() - started);
-			chart.ready = true;
-			chart.switchDurationMs = chart.switchDurationMs || 1;
-			chart.symbol = symbol;
-			chart.timeframe = timeframe;
-		});
-	}, [symbol, timeframe]);
+		let cancelled = false;
+		const chart = chartRef.current;
+		startChartSwitch();
+		setStatus("Loading candles...");
+
+		void (async () => {
+			try {
+				const points = getChartPoints(timeframe);
+				const response = await fetch(
+					`/api/prices?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(timeframe)}&points=${points}`,
+					{ cache: "no-store" }
+				);
+				if (!response.ok) throw new Error(`prices request failed: ${response.status}`);
+				const payload = await response.json();
+				if (!Array.isArray(payload.candles)) throw new Error("prices response missing candles");
+				if (cancelled) return;
+
+				chart.setIndicators(indicators);
+				chart.setCandles(payload.candles);
+				markChartReady(symbol, timeframe);
+				setStatus(`${symbol} ${timeframe}`);
+			} catch (error) {
+				if (cancelled) return;
+				markChartError(error instanceof Error ? error : String(error));
+				setStatus("Chart unavailable");
+			}
+		})();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [symbol, timeframe, indicators]);
 
 	function handleSymbolChange(e: Event) {
 		const sel = e.target as HTMLSelectElement;
-		const started = performance.now();
 		setSymbol(sel.value);
-		requestAnimationFrame(() => {
-			const w = (globalThis as typeof globalThis & { __CF_BENCH__: Window["__CF_BENCH__"] }).__CF_BENCH__;
-			if (w?.chart) {
-				w.chart.switchDurationMs = Math.max(1, performance.now() - started);
-				w.chart.symbol = sel.value;
-				w.chart.ready = true;
-			}
-		});
 	}
 
 	function handleTimeframeChange(e: Event) {
 		const sel = e.target as HTMLSelectElement;
-		const started = performance.now();
 		setTimeframe(sel.value);
-		requestAnimationFrame(() => {
-			const w = (globalThis as typeof globalThis & { __CF_BENCH__: Window["__CF_BENCH__"] }).__CF_BENCH__;
-			if (w?.chart) {
-				w.chart.switchDurationMs = Math.max(1, performance.now() - started);
-				w.chart.timeframe = sel.value;
-				w.chart.ready = true;
-			}
-		});
+	}
+
+	function toggleIndicator(name: keyof Indicators) {
+		setIndicators((prev) => ({ ...prev, [name]: !prev[name] }));
 	}
 
 	return (
@@ -110,7 +116,7 @@ export default function ChartIsland() {
 				<label class="pill">
 					<span class="small muted">Timeframe</span>
 					<select class="input" data-testid="timeframe-select" value={timeframe} onChange={handleTimeframeChange}>
-						{TIMEFRAMES.map((tf) => (
+						{chartTimeframes.map((tf) => (
 							<option value={tf} selected={tf === "1h"}>
 								{tf}
 							</option>
@@ -118,17 +124,18 @@ export default function ChartIsland() {
 					</select>
 				</label>
 				<label class="small muted">
-					<input type="checkbox" checked /> SMA20
+					<input data-testid="ind-sma20" data-chart-indicator="sma20" type="checkbox" checked={indicators.sma20} onChange={() => toggleIndicator("sma20")} /> SMA20
 				</label>
 				<label class="small muted">
-					<input type="checkbox" /> SMA50
+					<input data-testid="ind-sma50" data-chart-indicator="sma50" type="checkbox" checked={indicators.sma50} onChange={() => toggleIndicator("sma50")} /> SMA50
 				</label>
 				<label class="small muted">
-					<input type="checkbox" /> EMA20
+					<input data-testid="ind-ema20" data-chart-indicator="ema20" type="checkbox" checked={indicators.ema20} onChange={() => toggleIndicator("ema20")} /> EMA20
 				</label>
 				<label class="small muted">
-					<input type="checkbox" checked /> Volume
+					<input data-testid="ind-volume" data-chart-indicator="volume" type="checkbox" checked={indicators.volume} onChange={() => toggleIndicator("volume")} /> Volume
 				</label>
+				<span class="muted small" data-testid="chart-status">{status}</span>
 			</div>
 			<div style="height:420px; margin-top:12px">
 				<canvas ref={canvasRef} data-testid="chart-canvas" width="1200" height="420" />

@@ -11,7 +11,7 @@ export default async function StaysPage() {
         <h1 className="h1">Stays</h1>
         <p className="muted">Airbnb-style listing cards served on Cloudflare Workers.</p>
       </section>
-      <section className="grid cols-2 section">
+      <section className="grid cols-3">
         {listings.map((listing) => (
           <a key={listing.id} className="card listing-card" data-testid="stay-card" href={`/stays/${listing.id}`}>
             <strong>{listing.title}</strong>

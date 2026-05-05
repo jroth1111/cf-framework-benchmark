@@ -2,6 +2,7 @@ import {
   BENCH_MEDIA_PAGE_SIZE,
   blogPosts,
   chartSymbols,
+  chartTimeframes,
   formatUsd,
   getListing,
   getPost,
@@ -256,86 +257,22 @@ function chartPage() {
           <label class="pill">
             <span class="small muted">Timeframe</span>
             <select class="input" data-testid="timeframe-select">
-              <option value="1m">1m</option>
-              <option value="5m">5m</option>
-              <option value="15m">15m</option>
-              <option value="1h" selected>1h</option>
-              <option value="4h">4h</option>
-              <option value="1d">1d</option>
+              ${chartTimeframes
+                .map((timeframe) => `<option value="${esc(timeframe)}"${timeframe === "1h" ? " selected" : ""}>${esc(timeframe)}</option>`)
+                .join("")}
             </select>
           </label>
-          <label class="small muted"><input type="checkbox" checked /> SMA20</label>
-          <label class="small muted"><input type="checkbox" /> SMA50</label>
-          <label class="small muted"><input type="checkbox" /> EMA20</label>
-          <label class="small muted"><input type="checkbox" checked /> Volume</label>
+          <label class="small muted"><input data-testid="ind-sma20" data-chart-indicator="sma20" type="checkbox" checked /> SMA20</label>
+          <label class="small muted"><input data-testid="ind-sma50" data-chart-indicator="sma50" type="checkbox" /> SMA50</label>
+          <label class="small muted"><input data-testid="ind-ema20" data-chart-indicator="ema20" type="checkbox" /> EMA20</label>
+          <label class="small muted"><input data-testid="ind-volume" data-chart-indicator="volume" type="checkbox" checked /> Volume</label>
+          <span class="muted small" data-testid="chart-status">Loading candles...</span>
         </div>
         <div style="height:420px; margin-top:12px">
           <canvas data-testid="chart-canvas" width="1200" height="420"></canvas>
         </div>
       </div>
-      <script>
-        (function () {
-          var w = globalThis;
-          w.__CF_BENCH__ = w.__CF_BENCH__ || {};
-          var chart = (w.__CF_BENCH__.chart = w.__CF_BENCH__.chart || {});
-          var core = (w.__CF_BENCH__.chartCore = w.__CF_BENCH__.chartCore || {});
-          var canvas = document.querySelector('[data-testid="chart-canvas"]');
-          var ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
-          var symbol = document.querySelector('[data-testid="symbol-select"]');
-          var timeframe = document.querySelector('[data-testid="timeframe-select"]');
-
-          function draw() {
-            var started = performance.now();
-            if (ctx && canvas) {
-              var width = canvas.width;
-              var height = canvas.height;
-              ctx.clearRect(0, 0, width, height);
-              ctx.fillStyle = '#0f1620';
-              ctx.fillRect(0, 0, width, height);
-              var bars = 90;
-              for (var i = 0; i < bars; i++) {
-                var x = (i * width) / bars;
-                var base = Math.sin(i / 5) * 28 + Math.cos(i / 9) * 18;
-                var open = height / 2 + base;
-                var close = open + (Math.random() - 0.5) * 26;
-                var high = Math.min(open, close) - (6 + Math.random() * 10);
-                var low = Math.max(open, close) + (6 + Math.random() * 10);
-                ctx.strokeStyle = close >= open ? '#2ed273' : '#ef5d5d';
-                ctx.beginPath();
-                ctx.moveTo(x + 4, high);
-                ctx.lineTo(x + 4, low);
-                ctx.stroke();
-                ctx.fillStyle = close >= open ? '#2ed273' : '#ef5d5d';
-                ctx.fillRect(x + 1, Math.min(open, close), 6, Math.max(2, Math.abs(close - open)));
-              }
-            }
-
-            requestAnimationFrame(function () {
-              core.lastDrawMs = Math.max(1, performance.now() - started);
-              chart.ready = true;
-            });
-          }
-
-          function switchSymbol() {
-            var started = performance.now();
-            draw();
-            requestAnimationFrame(function () {
-              chart.switchDurationMs = Math.max(1, performance.now() - started);
-              chart.symbol = symbol ? symbol.value : 'BTC';
-              chart.timeframe = timeframe ? timeframe.value : '1h';
-              chart.ready = true;
-            });
-          }
-
-          if (symbol) symbol.addEventListener('change', switchSymbol);
-          if (timeframe) timeframe.addEventListener('change', switchSymbol);
-
-          draw();
-          chart.switchDurationMs = chart.switchDurationMs || 1;
-          chart.symbol = symbol ? symbol.value : 'BTC';
-          chart.timeframe = timeframe ? timeframe.value : '1h';
-        })();
-      </script>
+      <script type="module" src="/assets/chart-client.js"></script>
     `
   );
 }

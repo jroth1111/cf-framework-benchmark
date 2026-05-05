@@ -162,7 +162,7 @@ function classifyRouteHydration(sources, scenario) {
     const rel = sourceFile.relative.toLowerCase();
     const markers = [];
     if (/\.lazy\.|lazy\s*\(|dynamic\s*\(|import\s*\(/.test(sourceFile.relative) || /lazy\s*\(|dynamic\s*\(|import\s*\(/.test(sourceFile.source)) markers.push("lazy");
-    if (/["']use client["']/.test(sourceFile.source)) markers.push("client-island");
+    if (/["']use client["']/.test(sourceFile.source) || rel.includes("/islands/")) markers.push("client-island");
     if (/useVisibleTask\$/.test(sourceFile.source)) markers.push("resumable-task");
     if (/useEffect\s*\(|onMount\s*\(|hydrateRoot|createRoot|client:load|client:idle|client:visible|["']use client["']/.test(sourceFile.source)) {
       markers.push("client-hydration");

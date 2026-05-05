@@ -24,11 +24,16 @@ const data = queryListings({ page, pageSize: 12 });
       >
         <div style="font-weight: 700">{{ listing.title }}</div>
         <div class="small muted">
-          {{ listing.city }}, {{ listing.country }} • {{ listing.bedrooms }} bd • {{ listing.baths }} ba
+          {{ listing.city }}, {{ listing.country }} • {{ listing.bedrooms }} bd • {{ listing.baths }} ba • up to
+          {{ listing.maxGuests }} guests
         </div>
         <div style="margin-top: 8px">
           <strong>{{ formatUsd(listing.pricePerNight) }}</strong> <span class="muted small">/ night</span>
         </div>
+        <div class="small muted" style="margin-top: 6px">
+          ★ {{ listing.rating }} ({{ listing.reviews }} reviews)
+        </div>
+        <p class="muted small">{{ listing.summary }}</p>
       </NuxtLink>
     </div>
   </div>

@@ -1,6 +1,6 @@
 import type React from "react";
 
-import { BENCH_MEDIA_PAGE_SIZE, blogPosts, chartSymbols, getListing, getPost, queryListings, queryMedia } from "../../../../packages/dataset/src/index.js";
+import { BENCH_MEDIA_PAGE_SIZE, blogPosts, chartSymbols, chartTimeframes, getListing, getPost, queryListings, queryMedia } from "../../../../packages/dataset/src/index.js";
 import { route, type Route } from "rwsdk/router";
 
 type PageProps = {
@@ -26,27 +26,15 @@ function Shell({
 }) {
   return (
     <>
-      <section className="hero card">
-        <p className="eyebrow">Cloudflare Workers benchmark</p>
-        <h1>{title}</h1>
-      </section>
-      <nav className="section nav-pills" aria-label="Benchmark routes">
-        <a className="pill" href="/">
-          Overview
-        </a>
-        <a className="pill" href="/stays">
-          Stays
-        </a>
-        <a className="pill" href="/blog">
-          Blog
-        </a>
-        <a className="pill" href="/chart">
-          Chart
-        </a>
-        <a className="pill" href="/media">
-          Media
-        </a>
-      </nav>
+      <header className="top-nav">
+        <a className="brand" href="/">CF Bench</a>
+        <nav className="nav-pills" aria-label="Benchmark routes">
+          <a className="pill" href="/stays">Stays</a>
+          <a className="pill" href="/chart">Chart</a>
+          <a className="pill" href="/media">Media</a>
+          <a className="pill" href="/blog">Blog</a>
+        </nav>
+      </header>
       <section className="section">{children}</section>
     </>
   );
@@ -54,7 +42,8 @@ function Shell({
 
 function HomePage() {
   return (
-    <Shell title="Redwood benchmark routes">
+    <Shell title="Cloudflare Framework Benchmark">
+      <h1 className="h1">Cloudflare Framework Benchmark</h1>
       <div className="grid cols-3">
         <a className="card feature-card" href="/stays">
           <strong>Listing flow</strong>
@@ -78,21 +67,23 @@ function StaysPage() {
 
   return (
     <Shell title="Stays">
-      <div className="grid cols-2">
+      <h1 className="h1">Stays</h1>
+      <p className="muted">Airbnb-style listing index served on Cloudflare Workers.</p>
+      <div className="grid cols-3">
         {listings.map((listing) => (
           <a key={listing.id} className="card stay-card" data-testid="stay-card" href={`/stays/${listing.id}`}>
             <div className="stay-meta">
-              <span className="pill-pill">{listing.city}</span>
               <span className="muted small">
-                {listing.country} • {listing.bedrooms} bd • {listing.baths} ba
+                {listing.city}, {listing.country} • {listing.bedrooms} bd • {listing.baths} ba • up to {listing.maxGuests} guests
               </span>
             </div>
             <strong>{listing.title}</strong>
-            <p className="muted">{listing.summary}</p>
             <div className="price-row">
-              <span className="price">${listing.pricePerNight}</span>
-              <span className="muted small">nightly</span>
+              <span className="price">{formatUsd(listing.pricePerNight)}</span>
+              <span className="muted small">/ night</span>
             </div>
+            <div className="muted small">★ {listing.rating} ({listing.reviews} reviews)</div>
+            <p className="muted">{listing.summary}</p>
           </a>
         ))}
       </div>
@@ -183,61 +174,6 @@ function ChartPage({ rw }: PageProps) {
     </option>
   ));
 
-  const chartScript = `
-const bench = (globalThis.__CF_BENCH__ = globalThis.__CF_BENCH__ || {});
-const chart = (bench.chart = bench.chart || { ready: false });
-const core = (bench.chartCore = bench.chartCore || {});
-const canvas = document.querySelector('[data-testid="chart-canvas"]');
-const ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
-const symbol = document.querySelector('[data-testid="symbol-select"]');
-const timeframe = document.querySelector('[data-testid="timeframe-select"]');
-function draw() {
-  const started = performance.now();
-  if (!ctx || !canvas) return;
-  const width = canvas.width;
-  const height = canvas.height;
-  ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = '#081320';
-  ctx.fillRect(0, 0, width, height);
-  const bars = 90;
-  for (let i = 0; i < bars; i += 1) {
-    const x = (i * width) / bars;
-    const base = Math.sin(i / 5) * 26 + Math.cos(i / 8) * 18;
-    const open = height / 2 + base;
-    const close = open + (Math.sin(i / 3) * 18);
-    const high = Math.min(open, close) - 8;
-    const low = Math.max(open, close) + 8;
-    ctx.strokeStyle = close >= open ? '#39d98a' : '#ff6b6b';
-    ctx.beginPath();
-    ctx.moveTo(x + 4, high);
-    ctx.lineTo(x + 4, low);
-    ctx.stroke();
-    ctx.fillStyle = close >= open ? '#39d98a' : '#ff6b6b';
-    ctx.fillRect(x + 1, Math.min(open, close), 6, Math.max(3, Math.abs(close - open)));
-  }
-  requestAnimationFrame(() => {
-    core.lastDrawMs = Math.max(1, performance.now() - started);
-    chart.ready = true;
-  });
-}
-function update() {
-  const started = performance.now();
-  draw();
-  requestAnimationFrame(() => {
-    chart.switchDurationMs = Math.max(1, performance.now() - started);
-    chart.symbol = symbol ? symbol.value : 'BTC';
-    chart.timeframe = timeframe ? timeframe.value : '1h';
-    chart.ready = true;
-  });
-}
-symbol && symbol.addEventListener('change', update);
-timeframe && timeframe.addEventListener('change', update);
-draw();
-chart.symbol = symbol ? symbol.value : 'BTC';
-chart.timeframe = timeframe ? timeframe.value : '1h';
-chart.switchDurationMs = chart.switchDurationMs || 1;
-`;
-
   return (
     <Shell title="Chart">
       <div className="card stack">
@@ -251,18 +187,32 @@ chart.switchDurationMs = chart.switchDurationMs || 1;
           <label className="control">
             <span className="muted small">Timeframe</span>
             <select className="control-select" data-testid="timeframe-select" defaultValue="1h">
-              <option value="1m">1m</option>
-              <option value="5m">5m</option>
-              <option value="15m">15m</option>
-              <option value="1h">1h</option>
-              <option value="4h">4h</option>
-              <option value="1d">1d</option>
+              {chartTimeframes.map((timeframe) => (
+                <option key={timeframe} value={timeframe}>
+                  {timeframe}
+                </option>
+              ))}
             </select>
           </label>
+          <label className="muted small">
+            <input data-testid="ind-sma20" data-chart-indicator="sma20" type="checkbox" defaultChecked /> SMA20
+          </label>
+          <label className="muted small">
+            <input data-testid="ind-sma50" data-chart-indicator="sma50" type="checkbox" /> SMA50
+          </label>
+          <label className="muted small">
+            <input data-testid="ind-ema20" data-chart-indicator="ema20" type="checkbox" /> EMA20
+          </label>
+          <label className="muted small">
+            <input data-testid="ind-volume" data-chart-indicator="volume" type="checkbox" defaultChecked /> Volume
+          </label>
+          <span className="muted small" data-testid="chart-status">
+            Loading candles...
+          </span>
         </div>
         <canvas className="chart-canvas" data-testid="chart-canvas" width="1200" height="420" />
       </div>
-      <InlineScript nonce={rw.nonce} code={chartScript} />
+      <script nonce={rw.nonce} type="module" src="/assets/chart-client.js" />
     </Shell>
   );
 }

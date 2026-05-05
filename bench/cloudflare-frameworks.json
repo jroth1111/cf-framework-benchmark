@@ -36,6 +36,15 @@
       "benchmarkMode": "worker-baseline",
       "verificationTarget": "wrangler/workerd"
     },
+    "honox": {
+      "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/hono/",
+      "adapter": "HonoX Worker via Hono-compatible Cloudflare deployment",
+      "cloudflareSupport": "hono-derived",
+      "maturity": "stable-adapter",
+      "benchmarkMode": "full-stack-ssr",
+      "verificationTarget": "wrangler/workerd",
+      "notes": "HonoX is tracked as a Hono-derived framework entry because create-cloudflare does not expose a distinct honox template."
+    },
     "hono-solid": {
       "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/hono/",
       "adapter": "Hono Worker plus Solid client assets",

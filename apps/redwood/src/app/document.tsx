@@ -34,6 +34,8 @@ export const Document = ({ children, rw }: DocumentProps) => (
         .cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
         .cols-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
         .stack { display: grid; gap: 14px; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+        .brand { font-weight: 700; font-family: ui-sans-serif, system-ui, sans-serif; }
         .nav-pills { display: flex; flex-wrap: wrap; gap: 10px; }
         .pill, .action-pill { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255,255,255,0.75); color: var(--ink); }
         .pill-pill { display: inline-flex; align-items: center; border-radius: 999px; background: var(--accent-soft); color: var(--accent); padding: 4px 10px; font-size: 0.72rem; font-family: ui-sans-serif, system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.08em; }

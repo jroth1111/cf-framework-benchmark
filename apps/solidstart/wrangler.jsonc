@@ -9,6 +9,9 @@
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "./worker/index.ts",
 	"assets": {
-		"directory": "./dist/client"
-	}
+		"binding": "ASSETS",
+		"directory": "./dist/client",
+		"html_handling": "drop-trailing-slash"
+	},
+	"vars": { "NODE_ENV": "production" }
 }

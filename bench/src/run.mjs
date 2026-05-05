@@ -2341,8 +2341,8 @@ async function main() {
     md += `| ${fw} | ${formatBytes(b?.js || 0)} | ${formatBytes(b?.css || 0)} | ${formatBytes(b?.total || 0)} |\n`;
   }
 
-  md += `\n## Performance Metrics (p50)\n\n`;
-  md += `Note: TTFB is server/network; LCP/TBT/CPU/Heap are client-side metrics.\n\n`;
+  md += `\n## Performance Metrics (p50 · p95)\n\n`;
+  md += `Note: TTFB is server/network; LCP/TBT/CPU/Heap are client-side metrics. p95 in parentheses where n≥3.\n\n`;
   for (const profile of profileNames) {
     md += `### Profile: ${profile}\n\n`;
     for (const phase of phases) {
@@ -2364,7 +2364,20 @@ async function main() {
           md += `| Framework | TTFB (server) | LCP (client) | TBT (client) | Script (client) | CPU (client) | Heap (client) |\n`;
           md += `|-----------|--------------:|-------------:|-------------:|---------------:|-------------:|--------------:|\n`;
           for (const s of bucketRows) {
-            md += `| ${s.framework} | ${s.ttfb.p50?.toFixed(0) ?? '—'}ms | ${s.lcp.p50?.toFixed(0) ?? '—'}ms | ${s.tbt.p50?.toFixed(0) ?? '—'}ms | ${s.scriptBootMs.p50?.toFixed(0) ?? '—'}ms | ${s.cpuTaskMs.p50?.toFixed(0) ?? '—'}ms | ${formatBytes(s.heapUsed.p50 || 0)} |\n`;
+            const showP95 = (s.ttfb.n ?? 0) >= 3;
+            const fmt = (stat, unit = 'ms') => {
+              if (stat?.p50 == null) return '—';
+              return showP95 && stat.p95 != null
+                ? `${stat.p50.toFixed(0)}${unit} (${stat.p95.toFixed(0)})`
+                : `${stat.p50.toFixed(0)}${unit}`;
+            };
+            const fmtHeap = (stat) => {
+              if (stat?.p50 == null) return '—';
+              return showP95 && stat.p95 != null
+                ? `${formatBytes(stat.p50)} (${formatBytes(stat.p95)})`
+                : formatBytes(stat.p50);
+            };
+            md += `| ${s.framework} | ${fmt(s.ttfb)} | ${fmt(s.lcp)} | ${fmt(s.tbt)} | ${fmt(s.scriptBootMs)} | ${fmt(s.cpuTaskMs)} | ${fmtHeap(s.heapUsed)} |\n`;
           }
           md += '\n';
           md += `Sample counts:\n\n`;

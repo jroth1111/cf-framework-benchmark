@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CF Bench React</title>
+    <link rel="stylesheet" href="/src/main.css" />
+    <script>
+      (function () {
+        var w = window;
+        w.__CF_BENCH__ = w.__CF_BENCH__ || {};
+        var h = (w.__CF_BENCH__.hydration = w.__CF_BENCH__.hydration || {});
+        if (h.startMs == null) h.startMs = performance.now();
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"><header class="container nav"><a class="brand" href="/" data-discover="true">CF Bench</a><nav class="links"><a class="pill" href="/stays" data-discover="true">Stays</a><a class="pill" href="/chart" data-discover="true">Chart</a><a class="pill" href="/media" data-discover="true">Media</a><a aria-current="page" class="pill active" href="/blog" data-discover="true">Blog</a></nav></header><main class="container"><a class="pill" style="margin-bottom:16px" href="/blog" data-discover="true">← Back to blog</a><article class="blog-post"><h1 class="h1">SSG, SSR, and SPA in one site</h1><p class="muted">2025-04-02<!-- --> • <!-- -->7<!-- --> min read</p><div class="tags" style="margin-bottom:24px"><span class="tag">architecture</span></div><div data-testid="blog-html"><p>Modern sites are usually hybrid:</p>
+        <ul>
+          <li>Some pages must be interactive (SPA-ish)</li>
+          <li>Some pages benefit from SSR (fast first paint + SEO)</li>
+          <li>Some pages are perfect for SSG (blog/docs)</li>
+        </ul>
+        <p>This benchmark implements all three so you can test your real constraints.</p></div></article><div class="footer">React SPA variant • client-side routing via react-router-dom.</div></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

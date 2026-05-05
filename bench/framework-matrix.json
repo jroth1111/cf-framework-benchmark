@@ -6,6 +6,13 @@
     "platform": "workers",
     "capturedAt": "2026-03-05"
   },
+  "tiers": {
+    "framework-runtime": "Framework-owned full-stack runtime with SSR: results in the headline scoreboard.",
+    "framework-prerender": "Framework that defaults to prerendering/static for bench routes: scoreboard bucketed separately.",
+    "wrapper-baseline": "Custom Worker + library (no framework-owned runtime): useful as a comparison floor, not a framework result.",
+    "worker-baseline": "Hono or Hono+UI-lib: raw Worker HTML generation used as a performance ceiling/lower bound.",
+    "framework-experimental": "Blocked or in-progress framework implementation: excluded from all scoreboards until unblocked."
+  },
   "benchmarkDefaults": {
     "implementationKind": "native",
     "scenarioContracts": {
@@ -55,6 +62,7 @@
       "name": "analog",
       "c3Template": "analog",
       "benchmarkVariantOf": "analog",
+      "tier": "framework-experimental",
       "status": "blocked",
       "benchmarkEnabled": false,
       "appDir": "apps/analog",
@@ -65,6 +73,7 @@
     },
     {
       "name": "angular",
+      "tier": "framework-prerender",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/angular",
@@ -86,6 +95,7 @@
     },
     {
       "name": "astro",
+      "tier": "framework-prerender",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/astro",
@@ -105,6 +115,7 @@
     },
     {
       "name": "hono",
+      "tier": "worker-baseline",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/hono",
@@ -117,6 +128,7 @@
       "name": "hono-solid",
       "c3Template": "hono",
       "benchmarkVariantOf": "solid",
+      "tier": "worker-baseline",
       "composition": {
         "backend": "hono",
         "frontend": "solid"
@@ -133,6 +145,7 @@
       "name": "hono-svelte",
       "c3Template": "hono",
       "benchmarkVariantOf": "svelte",
+      "tier": "worker-baseline",
       "composition": {
         "backend": "hono",
         "frontend": "svelte"
@@ -149,6 +162,7 @@
       "name": "hono-vue",
       "c3Template": "hono",
       "benchmarkVariantOf": "vue",
+      "tier": "worker-baseline",
       "composition": {
         "backend": "hono",
         "frontend": "vue"
@@ -163,6 +177,7 @@
     },
     {
       "name": "next",
+      "tier": "framework-runtime",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/next",
@@ -179,6 +194,7 @@
     },
     {
       "name": "nuxt",
+      "tier": "framework-runtime",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/nuxt",
@@ -189,6 +205,7 @@
     },
     {
       "name": "qwik",
+      "tier": "framework-runtime",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/qwik",
@@ -205,6 +222,7 @@
     },
     {
       "name": "react",
+      "tier": "wrapper-baseline",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/react",
@@ -215,6 +233,7 @@
     },
     {
       "name": "react-router",
+      "tier": "framework-runtime",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/react-router",
@@ -225,6 +244,7 @@
     },
     {
       "name": "redwood",
+      "tier": "framework-runtime",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/redwood",
@@ -235,6 +255,7 @@
     },
     {
       "name": "solid",
+      "tier": "wrapper-baseline",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/solid",
@@ -247,6 +268,7 @@
       "name": "solidstart",
       "c3Template": "solid",
       "benchmarkVariantOf": "solid",
+      "tier": "framework-experimental",
       "status": "blocked",
       "benchmarkEnabled": false,
       "appDir": "apps/solidstart",
@@ -257,6 +279,7 @@
     },
     {
       "name": "svelte",
+      "tier": "framework-runtime",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/svelte",
@@ -267,6 +290,7 @@
     },
     {
       "name": "tanstack-start",
+      "tier": "framework-runtime",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/tanstack-start",
@@ -279,6 +303,7 @@
       "name": "tanstack-start-solid",
       "c3Template": "tanstack-start",
       "benchmarkVariantOf": "tanstack-start",
+      "tier": "framework-runtime",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/tanstack-start-solid",
@@ -289,6 +314,7 @@
     },
     {
       "name": "vike",
+      "tier": "framework-prerender",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/vike",
@@ -312,6 +338,7 @@
     },
     {
       "name": "vue",
+      "tier": "wrapper-baseline",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/vue",
@@ -324,6 +351,7 @@
       "name": "vue-c3",
       "c3Template": "vue",
       "benchmarkVariantOf": "vue",
+      "tier": "wrapper-baseline",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/vue-c3",
@@ -334,6 +362,7 @@
     },
     {
       "name": "waku",
+      "tier": "framework-prerender",
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/waku",

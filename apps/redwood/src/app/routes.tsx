@@ -1,6 +1,6 @@
 import type React from "react";
 
-import { BENCH_MEDIA_PAGE_SIZE, blogPosts, chartSymbols, chartTimeframes, getListing, getPost, queryListings, queryMedia } from "../../../../packages/dataset/src/index.js";
+import { BENCH_MEDIA_PAGE_SIZE, blogPosts, chartSymbols, chartTimeframes, formatUsd, getListing, getPost, queryListings, queryMedia } from "../../../../packages/dataset/src/index.js";
 import { route, type Route } from "rwsdk/router";
 
 type PageProps = {

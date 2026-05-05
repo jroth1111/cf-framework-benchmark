@@ -297,7 +297,7 @@ for (const suite of suites) {
     }
   }
 }
-const cloudflareAudit = await buildCloudflareAudit({ matrixPath });
+const cloudflareAudit = await buildCloudflareAudit({ cwd: path.resolve(path.dirname(matrixPath), ".."), matrixPath });
 const cloudflareByName = new Map(cloudflareAudit.frameworks.map((row) => [row.name, row]));
 
 const report = {

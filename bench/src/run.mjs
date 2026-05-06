@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { chromium } from 'playwright';
+import { chromium, devices } from 'playwright';
 import { buildCloudflareAudit } from '../../scripts/cloudflare-config-audit.mjs';
 import { buildOptimizationAudit } from '../../scripts/cloudflare-optimization-audit.mjs';
 import { provenanceHashForRow, sha256 } from './provenance.mjs';
@@ -84,6 +84,17 @@ const NETWORK_PROFILES = {
 
 const VIEWPORT = { width: 1280, height: 720 };
 const BENCH_PROFILE_HEADER = 'x-cf-bench-profile';
+
+function resolveDeviceContext(profileSettings) {
+  const deviceName = profileSettings?.device;
+  if (!deviceName) return { viewport: VIEWPORT };
+  const dev = devices[deviceName];
+  if (!dev) {
+    console.warn(`Unknown Playwright device "${deviceName}", falling back to default viewport.`);
+    return { viewport: VIEWPORT };
+  }
+  return { ...dev };
+}
 
 function arg(name, fallback = null) {
   const idx = process.argv.indexOf(name);
@@ -1138,6 +1149,57 @@ async function chartInteractions(page, timeoutScale = 1) {
   }
 }
 
+async function journeyInteractions(page, timeoutScale = 1) {
+  const waitMs = 8000 * timeoutScale;
+  await page.waitForSelector('[data-testid="stay-hero-image"]', { timeout: waitMs });
+
+  // Hifi journey step 3: gallery photo click. Force-click the second photo to
+  // generate a real interaction event. Lazy-loaded photos may not be loaded
+  // yet, so click is "force" to avoid Playwright's intersection check.
+  const galleryImgs = page.locator('[data-testid="stay-gallery"] img');
+  const galleryCount = await galleryImgs.count();
+  if (galleryCount >= 2) {
+    try {
+      await galleryImgs.nth(1).click({ timeout: waitMs, force: true });
+    } catch {
+      // Gallery click is best-effort; INP capture continues with the form step.
+    }
+    await page.waitForTimeout(TIMING.CONTROL_CHANGE_MS * timeoutScale);
+  }
+
+  // Hifi journey step 4: booking form fill + submit + wait for total.
+  const form = page.locator('[data-testid="stay-booking-form"]').first();
+  if (await form.count()) {
+    const checkin = form.locator('input[name="checkin"]').first();
+    if (await checkin.count()) {
+      try {
+        await checkin.fill('2026-06-15', { timeout: waitMs });
+        await checkin.blur();
+      } catch {}
+    }
+    const checkout = form.locator('input[name="checkout"]').first();
+    if (await checkout.count()) {
+      try {
+        await checkout.fill('2026-06-18', { timeout: waitMs });
+      } catch {}
+    }
+    const submitBtn = form.locator('button[type="submit"]').first();
+    try {
+      if (await submitBtn.count()) {
+        await submitBtn.click({ timeout: waitMs });
+      } else {
+        await form.locator('input').first().press('Enter');
+      }
+    } catch {}
+    try {
+      await page.waitForSelector('[data-testid="stay-booking-total"]', { timeout: waitMs });
+    } catch {
+      // Booking total wait is best-effort; metric collection still proceeds.
+    }
+    await page.waitForTimeout(TIMING.CONTROL_CHANGE_MS * timeoutScale);
+  }
+}
+
 async function mediaInteractions(page, timeoutScale = 1) {
   const waitMs = 8000 * timeoutScale;
   await page.waitForSelector('[data-testid="media-card"]', { timeout: waitMs });
@@ -1447,6 +1509,8 @@ async function runScenario(
         await waitForHydration(page, TIMING.HYDRATION_MAX_WAIT_MS * timeoutScale);
         if (sc.interactType === 'media' || sc.name === 'media') {
           await mediaInteractions(page, timeoutScale);
+        } else if (sc.interactType === 'journey') {
+          await journeyInteractions(page, timeoutScale);
         } else {
           await chartInteractions(page, timeoutScale);
         }
@@ -1529,9 +1593,9 @@ async function runScenario(
   }
 }
 
-async function warmupFramework(browser, fw, initScript, scenarios, throttling, timeoutScale, benchHeaders) {
+async function warmupFramework(browser, fw, initScript, scenarios, throttling, timeoutScale, benchHeaders, deviceContext) {
   console.log(`  ⏳ Warming up ${fw.name}...`);
-  const ctx = await browser.newContext({ viewport: VIEWPORT, extraHTTPHeaders: benchHeaders || undefined });
+  const ctx = await browser.newContext({ ...(deviceContext || { viewport: VIEWPORT }), extraHTTPHeaders: benchHeaders || undefined });
   await ctx.addInitScript({ content: initScript });
   const page = await ctx.newPage();
   if (throttling) {
@@ -1759,11 +1823,13 @@ async function main() {
     const benchConfig = { profile, ...(profileSettings[profile] || {}) };
     const initScript = buildInitScript(webVitalsSrc, benchConfig);
     const benchHeaders = benchHeadersForProfile(profile);
+    const deviceContext = resolveDeviceContext(profileSettings[profile]);
 
     const profileIterations = iterationsByProfile[profile] ?? iterations;
     const profileWarmup = warmupByProfile[profile] ?? warmupEnabled;
+    const deviceLabel = profileSettings[profile]?.device || 'default';
     console.log(
-      `\n🧪 Profile: ${profile} (chartCache=${benchConfig.chartCache || 'default'}, warmup=${profileWarmup ? 'on' : 'off'}, iterations=${profileIterations})`
+      `\n🧪 Profile: ${profile} (chartCache=${benchConfig.chartCache || 'default'}, device=${deviceLabel}, warmup=${profileWarmup ? 'on' : 'off'}, iterations=${profileIterations})`
     );
     const throttling = throttlingByProfile[profile] || null;
     const timeoutScale = timeoutScaleByProfile[profile] || 1;
@@ -1771,7 +1837,7 @@ async function main() {
     for (const fw of shuffled(frameworks, `${runSeed}:${profile}:warmup`)) {
       if (profileWarmup) {
         console.log(`\n▶ ${fw.name} (${fw.url})`);
-        await warmupFramework(browser, fw, initScript, scenarios, throttling, timeoutScale, benchHeaders);
+        await warmupFramework(browser, fw, initScript, scenarios, throttling, timeoutScale, benchHeaders, deviceContext);
       }
       bundleSizes[fw.name] = { js: 0, css: 0, total: 0, measured: false };
     }
@@ -1796,7 +1862,7 @@ async function main() {
       const { fw, sc, iteration: i } = unit;
       console.log(`\n▶ ${fw.name} (${fw.url}) · ${sc.name} [${i + 1}/${profileIterations}]`);
 
-      const ctx = await browser.newContext({ viewport: VIEWPORT, extraHTTPHeaders: benchHeaders });
+      const ctx = await browser.newContext({ ...deviceContext, extraHTTPHeaders: benchHeaders });
       try {
         await ctx.addInitScript({ content: initScript });
         const page = await ctx.newPage();
@@ -2494,12 +2560,13 @@ async function main() {
   md += '\n';
 
   md += `### Warmup & iterations by profile\n\n`;
-  md += `| Profile | Warmup | Iterations |\n`;
-  md += `|---------|--------|-----------:|\n`;
+  md += `| Profile | Device | Warmup | Iterations |\n`;
+  md += `|---------|--------|--------|-----------:|\n`;
   for (const p of profileNames) {
     const warm = warmupByProfile[p];
     const iter = iterationsByProfile[p];
-    md += `| ${p} | ${warm ? 'enabled' : 'disabled'} | ${Number.isFinite(iter) ? iter : '—'} |\n`;
+    const dev = profileSettings[p]?.device || 'default';
+    md += `| ${p} | ${dev} | ${warm ? 'enabled' : 'disabled'} | ${Number.isFinite(iter) ? iter : '—'} |\n`;
   }
   md += '\n';
 

@@ -43,7 +43,10 @@ function mapScenario(sc) {
     waitUntil: sc.waitUntil || (sc.type === 'spa' ? 'domcontentloaded' : 'load'),
   };
 
-  if (interactions.length > 0) {
+  if (sc.interactType === 'journey') {
+    out.interact = true;
+    out.interactType = 'journey';
+  } else if (interactions.length > 0) {
     out.interact = true;
     out.interactType = looksMedia ? 'media' : 'chart';
   }
@@ -171,9 +174,10 @@ async function main() {
   }
 
   const profileArg = argValue('--profile', null);
+  const isHifiSuite = suiteName.endsWith('_hifi') || suiteName.includes('_hifi');
   const profiles = profileArg
     ? (profileArg === 'both' ? ['parity', 'idiomatic'] : [profileArg])
-    : ['parity', 'idiomatic', 'mobile-cold'];
+    : (isHifiSuite ? ['mobile-hifi'] : ['parity', 'idiomatic', 'mobile-cold']);
 
   const config = {
     iterations: Number(argValue('--iterations', '10')),
@@ -183,6 +187,13 @@ async function main() {
       parity: { chartCache: 'no-store', throttling: 'none' },
       idiomatic: { chartCache: 'default', throttling: 'none' },
       'mobile-cold': { chartCache: 'default', throttling: 'fast-4g', warmup: false, iterations: 10 },
+      'mobile-hifi': {
+        device: 'iPhone 13',
+        chartCache: 'default',
+        throttling: 'fast-4g',
+        warmup: false,
+        iterations: 10,
+      },
     },
     throttlingProfiles: {
       none: { cpu: 1, network: 'none' },

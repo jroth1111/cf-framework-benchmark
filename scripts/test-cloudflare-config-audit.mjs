@@ -42,4 +42,19 @@ assert.ok(qwik, "qwik audit row missing");
 assert.equal(qwik.cloudflare.maturity, "beta");
 assert.equal(qwik.wrangler.nodejsCompat, true);
 
+const hifiReport = await buildCloudflareAudit({ hifiOnly: true });
+assert.equal(hifiReport.ok, true, "hifi-mode audit should pass for the 5 reference frameworks");
+assert.equal(hifiReport.gapCount, 0, "hifi-mode audit should report no gaps");
+assert.equal(hifiReport.mode, "hifi");
+assert.equal(hifiReport.enabledWorkersCount, 5, "hifi-mode audit should target the 5 reference frameworks");
+
+const hifiByName = new Map(hifiReport.frameworks.map((row) => [row.name, row]));
+for (const name of ["next", "redwood", "svelte", "qwik", "solidstart"]) {
+  const row = hifiByName.get(name);
+  assert.ok(row, `${name} hifi audit row missing`);
+  assert.equal(row.hifi?.enabled, true, `${name} should declare hifi.enabled`);
+  assert.equal(row.hifi?.imageTransforms, "enabled", `${name} should declare imageTransforms enabled`);
+  assert.equal(row.gaps.length, 0, `${name} should have no hifi gaps`);
+}
+
 console.log("Cloudflare config audit tests passed.");

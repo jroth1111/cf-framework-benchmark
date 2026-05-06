@@ -198,7 +198,7 @@ function summarizeConfig(config) {
   };
 }
 
-function buildFrameworkRow({ framework, metadata, config }) {
+function buildFrameworkRow({ framework, metadata, config, hifiOnly }) {
   const gaps = [];
   if (!metadata) gaps.push("missing-cloudflare-metadata");
   if (framework?.deploy?.type === "workers" && !config) gaps.push("missing-wrangler-config");
@@ -207,6 +207,11 @@ function buildFrameworkRow({ framework, metadata, config }) {
   if (config?.assets && !config.assets.directory) gaps.push("missing-assets-directory");
   if (framework?.benchmarkEnabled && metadata && !metadata.officialGuide) gaps.push("missing-official-guide");
   if (framework?.benchmarkEnabled && metadata && !metadata.benchmarkMode) gaps.push("missing-benchmark-mode");
+
+  const hifi = framework?.hifi ?? null;
+  if (hifiOnly && hifi?.enabled === true && hifi?.imageTransforms !== "enabled") {
+    gaps.push("hifi-image-transforms-missing");
+  }
 
   return {
     name: framework.name,
@@ -217,6 +222,7 @@ function buildFrameworkRow({ framework, metadata, config }) {
     deployType: framework.deploy?.type ?? null,
     cloudflare: metadata ?? null,
     wrangler: config,
+    hifi,
     gaps,
     ok: gaps.length === 0,
   };
@@ -251,6 +257,7 @@ export async function buildCloudflareAudit({
   cwd = process.cwd(),
   matrixPath = path.join(cwd, "bench", "framework-matrix.json"),
   metadataPath = path.join(cwd, "bench", "cloudflare-frameworks.json"),
+  hifiOnly = false,
 } = {}) {
   const matrixDoc = JSON.parse(await fs.readFile(matrixPath, "utf8"));
   const metadataDoc = JSON.parse(await fs.readFile(metadataPath, "utf8"));
@@ -265,20 +272,24 @@ export async function buildCloudflareAudit({
         framework,
         metadata: metadataByName[framework.name] ?? null,
         config: wranglerConfig,
+        hifiOnly,
       })
     );
   }
 
-  const enabled = frameworks.filter((row) => row.benchmarkEnabled && row.deployType === "workers");
+  const targetRows = hifiOnly
+    ? frameworks.filter((row) => row.deployType === "workers" && row.hifi?.enabled === true)
+    : frameworks.filter((row) => row.benchmarkEnabled && row.deployType === "workers");
   const report = {
     schemaVersion: "1.0.0",
     generatedAt: new Date().toISOString(),
     matrixPath,
     metadataPath,
-    ok: enabled.every((row) => row.ok),
-    gapCount: enabled.reduce((count, row) => count + row.gaps.length, 0),
+    mode: hifiOnly ? "hifi" : "default",
+    ok: targetRows.every((row) => row.ok),
+    gapCount: targetRows.reduce((count, row) => count + row.gaps.length, 0),
     frameworkCount: frameworks.length,
-    enabledWorkersCount: enabled.length,
+    enabledWorkersCount: targetRows.length,
     frameworks,
   };
   return report;
@@ -290,7 +301,8 @@ async function main() {
   const outPath = argValue("--out", null);
   const markdownPath = argValue("--markdown", null);
   const failOnGaps = hasFlag("--fail-on-gaps");
-  const report = await buildCloudflareAudit({ matrixPath, metadataPath });
+  const hifiOnly = hasFlag("--hifi");
+  const report = await buildCloudflareAudit({ matrixPath, metadataPath, hifiOnly });
 
   if (outPath) {
     await fs.mkdir(path.dirname(path.resolve(outPath)), { recursive: true });
@@ -298,16 +310,23 @@ async function main() {
   }
   if (markdownPath) {
     await fs.mkdir(path.dirname(path.resolve(markdownPath)), { recursive: true });
-    const enabled = report.frameworks.filter((row) => row.benchmarkEnabled && row.deployType === "workers");
+    const targetRows = hifiOnly
+      ? report.frameworks.filter((row) => row.deployType === "workers" && row.hifi?.enabled === true)
+      : report.frameworks.filter((row) => row.benchmarkEnabled && row.deployType === "workers");
+    const heading = hifiOnly ? "# Cloudflare Config Audit (hifi suite)" : "# Cloudflare Config Audit";
     await fs.writeFile(
       path.resolve(markdownPath),
-      `# Cloudflare Config Audit\n\nGenerated: ${report.generatedAt}\n\n${markdownTable(enabled)}\n`
+      `${heading}\n\nGenerated: ${report.generatedAt}\n\n${markdownTable(targetRows)}\n`
     );
   }
 
-  console.log(`Cloudflare config audit ${report.ok ? "passed" : "failed"} (${report.enabledWorkersCount} enabled Workers targets, ${report.gapCount} gaps).`);
+  const label = hifiOnly ? "hifi-mode " : "";
+  console.log(`Cloudflare ${label}config audit ${report.ok ? "passed" : "failed"} (${report.enabledWorkersCount} ${hifiOnly ? "hifi" : "enabled"} Workers targets, ${report.gapCount} gaps).`);
   if (failOnGaps && !report.ok) {
-    for (const row of report.frameworks.filter((item) => item.benchmarkEnabled && item.gaps.length)) {
+    const gappy = hifiOnly
+      ? report.frameworks.filter((item) => item.deployType === "workers" && item.hifi?.enabled === true && item.gaps.length)
+      : report.frameworks.filter((item) => item.benchmarkEnabled && item.gaps.length);
+    for (const row of gappy) {
       console.error(`- ${row.name}: ${row.gaps.join(", ")}`);
     }
     process.exit(1);

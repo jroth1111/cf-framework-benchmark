@@ -16,6 +16,12 @@ const CANONICAL_WPT_LOCATIONS = [
   { region: "US", location: "IAD_US_01:Chrome.Native" },
   { region: "EU", location: "DUB_IE_01:Chrome.Native" },
 ];
+const MOBILE_WPT_LOCATIONS = [
+  { region: "MEL", location: "MEL_AU_03:MotoG4.Chrome.3GFast" },
+  { region: "US", location: "IAD_US_01:MotoG4.Chrome.3GFast" },
+  { region: "EU", location: "DUB_IE_01:MotoG4.Chrome.3GFast" },
+];
+const HIFI_SUITE_ID = "mpa_airbnb_hifi";
 const DEFAULT_WPT_LOCATIONS = CANONICAL_WPT_LOCATIONS.map((entry) => entry.location).join(",");
 
 function argValue(flag, fallback = null) {
@@ -26,14 +32,21 @@ function argValue(flag, fallback = null) {
 
 const apiKey = argValue("--api-key", process.env.WPT_API_KEY || "");
 const endpoint = argValue("--endpoint", process.env.WPT_ENDPOINT || "https://www.webpagetest.org");
-const locationsRaw = argValue("--locations", process.env.WPT_LOCATIONS || DEFAULT_WPT_LOCATIONS);
 const targetsPath = toAbsolutePath(argValue("--targets", null), DEFAULT_TARGETS_PATH);
 const matrixPath = toAbsolutePath(argValue("--matrix", null), DEFAULT_MATRIX_PATH);
 const suitesDir = toAbsolutePath(argValue("--suites-dir", null), DEFAULT_SUITES_DIR);
 const only = parseCsvSet(argValue("--only", ""));
 const suiteNames = parseCsvSet(argValue("--suites", "mpa_airbnb,spa_trading_media"));
 const outPath = argValue("--out", path.join(process.cwd(), "bench", "results.remote.json"));
-const wptRuns = Math.max(1, Number(argValue("--runs", process.env.WPT_RUNS || "3")));
+
+const isHifiOnlySuite = suiteNames.size === 1 && suiteNames.has(HIFI_SUITE_ID);
+const explicitMobile = process.argv.includes("--mobile");
+const useMobileProfile = explicitMobile || isHifiOnlySuite;
+const activeLocations = useMobileProfile ? MOBILE_WPT_LOCATIONS : CANONICAL_WPT_LOCATIONS;
+const defaultLocations = activeLocations.map((entry) => entry.location).join(",");
+const locationsRaw = argValue("--locations", process.env.WPT_LOCATIONS || defaultLocations);
+const defaultRuns = useMobileProfile ? "5" : "3";
+const wptRuns = Math.max(1, Number(argValue("--runs", process.env.WPT_RUNS || defaultRuns)));
 
 if (!apiKey) {
   console.error("Missing WebPageTest API key. Set WPT_API_KEY or pass --api-key.");
@@ -129,16 +142,23 @@ function metricsForFirstView(firstView) {
 
 function canonicalRegionForLocation(location) {
   const locationId = String(location).split(/[.:]/)[0];
-  return CANONICAL_WPT_LOCATIONS.find((entry) => entry.location.startsWith(`${locationId}:`))?.region ?? null;
+  const pool = useMobileProfile ? MOBILE_WPT_LOCATIONS : CANONICAL_WPT_LOCATIONS;
+  return pool.find((entry) => entry.location.startsWith(`${locationId}:`))?.region ?? null;
 }
 
 const results = [];
+
+function frameworkIncludesScenario(fw, scenario) {
+  if (scenario.path.startsWith("/hifi/")) return fw.matrix?.hifi?.enabled === true;
+  return true;
+}
 
 for (const fw of frameworks) {
   const baseUrl = fw.url.replace(/\/$/, "");
   if (!baseUrl) continue;
 
   for (const scenario of scenarios) {
+    if (!frameworkIncludesScenario(fw, scenario)) continue;
     const url = `${baseUrl}${scenario.path}`;
     for (const location of locations) {
       console.log(`WPT: ${fw.name} ${scenario.name} @ ${location}`);
@@ -186,7 +206,8 @@ await fs.writeFile(
   JSON.stringify(
     {
       ts: new Date().toISOString(),
-      canonicalLocations: CANONICAL_WPT_LOCATIONS,
+      profile: useMobileProfile ? "mobile" : "desktop",
+      canonicalLocations: activeLocations,
       requestedRuns: wptRuns,
       results,
     },
@@ -194,4 +215,4 @@ await fs.writeFile(
     2
   )
 );
-console.log(`Remote results written to ${path.relative(process.cwd(), outPath)}`);
+console.log(`Remote results (${useMobileProfile ? "mobile" : "desktop"}) written to ${path.relative(process.cwd(), outPath)}`);

@@ -130,6 +130,7 @@ async function fetchHtmlStatus(label, url) {
 
 function routeSample(route) {
   if (route === "/stays/:id") return "/stays/001";
+  if (route === "/hifi/stays/:id") return "/hifi/stays/001";
   if (route === "/blog/:slug") return `/blog/${blogPosts[0]?.slug || "why-this-benchmark-exists"}`;
   return route;
 }
@@ -149,6 +150,17 @@ function requiredTestIdsForRoute(route) {
       return ["stay-card"];
     case "/stays/:id":
       return ["stay-description"];
+    case "/hifi/stays":
+      return ["stay-card"];
+    case "/hifi/stays/:id":
+      return [
+        "stay-hero-image",
+        "stay-gallery",
+        "stay-reviews",
+        "stay-booking-form",
+        "stay-booking-total",
+        "stay-map",
+      ];
     case "/blog":
       return ["blog-post-card"];
     case "/blog/:slug":
@@ -166,9 +178,11 @@ function expectedHtmlCache(route) {
   switch (route) {
     case "/stays":
     case "/blog":
+    case "/hifi/stays":
       return "s-maxage=60";
     case "/stays/:id":
     case "/blog/:slug":
+    case "/hifi/stays/:id":
       return "s-maxage=300";
     case "/":
     case "/chart":
@@ -183,6 +197,8 @@ function expectedDatasetContent(route) {
   switch (route) {
     case "/stays":
     case "/stays/:id":
+    case "/hifi/stays":
+    case "/hifi/stays/:id":
       return [listings[0]?.title].filter(Boolean);
     case "/blog":
     case "/blog/:slug":
@@ -361,8 +377,17 @@ if (!listings.length || !blogPosts.length) {
   throw new Error("Dataset is missing required fixtures for contract route samples.");
 }
 
+function frameworkSupportsHifi(framework) {
+  return framework?.matrix?.hifi?.enabled === true;
+}
+
+function routesForFramework(framework) {
+  if (frameworkSupportsHifi(framework)) return requiredRoutes;
+  return requiredRoutes.filter((route) => !route.startsWith("/hifi/"));
+}
+
 for (const framework of frameworks) {
-  await runFramework(framework, requiredRoutes);
+  await runFramework(framework, routesForFramework(framework));
 }
 
 if (failures.length) {

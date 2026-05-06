@@ -199,6 +199,11 @@
           "blog_post": { "renderMode": "prerender" }
         }
       },
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled",
+        "reference": true
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/next run deploy"
@@ -227,6 +232,11 @@
           "blog": { "renderMode": "prerender" },
           "blog_post": { "renderMode": "prerender" }
         }
+      },
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled",
+        "reference": true
       },
       "deploy": {
         "type": "workers",
@@ -261,6 +271,11 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/redwood",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled",
+        "reference": true
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/redwood run deploy"
@@ -285,6 +300,11 @@
       "status": "blocked",
       "benchmarkEnabled": false,
       "appDir": "apps/solidstart",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled",
+        "reference": true
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/solidstart run deploy"
@@ -296,6 +316,11 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/svelte",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled",
+        "reference": true
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/svelte run deploy"

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StaysRouteImport } from './routes/stays'
 import { Route as MediaRouteImport } from './routes/media'
+import { Route as HifiRouteImport } from './routes/hifi'
 import { Route as ChartRouteImport } from './routes/chart'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as IndexRouteImport } from './routes/index'
@@ -24,6 +25,9 @@ import { Route as ApiListingsRouteImport } from './routes/api.listings'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiBenchRouteImport } from './routes/api.bench'
 import { Route as ApiListingsIdRouteImport } from './routes/api.listings.$id'
+import { Route as HifiStaysRouteImport } from './routes/hifi.stays'
+import { Route as HifiStaysIndexRouteImport } from './routes/hifi.stays.index'
+import { Route as HifiStaysIdRouteImport } from './routes/hifi.stays.$id'
 
 const StaysRoute = StaysRouteImport.update({
   id: '/stays',
@@ -33,6 +37,11 @@ const StaysRoute = StaysRouteImport.update({
 const MediaRoute = MediaRouteImport.update({
   id: '/media',
   path: '/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HifiRoute = HifiRouteImport.update({
+  id: '/hifi',
+  path: '/hifi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChartRoute = ChartRouteImport.update({
@@ -100,11 +109,27 @@ const ApiListingsIdRoute = ApiListingsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiListingsRoute,
 } as any)
+const HifiStaysRoute = HifiStaysRouteImport.update({
+  id: '/stays',
+  path: '/stays',
+  getParentRoute: () => HifiRoute,
+} as any)
+const HifiStaysIndexRoute = HifiStaysIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => HifiStaysRoute,
+} as any)
+const HifiStaysIdRoute = HifiStaysIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => HifiStaysRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/blog': typeof BlogRouteWithChildren
   '/chart': typeof ChartRoute
+  '/hifi': typeof HifiRouteWithChildren
   '/media': typeof MediaRoute
   '/stays': typeof StaysRouteWithChildren
   '/api/bench': typeof ApiBenchRoute
@@ -113,14 +138,18 @@ export interface FileRoutesByFullPath {
   '/api/media': typeof ApiMediaRoute
   '/api/prices': typeof ApiPricesRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/hifi/stays': typeof HifiStaysRouteWithChildren
   '/stays/$id': typeof StaysIdRoute
   '/blog/': typeof BlogIndexRoute
   '/stays/': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
+  '/hifi/stays/$id': typeof HifiStaysIdRoute
+  '/hifi/stays/': typeof HifiStaysIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chart': typeof ChartRoute
+  '/hifi': typeof HifiRouteWithChildren
   '/media': typeof MediaRoute
   '/api/bench': typeof ApiBenchRoute
   '/api/health': typeof ApiHealthRoute
@@ -132,12 +161,15 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogIndexRoute
   '/stays': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
+  '/hifi/stays/$id': typeof HifiStaysIdRoute
+  '/hifi/stays': typeof HifiStaysIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/blog': typeof BlogRouteWithChildren
   '/chart': typeof ChartRoute
+  '/hifi': typeof HifiRouteWithChildren
   '/media': typeof MediaRoute
   '/stays': typeof StaysRouteWithChildren
   '/api/bench': typeof ApiBenchRoute
@@ -146,10 +178,13 @@ export interface FileRoutesById {
   '/api/media': typeof ApiMediaRoute
   '/api/prices': typeof ApiPricesRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/hifi/stays': typeof HifiStaysRouteWithChildren
   '/stays/$id': typeof StaysIdRoute
   '/blog/': typeof BlogIndexRoute
   '/stays/': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
+  '/hifi/stays/$id': typeof HifiStaysIdRoute
+  '/hifi/stays/': typeof HifiStaysIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,6 +192,7 @@ export interface FileRouteTypes {
     | '/'
     | '/blog'
     | '/chart'
+    | '/hifi'
     | '/media'
     | '/stays'
     | '/api/bench'
@@ -165,14 +201,18 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/api/prices'
     | '/blog/$slug'
+    | '/hifi/stays'
     | '/stays/$id'
     | '/blog/'
     | '/stays/'
     | '/api/listings/$id'
+    | '/hifi/stays/$id'
+    | '/hifi/stays/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/chart'
+    | '/hifi'
     | '/media'
     | '/api/bench'
     | '/api/health'
@@ -184,11 +224,14 @@ export interface FileRouteTypes {
     | '/blog'
     | '/stays'
     | '/api/listings/$id'
+    | '/hifi/stays/$id'
+    | '/hifi/stays'
   id:
     | '__root__'
     | '/'
     | '/blog'
     | '/chart'
+    | '/hifi'
     | '/media'
     | '/stays'
     | '/api/bench'
@@ -197,16 +240,20 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/api/prices'
     | '/blog/$slug'
+    | '/hifi/stays'
     | '/stays/$id'
     | '/blog/'
     | '/stays/'
     | '/api/listings/$id'
+    | '/hifi/stays/$id'
+    | '/hifi/stays/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BlogRoute: typeof BlogRouteWithChildren
   ChartRoute: typeof ChartRoute
+  HifiRoute: typeof HifiRouteWithChildren
   MediaRoute: typeof MediaRoute
   StaysRoute: typeof StaysRouteWithChildren
   ApiBenchRoute: typeof ApiBenchRoute
@@ -230,6 +277,13 @@ declare module '@tanstack/solid-router' {
       path: '/media'
       fullPath: '/media'
       preLoaderRoute: typeof MediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hifi': {
+      id: '/hifi'
+      path: '/hifi'
+      fullPath: '/hifi'
+      preLoaderRoute: typeof HifiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chart': {
@@ -323,6 +377,27 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof ApiListingsIdRouteImport
       parentRoute: typeof ApiListingsRoute
     }
+    '/hifi/stays': {
+      id: '/hifi/stays'
+      path: '/stays'
+      fullPath: '/hifi/stays'
+      preLoaderRoute: typeof HifiStaysRouteImport
+      parentRoute: typeof HifiRoute
+    }
+    '/hifi/stays/': {
+      id: '/hifi/stays/'
+      path: '/'
+      fullPath: '/hifi/stays/'
+      preLoaderRoute: typeof HifiStaysIndexRouteImport
+      parentRoute: typeof HifiStaysRoute
+    }
+    '/hifi/stays/$id': {
+      id: '/hifi/stays/$id'
+      path: '/$id'
+      fullPath: '/hifi/stays/$id'
+      preLoaderRoute: typeof HifiStaysIdRouteImport
+      parentRoute: typeof HifiStaysRoute
+    }
   }
 }
 
@@ -362,10 +437,35 @@ const ApiListingsRouteWithChildren = ApiListingsRoute._addFileChildren(
   ApiListingsRouteChildren,
 )
 
+interface HifiStaysRouteChildren {
+  HifiStaysIdRoute: typeof HifiStaysIdRoute
+  HifiStaysIndexRoute: typeof HifiStaysIndexRoute
+}
+
+const HifiStaysRouteChildren: HifiStaysRouteChildren = {
+  HifiStaysIdRoute: HifiStaysIdRoute,
+  HifiStaysIndexRoute: HifiStaysIndexRoute,
+}
+
+const HifiStaysRouteWithChildren = HifiStaysRoute._addFileChildren(
+  HifiStaysRouteChildren,
+)
+
+interface HifiRouteChildren {
+  HifiStaysRoute: typeof HifiStaysRouteWithChildren
+}
+
+const HifiRouteChildren: HifiRouteChildren = {
+  HifiStaysRoute: HifiStaysRouteWithChildren,
+}
+
+const HifiRouteWithChildren = HifiRoute._addFileChildren(HifiRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BlogRoute: BlogRouteWithChildren,
   ChartRoute: ChartRoute,
+  HifiRoute: HifiRouteWithChildren,
   MediaRoute: MediaRoute,
   StaysRoute: StaysRouteWithChildren,
   ApiBenchRoute: ApiBenchRoute,

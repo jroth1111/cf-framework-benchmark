@@ -8,6 +8,7 @@ import {
   getPost,
   queryListings,
 } from "@cf-bench/dataset";
+import { getHifiHeadHtml } from "@cf-bench/hifi-shell";
 
 const CACHE = {
   noStore: "no-store",
@@ -426,6 +427,10 @@ function pageCacheControl(pathname: string) {
   if (pathname === "/stays" || pathname === "/blog") return CACHE.short;
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return CACHE.detail;
   return CACHE.noStore;
+}
+
+export function renderHifiShell(title: string, bodyHtml: string) {
+  return shell(title, bodyHtml, getHifiHeadHtml());
 }
 
 export function handleHonoPageRequest(request: Request) {

@@ -13,6 +13,7 @@
     "@cf-bench/bench-types": "workspace:*",
     "@cf-bench/chart-core": "workspace:*",
     "@cf-bench/dataset": "workspace:*",
+    "@cf-bench/hifi-shell": "workspace:*",
     "@cf-bench/ui": "workspace:*",
     "react": "19.2.5",
     "react-dom": "19.2.5",

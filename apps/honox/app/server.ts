@@ -5,15 +5,22 @@ type Env = { ASSETS?: Fetcher };
 
 const CACHE_LIST = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
 const CACHE_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
+const CACHE_HIFI_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
 
-function benchmarkPageKind(pathname: string): "list" | "detail" | null {
+type PageKind = "list" | "detail" | "hifi-list" | "hifi-detail" | null;
+
+function benchmarkPageKind(pathname: string): PageKind {
 	pathname = pathname.replace(/\/+$/, "") || "/";
+	if (pathname === "/hifi/stays") return "hifi-list";
+	if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "hifi-detail";
 	if (pathname === "/stays" || pathname === "/blog") return "list";
 	if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
 	return null;
 }
 
-function benchmarkPageCache(profile: string | null, kind: "list" | "detail" | null): string {
+function benchmarkPageCache(profile: string | null, kind: PageKind): string {
+	if (kind === "hifi-list") return CACHE_LIST;
+	if (kind === "hifi-detail") return CACHE_HIFI_DETAIL;
 	if (profile === "idiomatic" || profile === "mobile-cold") {
 		if (kind === "detail") return CACHE_DETAIL;
 		if (kind === "list") return CACHE_LIST;

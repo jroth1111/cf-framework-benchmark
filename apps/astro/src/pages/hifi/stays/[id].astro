@@ -1,0 +1,24 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { getListing } from "@cf-bench/dataset";
+import { getHifiStayDetailParts } from "@cf-bench/hifi-shell";
+
+export const prerender = false;
+
+const id = Astro.params.id ?? "";
+const listing = getListing(id);
+const parts = getHifiStayDetailParts(listing);
+const title = listing ? listing.title : "Stay not found";
+const bodyHtml = listing ? parts.body : parts.notFound;
+---
+<Base title={title}>
+  <Fragment slot="head">
+    <script async src="/__bench/sdk/maps.js" is:inline></script>
+    <script async src="/__bench/sdk/analytics.js" is:inline></script>
+  </Fragment>
+  <Fragment set:html={bodyHtml} />
+  <script>
+    import { attachHifiBookingForms } from "@cf-bench/hifi-shell";
+    attachHifiBookingForms();
+  </script>
+</Base>

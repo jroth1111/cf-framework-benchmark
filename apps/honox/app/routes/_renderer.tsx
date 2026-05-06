@@ -27,7 +27,7 @@ const CSS = `
 const HYDRATION_START = `(function(){var w=globalThis;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(!Number.isFinite(h.startMs))h.startMs=performance.now();})();`;
 const HYDRATION_END = `(function(){var w=globalThis;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(h.endMs==null)h.endMs=h.startMs??performance.now();})();`;
 
-export default jsxRenderer(({ children, title }) => {
+export default jsxRenderer(({ children, title, hifi }) => {
 	return (
 		<html lang="en">
 			<head>
@@ -36,6 +36,8 @@ export default jsxRenderer(({ children, title }) => {
 				<title>{title ?? "HonoX Benchmark"}</title>
 				<style dangerouslySetInnerHTML={{ __html: CSS }} />
 				<script dangerouslySetInnerHTML={{ __html: HYDRATION_START }} />
+				{hifi ? <script async src="/__bench/sdk/maps.js" /> : null}
+				{hifi ? <script async src="/__bench/sdk/analytics.js" /> : null}
 				<Script src="/app/client.ts" />
 			</head>
 			<body>

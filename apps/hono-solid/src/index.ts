@@ -21,6 +21,8 @@ function normalizeBenchPath(pathname: string) {
 
 function cacheKind(pathname: string) {
   pathname = normalizeBenchPath(pathname);
+  if (pathname === "/hifi/stays") return "hifi-list";
+  if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "hifi-detail";
   if (pathname === "/stays" || pathname === "/blog") return "list";
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
   return null;
@@ -28,6 +30,8 @@ function cacheKind(pathname: string) {
 
 function cacheHeader(pathname: string, profile: string | null) {
   const kind = cacheKind(pathname);
+  if (kind === "hifi-list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
+  if (kind === "hifi-detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
   if (profile === "idiomatic" || profile === "mobile-cold") {
     if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
     if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
@@ -117,8 +121,10 @@ async function renderDocument(pathname: string, env: Bindings, request: Request)
   const clientScript = includeClient
     ? `\n    <script type="module" src="/${clientEntry.file}"></script>`
     : `\n    <script>(function(){var w=window;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(h.endMs==null)h.endMs=h.startMs??performance.now();})();</script>`;
+  const headExtras = route.headExtras ? `\n    ${route.headExtras}` : "";
+  const tailExtras = route.tailExtras ?? "";
 
-  return `<!doctype html>
+  const html = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -132,12 +138,13 @@ ${styleLinks}
         var h = (w.__CF_BENCH__.hydration = w.__CF_BENCH__.hydration || {});
         if (h.startMs == null) h.startMs = performance.now();
       })();
-    </script>
+    </script>${headExtras}
   </head>
   <body data-route="${route.route}">
-    <div id="app">${route.html}</div>${pagePropsScript}${clientScript}
+    <div id="app">${route.html}</div>${tailExtras}${pagePropsScript}${clientScript}
   </body>
 </html>`;
+  return { html, status: route.status ?? 200 };
 }
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -149,10 +156,10 @@ app.all("*", async (c) => {
   const url = new URL(c.req.raw.url);
   const start = performance.now();
   if (!url.pathname.includes(".")) {
-    const html = await renderDocument(url.pathname, c.env, c.req.raw);
-    if (html) {
-        return new Response(html, {
-          status: 200,
+    const document = await renderDocument(url.pathname, c.env, c.req.raw);
+    if (document) {
+        return new Response(document.html, {
+          status: document.status,
         headers: applyHtmlHeaders(null, normalizeBenchPath(url.pathname), c.req.header("x-cf-bench-profile") ?? null, start),
       });
     }

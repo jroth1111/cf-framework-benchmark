@@ -7,20 +7,28 @@ type BenchEnv = Env & {
 const BENCH_PROFILE_HEADER = "x-cf-bench-profile";
 const CACHE_LIST = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
 const CACHE_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
+const CACHE_HIFI_LIST = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
+const CACHE_HIFI_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
+
+type CacheKind = "list" | "detail" | "hifi-list" | "hifi-detail";
 
 function normalizeBenchPath(pathname: string) {
   return pathname.replace(/\/+$/, "") || "/";
 }
 
-function cacheKind(pathname: string) {
+function cacheKind(pathname: string): CacheKind | null {
   pathname = normalizeBenchPath(pathname);
   if (pathname === "/stays" || pathname === "/blog") return "list";
+  if (pathname === "/hifi/stays") return "hifi-list";
+  if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "hifi-detail";
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
   return null;
 }
 
-function cacheHeader(profile: string | null, kind: "list" | "detail" | null) {
+function cacheHeader(profile: string | null, kind: CacheKind | null) {
   if (profile === "idiomatic" || profile === "mobile-cold") {
+    if (kind === "hifi-detail") return CACHE_HIFI_DETAIL;
+    if (kind === "hifi-list") return CACHE_HIFI_LIST;
     if (kind === "detail") return CACHE_DETAIL;
     if (kind === "list") return CACHE_LIST;
   }

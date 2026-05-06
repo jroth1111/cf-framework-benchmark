@@ -102,6 +102,43 @@ function arg(name, fallback = null) {
   return process.argv[idx + 1] ?? fallback;
 }
 
+async function connectRealDevice(target) {
+  const [providerRaw, deviceRaw] = String(target).split(':', 2);
+  const provider = (providerRaw || '').toLowerCase();
+  const device = (deviceRaw || '').toLowerCase();
+  if (provider !== 'browserstack') {
+    throw new Error(`--realdevice supports only browserstack:* targets (got ${target}).`);
+  }
+  const user = process.env.BROWSERSTACK_USER;
+  const key = process.env.BROWSERSTACK_KEY;
+  if (!user || !key) {
+    throw new Error('--realdevice browserstack:* requires BROWSERSTACK_USER and BROWSERSTACK_KEY env vars.');
+  }
+  const caps = {
+    browser: 'chrome',
+    realMobile: 'true',
+    'browserstack.user': user,
+    'browserstack.key': key,
+    'browserstack.local': 'false',
+    'browserstack.video': 'false',
+    name: 'cf-bench-realdevice',
+    project: 'cf-framework-benchmark',
+  };
+  if (device === 'iphone-13') {
+    caps.os = 'ios';
+    caps.os_version = '15';
+    caps.device = 'iPhone 13';
+  } else if (device === 'pixel-7') {
+    caps.os = 'android';
+    caps.os_version = '13.0';
+    caps.device = 'Google Pixel 7';
+  } else {
+    throw new Error(`Unknown browserstack device "${deviceRaw}". Supported: iphone-13, pixel-7.`);
+  }
+  const wsEndpoint = `wss://cdp.browserstack.com/playwright?caps=${encodeURIComponent(JSON.stringify(caps))}`;
+  return chromium.connect(wsEndpoint);
+}
+
 function flag(name) {
   return process.argv.includes(name);
 }
@@ -1795,7 +1832,10 @@ async function main() {
 
   const webVitalsSrc = await loadWebVitalsScript();
 
-  const browser = await chromium.launch({ headless });
+  const realDeviceTarget = arg('--realdevice', null);
+  const browser = realDeviceTarget
+    ? await connectRealDevice(realDeviceTarget)
+    : await chromium.launch({ headless });
   const browserVersion = browser.version();
   const browserEnv = await getBrowserEnv(browser);
   const benchApiByFramework = {};

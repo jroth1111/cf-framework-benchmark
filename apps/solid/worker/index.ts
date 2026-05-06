@@ -22,11 +22,15 @@ function cacheKind(pathname: string) {
   pathname = normalizeBenchPath(pathname);
   if (pathname === "/stays" || pathname === "/blog") return "list";
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
+  if (pathname === "/hifi/stays") return "hifi-list";
+  if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "hifi-detail";
   return null;
 }
 
 function cacheHeader(pathname: string, profile: string | null) {
   const kind = cacheKind(pathname);
+  if (kind === "hifi-list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
+  if (kind === "hifi-detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
   if (profile === "idiomatic" || profile === "mobile-cold") {
     if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
     if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
@@ -114,6 +118,11 @@ async function renderDocument(pathname: string, env: Env, request: Request) {
     : '\n    <script>(function(){var w=globalThis;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(h.endMs==null)h.endMs=h.startMs??performance.now();})();</script>';
   const clientScript = includeClient ? `\n    <script type="module" src="/${clientEntry.file}"></script>` : "";
 
+  const headExtra = route.headExtra ? `\n    ${route.headExtra}` : "";
+  const bodyScript = route.bodyScript
+    ? `\n    <script>${route.bodyScript}</script>`
+    : "";
+
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -128,10 +137,10 @@ ${styleLinks}
         var h = (w.__CF_BENCH__.hydration = w.__CF_BENCH__.hydration || {});
         if (h.startMs == null) h.startMs = performance.now();
       })();
-    </script>
+    </script>${headExtra}
   </head>
   <body data-route="${route.route}">
-    <div id="app">${route.html}</div>${pagePropsScript}${hydrationTail}${clientScript}
+    <div id="app">${route.html}</div>${pagePropsScript}${hydrationTail}${clientScript}${bodyScript}
   </body>
 </html>`;
 }

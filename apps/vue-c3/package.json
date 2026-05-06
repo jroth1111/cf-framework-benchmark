@@ -16,6 +16,7 @@
 		"@cf-bench/bench-types": "workspace:*",
 		"@cf-bench/chart-core": "workspace:*",
 		"@cf-bench/dataset": "workspace:*",
+		"@cf-bench/hifi-shell": "workspace:*",
 		"@cf-bench/ui": "workspace:*",
 		"vue": "3.5.33",
 		"vue-router": "5.0.6"

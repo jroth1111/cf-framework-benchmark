@@ -37,7 +37,8 @@
     "bench:smoke": "pnpm -C bench exec node src/run-v4.mjs --suite mpa_airbnb --iterations 1 --profile parity --out ./bench/results.v4.mpa_airbnb.smoke.json && pnpm -C bench exec node src/run-v4.mjs --suite spa_trading_media --iterations 1 --profile parity --out ./bench/results.v4.spa_trading_media.smoke.json",
     "bench:stability": "node scripts/bench-stability.mjs",
     "bench:load": "pnpm -C bench run load",
-    "bench:remote": "node scripts/bench-remote.mjs"
+    "bench:remote": "node scripts/bench-remote.mjs",
+    "lighthouse:compare": "node scripts/lighthouse-compare.mjs"
   },
   "devDependencies": {
     "typescript": "6.0.3"

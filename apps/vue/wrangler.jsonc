@@ -16,6 +16,8 @@
 			"/blog/*",
 			"/chart",
 			"/media",
+			"/hifi/stays",
+			"/hifi/stays/*",
 			"/api/*"
 		]
 	},

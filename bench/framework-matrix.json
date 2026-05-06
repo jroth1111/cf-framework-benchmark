@@ -119,6 +119,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/hono",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono run deploy"
@@ -136,6 +140,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/hono-solid",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono-solid run deploy"
@@ -170,6 +178,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/hono-vue",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono-vue run deploy"
@@ -182,6 +194,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/honox",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/honox run deploy"
@@ -215,6 +231,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/nuxt",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/nuxt run deploy"
@@ -249,6 +269,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/react",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/react run deploy"
@@ -260,6 +284,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/react-router",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/react-router run deploy"
@@ -287,6 +315,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/solid",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/solid run deploy"
@@ -332,6 +364,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/tanstack-start",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/tanstack-start run deploy"
@@ -372,6 +408,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/tanstack-start-solid",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/tanstack-start-solid run deploy"
@@ -396,6 +436,10 @@
           "media": { "renderMode": "prerender" }
         }
       },
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vike run deploy"
@@ -407,6 +451,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/vue",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vue run deploy"
@@ -420,6 +468,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/vue-c3",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vue-c3 run deploy"
@@ -443,6 +495,10 @@
           "chart": { "renderMode": "prerender" },
           "media": { "renderMode": "prerender" }
         }
+      },
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
       },
       "deploy": {
         "type": "workers",

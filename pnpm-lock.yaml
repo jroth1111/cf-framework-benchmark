@@ -217,6 +217,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@cf-bench/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -264,6 +267,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       hono:
         specifier: 4.12.17
         version: 4.12.17
@@ -295,6 +301,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@cf-bench/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -348,6 +357,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@cf-bench/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -406,6 +418,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       hono:
         specifier: 4.12.17
         version: 4.12.17
@@ -498,6 +513,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@cf-bench/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -581,6 +599,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@cf-bench/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -630,6 +651,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@cf-bench/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -767,6 +791,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@cf-bench/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -908,6 +935,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@cf-bench/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -966,6 +996,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@cf-bench/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -1009,6 +1042,12 @@ importers:
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
+      '@cf-bench/dataset':
+        specifier: workspace:*
+        version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@photonjs/cloudflare':
         specifier: 0.1.13
         version: 0.1.13(@cloudflare/workers-types@4.20260505.1)(h3@1.15.11)(hono@4.12.17)(srvx@0.11.15)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(wrangler@4.87.0(@cloudflare/workers-types@4.20260505.1))
@@ -1064,6 +1103,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@cf-bench/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -1119,6 +1161,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       '@cf-bench/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -1171,6 +1216,9 @@ importers:
       '@cf-bench/dataset':
         specifier: workspace:*
         version: link:../../packages/dataset
+      '@cf-bench/hifi-shell':
+        specifier: workspace:*
+        version: link:../../packages/hifi-shell
       hono:
         specifier: 4.12.17
         version: 4.12.17

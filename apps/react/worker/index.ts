@@ -1,4 +1,5 @@
 import { handleContractApi } from "@cf-bench/bench-contract";
+import { getHifiHeadHtml } from "@cf-bench/hifi-shell";
 import { renderApp } from "../src/entry-server";
 
 type Env = {
@@ -15,6 +16,8 @@ function normalizeBenchPath(pathname: string) {
 
 function cacheKind(pathname: string) {
     pathname = normalizeBenchPath(pathname);
+    if (pathname === "/hifi/stays") return "hifi-list";
+    if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "hifi-detail";
     if (pathname === "/stays" || pathname === "/blog") return "list";
     if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
     return null;
@@ -22,6 +25,8 @@ function cacheKind(pathname: string) {
 
 function cacheHeader(pathname: string, profile: string | null) {
     const kind = cacheKind(pathname);
+    if (kind === "hifi-detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
+    if (kind === "hifi-list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
     if (profile === "idiomatic" || profile === "mobile-cold") {
         if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
         if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
@@ -40,7 +45,14 @@ function isBenchmarkRoute(pathname: string) {
     if (pathname === "/" || pathname === "/stays" || pathname === "/blog" || pathname === "/chart" || pathname === "/media") {
         return true;
     }
+    if (pathname === "/hifi/stays") return true;
+    if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return true;
     return /^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname);
+}
+
+function isHifiRoute(pathname: string) {
+    pathname = normalizeBenchPath(pathname);
+    return pathname === "/hifi/stays" || /^\/hifi\/stays\/[^/]+$/.test(pathname);
 }
 
 function needsClient(pathname: string) {
@@ -105,6 +117,13 @@ function stripClientAssets(shell: string) {
         .replace(/\s*<script type="module"[^>]*src="[^"]+"[^>]*><\/script>\s*/g, "");
 }
 
+function injectHifiHead(shell: string) {
+    const headHtml = getHifiHeadHtml();
+    const headOpen = shell.indexOf("</head>");
+    if (headOpen === -1) return shell;
+    return shell.slice(0, headOpen) + headHtml + shell.slice(headOpen);
+}
+
 function injectDocument(shell: string, url: URL, appHtml: string) {
     if (!shell.includes('<div id="root"></div>')) {
         throw new Error("React shell missing root placeholder");
@@ -116,7 +135,10 @@ function injectDocument(shell: string, url: URL, appHtml: string) {
     const hydrationTail = includeClient
         ? ""
         : '<script>(function(){var w=globalThis;w.__CF_BENCH__=w.__CF_BENCH__||{};var h=(w.__CF_BENCH__.hydration=w.__CF_BENCH__.hydration||{});if(h.endMs==null)h.endMs=h.startMs??performance.now();})();</script>';
-    const documentShell = includeClient ? shell : stripClientAssets(shell);
+    let documentShell = includeClient ? shell : stripClientAssets(shell);
+    if (isHifiRoute(pathname)) {
+        documentShell = injectHifiHead(documentShell);
+    }
     return documentShell.replace('<div id="root"></div>', `${renderBootstrap(url)}\n    ${root}${hydrationTail}`);
 }
 

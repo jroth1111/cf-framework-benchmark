@@ -1,5 +1,6 @@
 import { handleContractApi } from "@cf-bench/bench-contract";
 import { getListing, getPost } from "@cf-bench/dataset";
+import { getHifiHeadHtml } from "@cf-bench/hifi-shell";
 import { render } from "../src/entry-server";
 
 type BenchEnv = Env & {
@@ -17,7 +18,17 @@ function cacheKind(pathname: string) {
 	return null;
 }
 
+function isHifiStaysListPath(pathname: string) {
+	return normalizeBenchPath(pathname) === "/hifi/stays";
+}
+
+function isHifiStayDetailPath(pathname: string) {
+	return /^\/hifi\/stays\/[^/]+$/.test(normalizeBenchPath(pathname));
+}
+
 function cacheHeader(pathname: string, profile: string | null) {
+	if (isHifiStaysListPath(pathname)) return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
+	if (isHifiStayDetailPath(pathname)) return "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
 	const kind = cacheKind(pathname);
 	if (profile === "idiomatic" || profile === "mobile-cold") {
 		if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
@@ -32,6 +43,7 @@ function isBenchRoute(pathname: string) {
 		return true;
 	}
 	if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return true;
+	if (isHifiStaysListPath(pathname) || isHifiStayDetailPath(pathname)) return true;
 	return false;
 }
 
@@ -68,6 +80,9 @@ function pageTitle(pathname: string) {
 	if (pathname === "/blog") return "Blog";
 	if (pathname === "/chart") return "Chart";
 	if (pathname === "/media") return "Media";
+	if (pathname === "/hifi/stays") return "Stays (hifi)";
+	const hifiStayMatch = pathname.match(/^\/hifi\/stays\/([^/]+)$/);
+	if (hifiStayMatch) return getListing(hifiStayMatch[1])?.title ?? "Stay not found";
 	const stayMatch = pathname.match(/^\/stays\/([^/]+)$/);
 	if (stayMatch) return getListing(stayMatch[1])?.title ?? "Listing not found";
 	const blogMatch = pathname.match(/^\/blog\/([^/]+)$/);
@@ -133,12 +148,15 @@ function splitShell(shell: string): ShellParts {
 function resolveShellParts(shell: ShellParts, pathname: string, includeClient: boolean): ShellParts {
 	const route = escapeHtml(pathname);
 	const title = escapeHtml(pageTitle(pathname));
-	const head = shell.head
+	let head = shell.head
 		.replaceAll("__CF_BENCH_ROUTE__", route)
 		.replaceAll("__CF_BENCH_TITLE__", title)
 		.replace(CLIENT_ASSETS_RE, "")
 		.replace(includeClient ? /$^/ : CLIENT_MODULE_SCRIPT_RE, "")
 		.replace(includeClient ? /$^/ : CLIENT_MODULE_PRELOAD_RE, "");
+	if (isHifiStaysListPath(pathname) || isHifiStayDetailPath(pathname)) {
+		head = head.replace(/<\/head>/i, `${getHifiHeadHtml()}</head>`);
+	}
 	const tailWithoutMarkers = shell.tail
 		.replaceAll("__CF_BENCH_ROUTE__", route)
 		.replaceAll("__CF_BENCH_TITLE__", title)

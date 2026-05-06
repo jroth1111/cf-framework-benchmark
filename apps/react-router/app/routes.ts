@@ -8,4 +8,6 @@ export default [
   route("blog/:slug", "routes/blog-post.tsx"),
   route("chart", "routes/chart.tsx"),
   route("media", "routes/media.tsx"),
+  route("hifi/stays", "routes/hifi-stays.tsx"),
+  route("hifi/stays/:id", "routes/hifi-stay-detail.tsx"),
 ] satisfies RouteConfig;

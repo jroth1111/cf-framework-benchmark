@@ -16,6 +16,8 @@ import { Route as StaysIndexRouteImport } from './routes/stays/index'
 import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as StaysIdRouteImport } from './routes/stays/$id'
 import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
+import { Route as HifiStaysIndexRouteImport } from './routes/hifi/stays/index'
+import { Route as HifiStaysIdRouteImport } from './routes/hifi/stays/$id'
 import { Route as ApiPricesRouteImport } from './routes/api/prices'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
@@ -58,6 +60,20 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/blog/$slug.lazy').then((d) => d.Route))
+const HifiStaysIndexRoute = HifiStaysIndexRouteImport.update({
+  id: '/hifi/stays/',
+  path: '/hifi/stays/',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/hifi/stays/index.lazy').then((d) => d.Route),
+)
+const HifiStaysIdRoute = HifiStaysIdRouteImport.update({
+  id: '/hifi/stays/$id',
+  path: '/hifi/stays/$id',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/hifi/stays/$id.lazy').then((d) => d.Route),
+)
 const ApiPricesRoute = ApiPricesRouteImport.update({
   id: '/api/prices',
   path: '/api/prices',
@@ -103,6 +119,8 @@ export interface FileRoutesByFullPath {
   '/stays/': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
   '/api/listings/': typeof ApiListingsIndexRoute
+  '/hifi/stays/$id': typeof HifiStaysIdRoute
+  '/hifi/stays/': typeof HifiStaysIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +136,8 @@ export interface FileRoutesByTo {
   '/stays': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
   '/api/listings': typeof ApiListingsIndexRoute
+  '/hifi/stays/$id': typeof HifiStaysIdRoute
+  '/hifi/stays': typeof HifiStaysIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +154,8 @@ export interface FileRoutesById {
   '/stays/': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
   '/api/listings/': typeof ApiListingsIndexRoute
+  '/hifi/stays/$id': typeof HifiStaysIdRoute
+  '/hifi/stays/': typeof HifiStaysIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +173,8 @@ export interface FileRouteTypes {
     | '/stays/'
     | '/api/listings/$id'
     | '/api/listings/'
+    | '/hifi/stays/$id'
+    | '/hifi/stays/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +190,8 @@ export interface FileRouteTypes {
     | '/stays'
     | '/api/listings/$id'
     | '/api/listings'
+    | '/hifi/stays/$id'
+    | '/hifi/stays'
   id:
     | '__root__'
     | '/'
@@ -181,6 +207,8 @@ export interface FileRouteTypes {
     | '/stays/'
     | '/api/listings/$id'
     | '/api/listings/'
+    | '/hifi/stays/$id'
+    | '/hifi/stays/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +225,8 @@ export interface RootRouteChildren {
   StaysIndexRoute: typeof StaysIndexRoute
   ApiListingsIdRoute: typeof ApiListingsIdRoute
   ApiListingsIndexRoute: typeof ApiListingsIndexRoute
+  HifiStaysIdRoute: typeof HifiStaysIdRoute
+  HifiStaysIndexRoute: typeof HifiStaysIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +322,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiListingsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hifi/stays/': {
+      id: '/hifi/stays/'
+      path: '/hifi/stays'
+      fullPath: '/hifi/stays/'
+      preLoaderRoute: typeof HifiStaysIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hifi/stays/$id': {
+      id: '/hifi/stays/$id'
+      path: '/hifi/stays/$id'
+      fullPath: '/hifi/stays/$id'
+      preLoaderRoute: typeof HifiStaysIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -309,6 +353,8 @@ const rootRouteChildren: RootRouteChildren = {
   StaysIndexRoute: StaysIndexRoute,
   ApiListingsIdRoute: ApiListingsIdRoute,
   ApiListingsIndexRoute: ApiListingsIndexRoute,
+  HifiStaysIdRoute: HifiStaysIdRoute,
+  HifiStaysIndexRoute: HifiStaysIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

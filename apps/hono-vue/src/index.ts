@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { handleContractApi } from "@cf-bench/bench-contract";
-import { getListing, getPost } from "@cf-bench/dataset";
+import { getListing, getPost, queryListings } from "@cf-bench/dataset";
+import { getHifiHeadHtml, getHifiStayDetailParts, renderHifiStaysListBody } from "@cf-bench/hifi-shell";
 import { render } from "./entry-server";
 
 type Bindings = Env & {
@@ -15,6 +16,8 @@ function normalizeBenchPath(pathname: string) {
 
 function cacheKind(pathname: string) {
   pathname = normalizeBenchPath(pathname);
+  if (pathname === "/hifi/stays") return "hifi-list";
+  if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "hifi-detail";
   if (pathname === "/stays" || pathname === "/blog") return "list";
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
   return null;
@@ -22,11 +25,55 @@ function cacheKind(pathname: string) {
 
 function cacheHeader(pathname: string, profile: string | null) {
   const kind = cacheKind(pathname);
+  if (kind === "hifi-list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
+  if (kind === "hifi-detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
   if (profile === "idiomatic" || profile === "mobile-cold") {
     if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
     if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
   }
   return "no-store";
+}
+
+function isHifiRoute(pathname: string) {
+  pathname = normalizeBenchPath(pathname);
+  return pathname === "/hifi/stays" || /^\/hifi\/stays\/[^/]+$/.test(pathname);
+}
+
+function renderHifiDocument(pathname: string, profile: string | null, start: number) {
+  pathname = normalizeBenchPath(pathname);
+  let title = "Stays (hifi)";
+  let body = "";
+  let inlineScript = "";
+  let status = 200;
+
+  if (pathname === "/hifi/stays") {
+    const listings = queryListings({ page: 1, pageSize: 12 }).results;
+    body = renderHifiStaysListBody(listings);
+  } else {
+    const match = pathname.match(/^\/hifi\/stays\/([^/]+)$/);
+    const id = match?.[1] ?? "";
+    const listing = getListing(id);
+    const parts = getHifiStayDetailParts(listing);
+    title = listing ? listing.title : "Stay not found";
+    body = parts.body;
+    if (listing) inlineScript = `<script>${parts.script}</script>`;
+    if (!listing) status = 404;
+  }
+
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${escapeHtml(title)}</title>
+    ${getHifiHeadHtml()}
+  </head>
+  <body data-route="${escapeHtml(pathname)}">
+    <div id="app">${body}</div>${inlineScript}
+  </body>
+</html>`;
+
+  return new Response(html, { status, headers: htmlHeaders(pathname, profile, start) });
 }
 
 function isBenchRoute(pathname: string) {
@@ -226,6 +273,9 @@ app.all("*", async (c) => {
   if (api) return api;
 
   const url = new URL(c.req.raw.url);
+  if (isHifiRoute(url.pathname)) {
+    return renderHifiDocument(url.pathname, c.req.header("x-cf-bench-profile") ?? null, performance.now());
+  }
   if (isBenchRoute(url.pathname)) {
     return renderDocument(c.req.raw, c.env);
   }

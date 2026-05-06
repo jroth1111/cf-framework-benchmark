@@ -7,6 +7,8 @@ const BlogPage = () => import("../views/BlogPage");
 const BlogPostPage = () => import("../views/BlogPostPage");
 const ChartPage = () => import("../views/ChartPage");
 const MediaPage = () => import("../views/MediaPage");
+const HifiStaysPage = () => import("../views/HifiStaysPage");
+const HifiStayDetailPage = () => import("../views/HifiStayDetailPage");
 
 const routes: RouteRecordRaw[] = [
 	{ path: "/", name: "home", component: HomePage },
@@ -16,6 +18,8 @@ const routes: RouteRecordRaw[] = [
 	{ path: "/blog/:slug", name: "blog-post", component: BlogPostPage },
 	{ path: "/chart", name: "chart", component: ChartPage },
 	{ path: "/media", name: "media", component: MediaPage },
+	{ path: "/hifi/stays", name: "hifi-stays", component: HifiStaysPage },
+	{ path: "/hifi/stays/:id", name: "hifi-stay-detail", component: HifiStayDetailPage },
 ];
 
 export function createBenchRouter(history: RouterHistory) {

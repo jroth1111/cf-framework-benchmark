@@ -1,0 +1,17 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { queryListings } from "@cf-bench/dataset";
+import { renderHifiStaysListBody } from "@cf-bench/hifi-shell";
+
+export const prerender = false;
+
+const listings = queryListings({ page: 1, pageSize: 12 }).results;
+const bodyHtml = renderHifiStaysListBody(listings);
+---
+<Base title="Stays (hifi)">
+  <Fragment slot="head">
+    <script async src="/__bench/sdk/maps.js" is:inline></script>
+    <script async src="/__bench/sdk/analytics.js" is:inline></script>
+  </Fragment>
+  <Fragment set:html={bodyHtml} />
+</Base>

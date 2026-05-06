@@ -9,6 +9,8 @@
 	},
 	"dependencies": {
 		"@cf-bench/bench-contract": "workspace:*",
+		"@cf-bench/dataset": "workspace:*",
+		"@cf-bench/hifi-shell": "workspace:*",
 		"@photonjs/cloudflare": "0.1.13",
 		"react": "19.2.5",
 		"react-dom": "19.2.5",

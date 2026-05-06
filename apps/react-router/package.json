@@ -16,6 +16,7 @@
 		"@cf-bench/bench-types": "workspace:*",
 		"@cf-bench/chart-core": "workspace:*",
 		"@cf-bench/dataset": "workspace:*",
+		"@cf-bench/hifi-shell": "workspace:*",
 		"@cf-bench/ui": "workspace:*",
 		"isbot": "5.1.39",
 		"react": "19.2.5",

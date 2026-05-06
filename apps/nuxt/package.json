@@ -16,6 +16,7 @@
 		"@cf-bench/bench-types": "workspace:*",
 		"@cf-bench/chart-core": "workspace:*",
 		"@cf-bench/dataset": "workspace:*",
+		"@cf-bench/hifi-shell": "workspace:*",
 		"@cf-bench/ui": "workspace:*",
 		"nuxt": "4.4.4",
 		"vue": "3.5.33",

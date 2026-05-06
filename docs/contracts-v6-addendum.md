@@ -164,10 +164,31 @@ Additionally:
 
 ## Phase 1 vs Phase 2
 
-Phase 1 ships hifi routes in five reference frameworks: `next`, `redwood`,
+Phase 1 shipped hifi routes in five reference frameworks: `next`, `redwood`,
 `svelte`, `qwik`, `solidstart`. Frameworks not yet shipping hifi routes are
-flagged `hifi-pending` and excluded from hifi scoreboards until they land.
+flagged `hifi-pending` (matrix `hifi.enabled !== true`) and excluded from
+hifi scoreboards until they land.
 
-Phase 2 expands to the remaining 13 frameworks, adds BrowserStack real-device
-hooks, the MotoG4 mobile WebPageTest profile, and a Lighthouse comparison
-harness against airbnb.com itself.
+Phase 2 expands to the remaining benchmarkEnabled frameworks across the
+React, Hono, Vue, Solid, and TanStack Start paradigms, plus prerender-tier
+frameworks (Astro, Vike, Waku) where feasible. Phase 2 also lands:
+
+- `--realdevice browserstack:iphone-13` runner flag in `bench/src/run.mjs`
+  that swaps `chromium.launch()` for `chromium.connect(<BrowserStack CDP
+  endpoint>)`. Requires `BROWSERSTACK_USER` and `BROWSERSTACK_KEY` env vars.
+  Real-device runs are diagnostic only — canonical hifi rankings remain on
+  Playwright `devices['iPhone 13']` emulation per the Profile Contract.
+- The MotoG4 mobile WebPageTest profile is auto-selected by
+  `scripts/bench-remote.mjs` when the suite list is `mpa_airbnb_hifi`. It
+  defaults to 5 runs per location for tighter mobile p75/p90.
+- `scripts/lighthouse-compare.mjs` runs Lighthouse against a framework's
+  hifi route and a reference Airbnb listing URL, then diffs the headline
+  metrics (LCP, FCP, TBT, CLS, JS bytes). The verdict block flags whether
+  JS bytes, TBT, and LCP land within 2× of the reference — that is the
+  realism bar called out in the verification plan.
+
+Frameworks where hifi cannot be deployed without changing their tier
+(prerender frameworks lacking `@cf-bench/bench-contract` integration or
+where extending the worker entry would be bucket-changing) remain
+`hifi-pending` and are documented in `bench/framework-matrix.json` by the
+absence of a `hifi` block.

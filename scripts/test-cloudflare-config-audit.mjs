@@ -43,18 +43,53 @@ assert.equal(qwik.cloudflare.maturity, "beta");
 assert.equal(qwik.wrangler.nodejsCompat, true);
 
 const hifiReport = await buildCloudflareAudit({ hifiOnly: true });
-assert.equal(hifiReport.ok, true, "hifi-mode audit should pass for the 5 reference frameworks");
+assert.equal(hifiReport.ok, true, "hifi-mode audit should pass after Phase 2 rollout");
 assert.equal(hifiReport.gapCount, 0, "hifi-mode audit should report no gaps");
 assert.equal(hifiReport.mode, "hifi");
-assert.equal(hifiReport.enabledWorkersCount, 5, "hifi-mode audit should target the 5 reference frameworks");
+assert.equal(hifiReport.enabledWorkersCount, 19, "hifi-mode audit should target Phase 1 + Phase 2 frameworks");
 
 const hifiByName = new Map(hifiReport.frameworks.map((row) => [row.name, row]));
-for (const name of ["next", "redwood", "svelte", "qwik", "solidstart"]) {
+const hifiEnabledFrameworks = [
+  "next",
+  "redwood",
+  "svelte",
+  "qwik",
+  "solidstart",
+  "react",
+  "react-router",
+  "hono",
+  "honox",
+  "hono-solid",
+  "hono-vue",
+  "vue",
+  "vue-c3",
+  "nuxt",
+  "solid",
+  "tanstack-start",
+  "tanstack-start-solid",
+  "vike",
+  "waku",
+];
+for (const name of hifiEnabledFrameworks) {
   const row = hifiByName.get(name);
   assert.ok(row, `${name} hifi audit row missing`);
   assert.equal(row.hifi?.enabled, true, `${name} should declare hifi.enabled`);
   assert.equal(row.hifi?.imageTransforms, "enabled", `${name} should declare imageTransforms enabled`);
   assert.equal(row.gaps.length, 0, `${name} should have no hifi gaps`);
 }
+
+const phase1Reference = ["next", "redwood", "svelte", "qwik", "solidstart"];
+for (const name of phase1Reference) {
+  const row = hifiByName.get(name);
+  assert.equal(row.hifi?.reference, true, `${name} should remain a hifi reference framework`);
+}
+
+const astroRow = byName.get("astro");
+assert.ok(astroRow, "astro audit row missing");
+assert.equal(
+  astroRow.hifi ?? null,
+  null,
+  "astro should remain hifi-pending (no @cf-bench/bench-contract integration to serve /__bench/sdk)"
+);
 
 console.log("Cloudflare config audit tests passed.");

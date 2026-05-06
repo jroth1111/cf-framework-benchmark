@@ -9,12 +9,20 @@ import {
   queryListings,
   queryMedia,
 } from "@cf-bench/dataset";
+import {
+  getHifiHeadHtml,
+  getHifiStayDetailParts,
+  renderHifiStaysListBody,
+} from "@cf-bench/hifi-shell";
 
 export type RenderedRoute = {
-  route: "home" | "stays" | "stay" | "blog" | "post" | "chart" | "media";
+  route: "home" | "stays" | "stay" | "blog" | "post" | "chart" | "media" | "hifi-stays" | "hifi-stay";
   title: string;
   html: string;
   pageProps?: { id?: string; slug?: string };
+  headExtras?: string;
+  tailExtras?: string;
+  status?: number;
 };
 
 function esc(value: unknown) {
@@ -253,6 +261,32 @@ export function renderRoute(pathname: string): RenderedRoute | null {
 
   if (pathname === "/media") {
     return { route: "media", title: "Media Feed (SPA-like)", html: renderMedia() };
+  }
+
+  if (pathname === "/hifi/stays") {
+    const listings = queryListings({ page: 1, pageSize: 12 }).results;
+    return {
+      route: "hifi-stays",
+      title: "Stays (hifi)",
+      html: renderHifiStaysListBody(listings),
+      headExtras: getHifiHeadHtml(),
+    };
+  }
+
+  const hifiStayMatch = pathname.match(/^\/hifi\/stays\/([^/]+)$/);
+  if (hifiStayMatch) {
+    const id = hifiStayMatch[1];
+    const listing = getListing(id);
+    const parts = getHifiStayDetailParts(listing);
+    return {
+      route: "hifi-stay",
+      title: listing ? listing.title : "Stay not found",
+      html: parts.body,
+      pageProps: { id },
+      headExtras: getHifiHeadHtml(),
+      tailExtras: listing ? `<script>${parts.script}</script>` : "",
+      status: listing ? 200 : 404,
+    };
   }
 
   return null;

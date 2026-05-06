@@ -9,12 +9,28 @@ import {
   queryListings,
   queryMedia,
 } from "@cf-bench/dataset";
+import {
+  getHifiHeadHtml,
+  getHifiStayDetailParts,
+  renderHifiStaysListBody,
+} from "@cf-bench/hifi-shell";
 
 export type RenderedRoute = {
-  route: "home" | "stays" | "stay" | "blog" | "post" | "chart" | "media";
+  route:
+    | "home"
+    | "stays"
+    | "stay"
+    | "blog"
+    | "post"
+    | "chart"
+    | "media"
+    | "hifi-stays"
+    | "hifi-stay";
   title: string;
   html: string;
   pageProps?: { id?: string; slug?: string };
+  headExtra?: string;
+  bodyScript?: string;
 };
 
 function esc(value: unknown) {
@@ -220,6 +236,22 @@ function renderMedia() {
   );
 }
 
+function renderHifiStays() {
+  const listings = queryListings({ page: 1, pageSize: 12 }).results;
+  return layout("Stays (hifi)", renderHifiStaysListBody(listings));
+}
+
+function renderHifiStay(id: string) {
+  const listing = getListing(id);
+  const parts = getHifiStayDetailParts(listing);
+  const title = listing ? listing.title : "Stay not found";
+  return {
+    title,
+    html: layout(title, parts.body),
+    bodyScript: parts.script,
+  };
+}
+
 export function renderRoute(pathname: string): RenderedRoute | null {
   if (pathname === "/") {
     return { route: "home", title: "Framework benchmark harness", html: renderHome() };
@@ -253,6 +285,29 @@ export function renderRoute(pathname: string): RenderedRoute | null {
 
   if (pathname === "/media") {
     return { route: "media", title: "Media Feed (SPA-like)", html: renderMedia() };
+  }
+
+  if (pathname === "/hifi/stays") {
+    return {
+      route: "hifi-stays",
+      title: "Stays (hifi)",
+      html: renderHifiStays(),
+      headExtra: getHifiHeadHtml(),
+    };
+  }
+
+  const hifiStayMatch = pathname.match(/^\/hifi\/stays\/([^/]+)$/);
+  if (hifiStayMatch) {
+    const id = hifiStayMatch[1];
+    const rendered = renderHifiStay(id);
+    return {
+      route: "hifi-stay",
+      title: rendered.title,
+      html: rendered.html,
+      pageProps: { id },
+      headExtra: getHifiHeadHtml(),
+      bodyScript: rendered.bodyScript,
+    };
   }
 
   return null;

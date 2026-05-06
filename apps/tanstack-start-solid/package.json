@@ -18,6 +18,7 @@
     "@cf-bench/chart-core": "workspace:*",
     "@cf-bench/chart-hooks": "workspace:*",
     "@cf-bench/dataset": "workspace:*",
+    "@cf-bench/hifi-shell": "workspace:*",
     "@cf-bench/ui": "workspace:*",
     "@tanstack/solid-router": "1.169.1",
     "@tanstack/solid-start": "1.167.60",

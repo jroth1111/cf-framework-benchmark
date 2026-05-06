@@ -29,6 +29,12 @@ export type Listing = {
   superhost: boolean;
   summary: string;
   descriptionHtml: string;
+  photos?: string[];
+  heroPhoto?: string;
+  hostAvatar?: string;
+  mapTilesUrl?: string;
+  descriptionHtmlHifi?: string;
+  nightsAvailable?: number[];
 };
 
 export type BlogPost = {

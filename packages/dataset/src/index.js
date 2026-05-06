@@ -41,6 +41,12 @@
  *  superhost: boolean;
  *  summary: string;
  *  descriptionHtml: string;
+ *  photos?: string[];
+ *  heroPhoto?: string;
+ *  hostAvatar?: string;
+ *  mapTilesUrl?: string;
+ *  descriptionHtmlHifi?: string;
+ *  nightsAvailable?: number[];
  * }} Listing
  */
 
@@ -67,6 +73,20 @@ function mulberry32(seed) {
     x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
     return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
   };
+}
+
+/**
+ * Cloudflare Images transform URL.
+ * Output is rendered relative to the Worker's hostname; requires Image
+ * Transformations enabled on the deployed zone (audited per-framework for the
+ * mpa_airbnb_hifi suite).
+ */
+function cfImage(originUrl, opts = {}) {
+  const params = ['format=auto', 'fit=cover'];
+  if (opts.width) params.push(`width=${opts.width}`);
+  if (opts.height) params.push(`height=${opts.height}`);
+  if (opts.quality) params.push(`quality=${opts.quality}`);
+  return `/cdn-cgi/image/${params.join(',')}/${originUrl}`;
 }
 
 /** @param {number} value */
@@ -206,6 +226,68 @@ export const listings = (() => {
       <p>This content is intentionally consistent across frameworks so rendering + hydration differences are easier to spot.</p>
     `.trim();
 
+    // Hifi-suite (mpa_airbnb_hifi) additive fields. The fields above MUST stay
+    // byte-identical to preserve v5-suite payload provenance across frameworks.
+    const photos = [];
+    for (let p = 0; p < 8; p++) {
+      photos.push(
+        cfImage(`https://picsum.photos/seed/listing-${id}-photo-${p}/1600/1067`, {
+          width: 1600,
+          quality: 80,
+        }),
+      );
+    }
+    const heroPhoto = photos[0];
+    const hostAvatar = cfImage(`https://picsum.photos/seed/host-${id}/256/256`, {
+      width: 128,
+    });
+    const mapTilesUrl = cfImage(`https://picsum.photos/seed/map-${id}/800/400`, {
+      width: 800,
+    });
+    const nightsAvailable = [];
+    for (let d = 0; d < 90; d++) {
+      if (rand() >= 0.25) nightsAvailable.push(d);
+    }
+    const hostBio = `${hostName} ${superhost ? 'is a Superhost' : 'has been hosting'} since ${hostSinceISO}. Response rate 100%, response time under an hour.`;
+    const safetyAmenities = ['Smoke alarm', 'First aid kit', 'Carbon monoxide alarm'];
+    const amenityTilesHtml = [...amenities, ...safetyAmenities]
+      .map((a) => `<div class="amenity-tile"><span aria-hidden="true">●</span><span>${a}</span></div>`)
+      .join('');
+    const descriptionHtmlHifi = `
+      <section class="hifi-overview">
+        <p>${summary}</p>
+        <p><strong>${neighborhood}, ${loc.city}, ${loc.country}.</strong></p>
+      </section>
+      <section class="hifi-host">
+        <h3>Hosted by ${hostName}</h3>
+        <p>${hostBio}</p>
+      </section>
+      <section class="hifi-amenities">
+        <h3>What this place offers</h3>
+        <div class="amenity-grid">${amenityTilesHtml}</div>
+      </section>
+      <section class="hifi-things-to-know">
+        <h3>Things to know</h3>
+        <div class="three-col">
+          <div>
+            <h4>House rules</h4>
+            <ul><li>Check-in after 3:00 PM</li><li>Checkout before 11:00 AM</li><li>${maxGuests} guests max</li></ul>
+          </div>
+          <div>
+            <h4>Health &amp; safety</h4>
+            <ul><li>Self check-in</li><li>Smoke detector</li><li>Carbon monoxide detector</li></ul>
+          </div>
+          <div>
+            <h4>Cancellation</h4>
+            <ul><li>Free cancel within 48h</li><li>Strict 14-day policy</li><li>Trip insurance available</li></ul>
+          </div>
+        </div>
+      </section>
+      <section class="hifi-bench-note">
+        <p>Hifi suite content. Same DOM shape across frameworks for fairness.</p>
+      </section>
+    `.trim();
+
     out.push({
       id,
       title,
@@ -230,6 +312,12 @@ export const listings = (() => {
       superhost,
       summary,
       descriptionHtml,
+      photos,
+      heroPhoto,
+      hostAvatar,
+      mapTilesUrl,
+      nightsAvailable,
+      descriptionHtmlHifi,
     });
   }
   return out;

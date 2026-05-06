@@ -12,8 +12,13 @@ import {
   toUrl,
   withServerTiming,
 } from "@cf-bench/bench-utils";
+import {
+  getAnalyticsSdkSource,
+  getMapsSdkSource,
+} from "./sdk-fixtures.js";
 
-const SUITES = ["mpa_airbnb", "spa_trading_media"];
+const SUITES = ["mpa_airbnb", "spa_trading_media", "mpa_airbnb_hifi"];
+const SDK_CACHE = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
 export { parseIntParam } from "@cf-bench/bench-utils";
 
 export function json(data, options = {}) {
@@ -107,6 +112,29 @@ export function handleMedia(input) {
   return json(queryMedia({ channel, page, pageSize }), { cacheControl: CACHE.short, start });
 }
 
+function jsResponse(body, start) {
+  const headers = withServerTiming(null, start);
+  headers.set("content-type", "application/javascript; charset=utf-8");
+  headers.set("cache-control", SDK_CACHE);
+  return new Response(body, { status: 200, headers });
+}
+
+export function handleSdkMaps() {
+  const start = performance.now();
+  return jsResponse(getMapsSdkSource(), start);
+}
+
+export function handleSdkAnalytics() {
+  const start = performance.now();
+  return jsResponse(getAnalyticsSdkSource(), start);
+}
+
+export function handleBeacon() {
+  const headers = withServerTiming(null, performance.now());
+  headers.set("cache-control", CACHE.noStore);
+  return new Response(null, { status: 204, headers });
+}
+
 export function handleContractApi(framework, input) {
   const url = toUrl(input);
   if (url.pathname === "/api/bench") return handleBench(framework);
@@ -114,6 +142,9 @@ export function handleContractApi(framework, input) {
   if (url.pathname === "/api/listings") return handleListings(url);
   if (url.pathname === "/api/prices") return handlePrices(url);
   if (url.pathname === "/api/media") return handleMedia(url);
+  if (url.pathname === "/__bench/sdk/maps.js") return handleSdkMaps();
+  if (url.pathname === "/__bench/sdk/analytics.js") return handleSdkAnalytics();
+  if (url.pathname === "/__bench/beacon") return handleBeacon();
   const listingMatch = url.pathname.match(/^\/api\/listings\/([^/]+)$/);
   if (listingMatch) return handleListing(listingMatch[1]);
   return null;

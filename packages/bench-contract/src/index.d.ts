@@ -19,7 +19,7 @@ export type BenchResponseV3 = {
   runtime: "cloudflare-workers";
   framework: string;
   contractVersion: "v3.0.0";
-  suiteSupport: string[];
+  suiteSupport: ("mpa_airbnb" | "spa_trading_media" | "mpa_airbnb_hifi" | string)[];
 };
 
 export type HealthResponse = {
@@ -57,4 +57,7 @@ export function handleListings(input: URL | Request | string): Response;
 export function handleListing(id: string): Response;
 export function handlePrices(input: URL | Request | string): Response;
 export function handleMedia(input: URL | Request | string): Response;
+export function handleSdkMaps(): Response;
+export function handleSdkAnalytics(): Response;
+export function handleBeacon(): Response;
 export function handleContractApi(framework: string, input: URL | Request | string): Response | null;

@@ -16,6 +16,7 @@
     "@cf-bench/chart-core": "workspace:*",
     "@cf-bench/chart-hooks": "workspace:*",
     "@cf-bench/dataset": "workspace:*",
+    "@cf-bench/hifi-shell": "workspace:*",
     "@cf-bench/ui": "workspace:*",
     "@opennextjs/cloudflare": "1.19.6",
     "next": "16.2.4",

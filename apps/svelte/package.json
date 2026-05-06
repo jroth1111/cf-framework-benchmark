@@ -15,6 +15,7 @@
     "@cf-bench/chart-core": "workspace:*",
     "@cf-bench/chart-hooks": "workspace:*",
     "@cf-bench/dataset": "workspace:*",
+    "@cf-bench/hifi-shell": "workspace:*",
     "@cf-bench/ui": "workspace:*"
   },
   "devDependencies": {

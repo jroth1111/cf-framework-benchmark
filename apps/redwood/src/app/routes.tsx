@@ -1,6 +1,7 @@
 import type React from "react";
 
 import { BENCH_MEDIA_PAGE_SIZE, blogPosts, chartSymbols, chartTimeframes, formatUsd, getListing, getPost, queryListings, queryMedia } from "../../../../packages/dataset/src/index.js";
+import { getHifiBookingScript, getHifiStayDetailParts, renderHifiStaysListBody } from "../../../../packages/hifi-shell/src/index.js";
 import { route, type Route } from "rwsdk/router";
 
 type PageProps = {
@@ -325,10 +326,39 @@ media.ready = true;
   );
 }
 
+function HifiStaysPage() {
+  const listings = queryListings({ page: 1, pageSize: 12 }).results;
+  return (
+    <Shell title="Stays (hifi)">
+      <script async src="/__bench/sdk/maps.js" />
+      <script async src="/__bench/sdk/analytics.js" />
+      <div dangerouslySetInnerHTML={{ __html: renderHifiStaysListBody(listings) }} />
+    </Shell>
+  );
+}
+
+function HifiStayDetailPage({ params, response, rw }: PageProps) {
+  const listing = getListing(params.id ?? "");
+  const parts = getHifiStayDetailParts(listing);
+  if (!listing) {
+    response.status = 404;
+  }
+  return (
+    <Shell title={listing ? listing.title : "Stay not found"}>
+      <script async src="/__bench/sdk/maps.js" />
+      <script async src="/__bench/sdk/analytics.js" />
+      <div dangerouslySetInnerHTML={{ __html: parts.body }} />
+      {listing ? <InlineScript nonce={rw.nonce} code={getHifiBookingScript()} /> : null}
+    </Shell>
+  );
+}
+
 export const routes: Route[] = [
   route("/", HomePage),
   route("/stays", StaysPage),
   route("/stays/:id", StayDetailPage),
+  route("/hifi/stays", HifiStaysPage),
+  route("/hifi/stays/:id", HifiStayDetailPage),
   route("/blog", BlogPage),
   route("/blog/:slug", BlogPostPage),
   route("/chart", ChartPage),

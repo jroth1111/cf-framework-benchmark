@@ -14,6 +14,8 @@ function normalizeBenchPath(pathname: string) {
 
 function cacheKind(pathname: string) {
   pathname = normalizeBenchPath(pathname);
+  if (pathname === "/hifi/stays") return "hifi-list";
+  if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "hifi-detail";
   if (pathname === "/stays" || pathname === "/blog") return "list";
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
   return null;
@@ -21,6 +23,8 @@ function cacheKind(pathname: string) {
 
 function cacheHeader(pathname: string, profile: string | null) {
   const kind = cacheKind(pathname);
+  if (kind === "hifi-detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
+  if (kind === "hifi-list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
   if (profile === "idiomatic" || profile === "mobile-cold") {
     if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
     if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";

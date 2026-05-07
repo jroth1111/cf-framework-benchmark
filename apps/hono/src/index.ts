@@ -13,6 +13,10 @@ const CACHE_LIST = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
 const CACHE_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
 const CACHE_HIFI_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
 
+function serverTiming(start: number) {
+  return `cf_bench;dur=${(performance.now() - start).toFixed(1)}`;
+}
+
 function normalizeBenchPath(pathname: string) {
   return pathname.replace(/\/+$/, "") || "/";
 }
@@ -32,14 +36,17 @@ function benchmarkPageCache(profile: string | null, kind: "list" | "detail" | nu
 }
 
 app.get("/hifi/stays", (c) => {
+  const start = performance.now();
   const listings = queryListings({ page: 1, pageSize: 12 }).results;
   const html = renderHifiShell("Stays (hifi)", renderHifiStaysListBody(listings));
   c.header("content-type", "text/html; charset=utf-8");
   c.header("cache-control", CACHE_LIST);
+  c.header("server-timing", serverTiming(start));
   return c.body(html);
 });
 
 app.get("/hifi/stays/:id", (c) => {
+  const start = performance.now();
   const id = c.req.param("id") ?? "";
   const listing = getListing(id);
   const parts = getHifiStayDetailParts(listing);
@@ -50,6 +57,7 @@ app.get("/hifi/stays/:id", (c) => {
   );
   c.header("content-type", "text/html; charset=utf-8");
   c.header("cache-control", CACHE_HIFI_DETAIL);
+  c.header("server-timing", serverTiming(start));
   return c.body(html, listing ? 200 : 404);
 });
 

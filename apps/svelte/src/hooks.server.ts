@@ -3,6 +3,8 @@ import { benchCacheHeader } from "$lib/bench-cache";
 
 function benchmarkPageKind(pathname: string) {
   if (pathname === "/stays" || pathname === "/blog") return "list";
+  if (pathname === "/hifi/stays") return "list";
+  if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "detail";
   if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
   return null;
 }

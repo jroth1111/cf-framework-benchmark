@@ -43,6 +43,7 @@ await run("test:deploy-bench", "pnpm", ["test:deploy-bench"]);
 await run("test:bench-runner", "pnpm", ["test:bench-runner"]);
 await run("test:contract-report", "pnpm", ["test:contract-report"]);
 await run("test:control-package", "pnpm", ["test:control-package"]);
+await run("test:hifi-live-header-config", "pnpm", ["test:hifi-live-header-config"]);
 await run("test:verify-results", "pnpm", ["test:verify-results"]);
 await run("test:ci-workflows", "pnpm", ["test:ci-workflows"]);
 await run("verify:result-artifacts", "pnpm", ["verify:results", "--", "--all-local", "--artifact-policy"]);

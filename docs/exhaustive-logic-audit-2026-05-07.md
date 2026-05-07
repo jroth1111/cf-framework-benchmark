@@ -333,3 +333,68 @@ Evidence:
     `mobile-hifi`, or `fast-4g` workflow wiring is removed.
 - Residual gap: GitHub Actions itself is not run locally; verification is
   static workflow/script inspection plus repo static gate.
+
+### F-008: Hifi live verification exposed stale Workers and header/filter gaps
+
+Bead: `cf-framework-benchmark-hni`
+
+Status: `verified`
+
+Evidence:
+
+- Source requirement: `docs/contracts-v6-addendum.md` makes
+  `mpa_airbnb_hifi` the canonical hifi suite for hifi-enabled Workers; the live
+  gates must prove hifi routes, hifi cache headers, `Server-Timing`, and hifi
+  smoke paths at the deployed target URLs.
+- Root causes:
+  - Most live hifi-enabled Workers were stale and still returned 404 for
+    `/hifi/stays` even though current source implemented the route.
+  - Hono's direct `/hifi/stays` handlers bypassed the render helper that emits
+    `Server-Timing`.
+  - Svelte's response hook classified only v5 `/stays` and `/blog` pages as
+    cacheable benchmark pages, so hifi pages were overwritten to `no-store`.
+  - Vike and Waku declared hifi pages as hifi-enabled in source but omitted
+    `/hifi/stays` and `/hifi/stays/*` from `assets.run_worker_first`, so
+    prerendered hifi HTML was served asset-first without the Worker header
+    wrapper.
+  - The hifi live verifier filtered hifi document routes for non-hifi
+    frameworks but still required non-hifi frameworks to advertise
+    `mpa_airbnb_hifi` in `/api/bench`; smoke had the same missing hifi filter
+    for scenario paths.
+- Fix evidence:
+  - Redeployed stale hifi-enabled Workers so live source and matrix state match.
+  - Added direct `Server-Timing` emission to Hono hifi list/detail handlers.
+  - Added hifi list/detail classification to the Svelte hook.
+  - Added hifi page patterns to Vike and Waku `run_worker_first`.
+  - Added `scripts/test-hifi-live-header-config.mjs` and wired it into
+    `verify:static`.
+  - Updated `scripts/contract-tests.mjs` and `scripts/smoke.mjs` to filter
+    hifi suite support/scenarios by matrix `hifi.enabled`.
+- Positive probes:
+  - Before source/header fixes, `pnpm verify:live -- --suites mpa_airbnb_hifi --timeout 20000`
+    reduced the stale-deploy failure from 17 targets to four header failures
+    after redeploying stale Workers.
+  - After source/header and verifier fixes, the same command passed:
+    matrix check, target check, contract report, contract tests, and smoke.
+  - `pnpm test:hifi-live-header-config` passed.
+  - `node --check scripts/test-hifi-live-header-config.mjs`,
+    `node --check scripts/contract-tests.mjs`, and
+    `node --check scripts/smoke.mjs` passed.
+- Negative probes:
+  - The pre-fix live contract report failed with 574 checks while stale Workers
+    returned 404 on hifi routes; after the stale redeploy, only Hono/Svelte/Vike/Waku
+    header failures remained; after source/header redeploy, contract report was
+    green for all 19 live targets.
+  - `test-hifi-live-header-config` fails if Hono hifi handlers stop emitting
+    `Server-Timing`, if Svelte stops classifying hifi pages as benchmark pages,
+    or if Vike/Waku stop routing hifi pages through the Worker.
+  - `contract-tests` now asserts non-hifi frameworks do not claim unsupported
+    hifi suite support.
+- External-control actions:
+  - Rollback paths for the broad stale redeploy were recorded in bead
+    `cf-framework-benchmark-hni` before mutation.
+  - Rollback paths for the final Hono/Svelte/Vike/Waku source-header redeploy
+    were recorded in the same bead before mutation.
+- Residual gap: live verification is for the current Cloudflare account's
+  Workers targets only; it does not prove GitHub Actions execution, but the
+  workflow wiring is covered by F-007.

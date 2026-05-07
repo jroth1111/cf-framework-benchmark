@@ -11,6 +11,8 @@
 			"/",
 			"/stays",
 			"/stays/*",
+			"/hifi/stays",
+			"/hifi/stays/*",
 			"/blog",
 			"/blog/*",
 			"/chart",

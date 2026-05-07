@@ -17,6 +17,7 @@
     "test:bench-runner": "node scripts/test-bench-runner.mjs",
     "test:contract-report": "node scripts/test-contract-report.mjs",
     "test:control-package": "node scripts/test-control-package.mjs",
+    "test:hifi-live-header-config": "node scripts/test-hifi-live-header-config.mjs",
     "test:verify-results": "node scripts/test-verify-results.mjs",
     "test:ci-workflows": "node scripts/test-ci-workflows.mjs",
     "test:bench-stability": "node --check scripts/bench-stability.mjs",

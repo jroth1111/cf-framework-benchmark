@@ -45,6 +45,10 @@ function hasChartInteraction(scenario) {
   );
 }
 
+function frameworkSupportsHifi(framework) {
+  return framework?.matrix?.hifi?.enabled === true;
+}
+
 const frameworks = await resolveLiveTargets({
   matrixPath,
   targetsPath,
@@ -57,6 +61,11 @@ const suites = await Promise.all([...suiteNames].map((name) => loadSuite(name, s
 const scenarios = suites
   .flatMap((suite) => suite.scenarios.map((scenario) => ({ ...scenario, suiteId: suite.id })))
   .filter((scenario, idx, arr) => arr.findIndex((row) => row.path === scenario.path) === idx);
+
+function scenariosForFramework(framework) {
+  if (frameworkSupportsHifi(framework)) return scenarios;
+  return scenarios.filter((scenario) => !String(scenario.path || "").startsWith("/hifi/"));
+}
 
 if (!scenarios.length) {
   throw new Error("No scenarios resolved from selected suites.");
@@ -296,7 +305,7 @@ async function runFramework(framework) {
 
   try {
     console.log(`\n${framework.name}`);
-    for (const scenario of scenarios) {
+    for (const scenario of scenariosForFramework(framework)) {
       await gotoScenario(page, baseUrl, scenario);
       await validateScenarioSurface(page, scenario, `${framework.name} ${scenario.name}`);
       await warmReloadDocumentScenario(page, scenario, `${framework.name} ${scenario.name}`);

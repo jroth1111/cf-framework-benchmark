@@ -208,7 +208,19 @@ function expectedDatasetContent(route) {
   }
 }
 
-async function runFramework(framework, requiredRoutes) {
+function frameworkSupportsHifi(framework) {
+  return framework?.matrix?.hifi?.enabled === true;
+}
+
+function suiteUsesHifi(suite) {
+  return suite.requiredRoutes.some((route) => route.startsWith("/hifi/"));
+}
+
+function suiteSupportForFramework(framework) {
+  return suites.filter((suite) => !suiteUsesHifi(suite) || frameworkSupportsHifi(framework)).map((suite) => suite.id);
+}
+
+async function runFramework(framework, requiredRoutes, expectedSuiteSupport) {
   const baseUrl = framework.url.replace(/\/$/, "");
   console.log(`\n${framework.name}`);
 
@@ -222,10 +234,17 @@ async function runFramework(framework, requiredRoutes) {
     expect(bench.body?.framework === framework.name, `${framework.name} /api/bench framework mismatch`);
     expect(bench.body?.contractVersion === "v3.0.0", `${framework.name} /api/bench contractVersion mismatch`);
     expect(Array.isArray(bench.body?.suiteSupport), `${framework.name} /api/bench suiteSupport missing`);
-    for (const suite of suiteNames) {
+    for (const suite of expectedSuiteSupport) {
       expect(
         bench.body?.suiteSupport?.includes(suite),
         `${framework.name} /api/bench suiteSupport missing ${suite}`
+      );
+    }
+    for (const suite of suiteNames) {
+      if (expectedSuiteSupport.includes(suite)) continue;
+      expect(
+        !bench.body?.suiteSupport?.includes(suite),
+        `${framework.name} /api/bench suiteSupport should not include unsupported ${suite}`
       );
     }
   }
@@ -377,17 +396,13 @@ if (!listings.length || !blogPosts.length) {
   throw new Error("Dataset is missing required fixtures for contract route samples.");
 }
 
-function frameworkSupportsHifi(framework) {
-  return framework?.matrix?.hifi?.enabled === true;
-}
-
 function routesForFramework(framework) {
   if (frameworkSupportsHifi(framework)) return requiredRoutes;
   return requiredRoutes.filter((route) => !route.startsWith("/hifi/"));
 }
 
 for (const framework of frameworks) {
-  await runFramework(framework, routesForFramework(framework));
+  await runFramework(framework, routesForFramework(framework), suiteSupportForFramework(framework));
 }
 
 if (failures.length) {

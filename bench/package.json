@@ -5,7 +5,8 @@
   "scripts": {
     "run": "node ./src/run-v4.mjs --suite mpa_airbnb",
     "run:spa": "node ./src/run-v4.mjs --suite spa_trading_media",
-    "run:all": "pnpm run run && pnpm run run:spa",
+    "run:hifi": "node ./src/run-v4.mjs --suite mpa_airbnb_hifi",
+    "run:all": "pnpm run run && pnpm run run:spa && pnpm run run:hifi",
     "run:flame": "node ./src/run-v4.mjs --suite spa_trading_media --iterations 1 --profile parity --flamegraphs --out ./results.v4.spa_trading_media.flame.json",
     "load": "node ./src/load-test.mjs"
   },

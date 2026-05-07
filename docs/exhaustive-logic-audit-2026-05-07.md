@@ -50,7 +50,7 @@ classified separately when they are tracked but not authored as logic.
 | repo scripts | in progress | Contract report/test path audited; startup, static, deploy, verify, and live scripts still open. |
 | app routes/API integrations | not_started | Enabled app entrypoints and shared contract integration still open. |
 | disabled/experimental apps | not_started | Must classify as intentionally excluded or bug-bearing if referenced by active gates. |
-| CI/workflows | not_started | GitHub workflows and release/verification paths still open. |
+| CI/workflows | in progress | Scheduled benchmark workflow hifi omission audited/fixed; broader CI workflow review still open. |
 | tracked generated artifacts | not_started | Must classify as generated authority, stale output, or ignorable build residue. |
 
 ## Findings
@@ -298,3 +298,38 @@ Evidence:
     `pnpm -C apps/astro exec wrangler rollback --name cf-bench-astro 17270828-fc8c-4ab2-b387-56b2b0db8a61`.
 - Residual gap: broader all-framework hifi live verification remains outside
   this targeted Astro fix checkpoint.
+
+### F-007: Scheduled benchmark workflow omitted canonical hifi results
+
+Bead: `cf-framework-benchmark-4nf`
+
+Status: `verified`
+
+Evidence:
+
+- Source requirement: `docs/contracts-v6-addendum.md` defines
+  `bench/results.v4.mpa_airbnb_hifi.{json,md}` as canonical hifi results and
+  describes the `bench-remote` hifi mobile pathway for `mpa_airbnb_hifi`.
+- Root cause: root/bench package scripts and `.github/workflows/benchmark.yml`
+  only ran, verified, and uploaded `mpa_airbnb` and `spa_trading_media`; the
+  live preflight and optional WebPageTest step also ran only the default v5
+  suite set. Scheduled benchmark evidence could therefore never produce the v6
+  hifi artifacts or preflight hifi routes.
+- Fix evidence: added `bench:hifi` / `run:hifi`; `bench:all` and `run:all` now
+  include hifi; the benchmark workflow now preflights/runs/verifies/uploads
+  `mpa_airbnb_hifi` and has a separate optional hifi WebPageTest artifact.
+  `scripts/test-ci-workflows.mjs` asserts the workflow and package scripts keep
+  the hifi suite wired.
+- Positive probe:
+  - `pnpm test:ci-workflows` passed.
+  - `node --check scripts/verify-static.mjs && node --check scripts/test-ci-workflows.mjs` passed.
+  - `pnpm test:bench-runner` passed, preserving the hifi runner entrypoint
+    behavior covered in F-004/F-005.
+  - `pnpm verify:static` passed after wiring the workflow regression into the
+    static gate.
+- Negative probe:
+  - `test:ci-workflows` would fail if the hifi suite,
+    hifi live preflight, hifi result artifacts, hifi remote output,
+    `mobile-hifi`, or `fast-4g` workflow wiring is removed.
+- Residual gap: GitHub Actions itself is not run locally; verification is
+  static workflow/script inspection plus repo static gate.

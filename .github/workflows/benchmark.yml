@@ -56,7 +56,7 @@ jobs:
         run: pnpm -C bench exec playwright install --with-deps chromium
 
       - name: Live preflight
-        run: pnpm verify:live
+        run: pnpm verify:live -- --suites mpa_airbnb,spa_trading_media,mpa_airbnb_hifi
 
   bench:
     needs: preflight
@@ -90,11 +90,13 @@ jobs:
         run: |
           pnpm -C bench exec node src/run-v4.mjs --suite mpa_airbnb --iterations $BENCH_ITERATIONS --profile $BENCH_PROFILE --throttle $BENCH_THROTTLE
           pnpm -C bench exec node src/run-v4.mjs --suite spa_trading_media --iterations $BENCH_ITERATIONS --profile $BENCH_PROFILE --throttle $BENCH_THROTTLE
+          pnpm -C bench exec node src/run-v4.mjs --suite mpa_airbnb_hifi --iterations $BENCH_ITERATIONS --profile mobile-hifi --throttle fast-4g
 
       - name: Verify benchmark results
         run: |
           pnpm verify:results -- --json bench/results.v4.mpa_airbnb.json
           pnpm verify:results -- --json bench/results.v4.spa_trading_media.json
+          pnpm verify:results -- --json bench/results.v4.mpa_airbnb_hifi.json
 
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -105,6 +107,8 @@ jobs:
             bench/results.v4.mpa_airbnb.md
             bench/results.v4.spa_trading_media.json
             bench/results.v4.spa_trading_media.md
+            bench/results.v4.mpa_airbnb_hifi.json
+            bench/results.v4.mpa_airbnb_hifi.md
 
       - name: Run flamegraphs
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_flamegraphs }}
@@ -139,9 +143,23 @@ jobs:
           WPT_LOCATIONS: ${{ secrets.WPT_LOCATIONS || 'MEL_AU_03:Chrome.Native,IAD_US_01:Chrome.Native,DUB_IE_01:Chrome.Native' }}
         run: pnpm bench:remote
 
+      - name: Run hifi WebPageTest (optional)
+        if: ${{ secrets.WPT_API_KEY != '' }}
+        env:
+          WPT_API_KEY: ${{ secrets.WPT_API_KEY }}
+          WPT_LOCATIONS: ${{ secrets.WPT_HIFI_LOCATIONS || 'MEL_AU_03:MotoG4.Chrome.3GFast,IAD_US_01:MotoG4.Chrome.3GFast,DUB_IE_01:MotoG4.Chrome.3GFast' }}
+        run: pnpm bench:remote -- --suites mpa_airbnb_hifi --out bench/results.remote.hifi.json
+
       - name: Upload remote results
         if: ${{ secrets.WPT_API_KEY != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: bench-results-remote
           path: bench/results.remote.json
+
+      - name: Upload hifi remote results
+        if: ${{ secrets.WPT_API_KEY != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results-remote-hifi
+          path: bench/results.remote.hifi.json

@@ -50,6 +50,7 @@ await run("test:ci-workflows", "pnpm", ["test:ci-workflows"]);
 await run("verify:result-artifacts", "pnpm", ["verify:results", "--", "--all-local", "--artifact-policy"]);
 await run("test:bench-stability", "pnpm", ["test:bench-stability"]);
 await run("test:cloudflare-config", "pnpm", ["test:cloudflare-config"]);
+await run("test:cloudflare-config-fixtures", "pnpm", ["test:cloudflare-config-fixtures"]);
 await run("test:cloudflare-optimization", "pnpm", ["test:cloudflare-optimization"]);
 await run("cloudflare:config-audit", "pnpm", ["cloudflare:config-audit", "--fail-on-gaps"]);
 await run("cloudflare:optimization-audit", "pnpm", ["cloudflare:optimization-audit", "--fail-on-gaps"]);

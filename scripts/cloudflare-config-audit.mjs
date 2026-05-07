@@ -2,6 +2,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { parse as parseJsonc, printParseErrorCode } from "jsonc-parser";
+import { parse as parseToml } from "smol-toml";
 
 const CONTRACTS_PATH = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -21,99 +23,34 @@ function hasFlag(flag) {
   return process.argv.includes(flag);
 }
 
-function stripJsonComments(source) {
-  let out = "";
-  let inString = false;
-  let quote = "";
-  let escaped = false;
-  for (let i = 0; i < source.length; i += 1) {
-    const char = source[i];
-    const next = source[i + 1];
-    if (inString) {
-      out += char;
-      if (escaped) {
-        escaped = false;
-      } else if (char === "\\") {
-        escaped = true;
-      } else if (char === quote) {
-        inString = false;
-      }
-      continue;
-    }
-    if (char === '"' || char === "'") {
-      inString = true;
-      quote = char;
-      out += char;
-      continue;
-    }
-    if (char === "/" && next === "/") {
-      while (i < source.length && source[i] !== "\n") i += 1;
-      out += "\n";
-      continue;
-    }
-    if (char === "/" && next === "*") {
-      i += 2;
-      while (i < source.length && !(source[i] === "*" && source[i + 1] === "/")) i += 1;
-      i += 1;
-      continue;
-    }
-    out += char;
+function parseJsoncStrict(source, label) {
+  const errors = [];
+  const value = parseJsonc(source, errors, { allowTrailingComma: true, disallowComments: false });
+  if (errors.length) {
+    const detail = errors
+      .map((err) => `${printParseErrorCode(err.error)} at offset ${err.offset} (length ${err.length})`)
+      .join("; ");
+    throw new Error(`Invalid JSONC in ${label}: ${detail}`);
   }
-  return out;
-}
-
-function parseTomlValue(raw) {
-  const value = raw.trim();
-  if (value.startsWith("[") && value.endsWith("]")) {
-    const body = value.slice(1, -1).trim();
-    if (!body) return [];
-    return body
-      .split(",")
-      .map((item) => parseTomlValue(item))
-      .filter((item) => item !== "");
-  }
-  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-    return value.slice(1, -1);
-  }
-  if (value === "true") return true;
-  if (value === "false") return false;
-  if (/^-?\d+(\.\d+)?$/.test(value)) return Number(value);
   return value;
 }
 
-function parseToml(source) {
-  const root = {};
-  let section = root;
-  for (const rawLine of source.split(/\r?\n/)) {
-    const line = rawLine.replace(/#.*$/, "").trim();
-    if (!line) continue;
-    const sectionMatch = line.match(/^\[([^\]]+)\]$/);
-    if (sectionMatch) {
-      section = root;
-      for (const part of sectionMatch[1].split(".")) {
-        section[part] ??= {};
-        section = section[part];
-      }
-      continue;
-    }
-    const eqIdx = line.indexOf("=");
-    if (eqIdx === -1) continue;
-    const key = line.slice(0, eqIdx).trim();
-    section[key] = parseTomlValue(line.slice(eqIdx + 1));
-  }
-  return root;
-}
-
-async function readWranglerConfig(appDir) {
+export async function readWranglerConfig(appDir) {
   const candidates = ["wrangler.jsonc", "wrangler.toml"];
   for (const name of candidates) {
     const filePath = path.join(appDir, name);
+    let raw;
     try {
-      const raw = await fs.readFile(filePath, "utf8");
-      const parsed = name.endsWith(".jsonc") ? JSON.parse(stripJsonComments(raw)) : parseToml(raw);
+      raw = await fs.readFile(filePath, "utf8");
+    } catch (err) {
+      if (err?.code === "ENOENT") continue;
+      throw err;
+    }
+    try {
+      const parsed = name.endsWith(".jsonc") ? parseJsoncStrict(raw, filePath) : parseToml(raw);
       return { path: filePath, format: name.endsWith(".jsonc") ? "jsonc" : "toml", parsed };
     } catch (err) {
-      if (err?.code !== "ENOENT") throw new Error(`Failed to parse ${filePath}: ${err.message}`);
+      throw new Error(`Failed to parse ${filePath}: ${err.message}`);
     }
   }
   return null;

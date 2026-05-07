@@ -28,6 +28,7 @@
     "test:ci-workflows": "node scripts/test-ci-workflows.mjs",
     "test:bench-stability": "node --check scripts/bench-stability.mjs",
     "test:cloudflare-config": "node scripts/test-cloudflare-config-audit.mjs",
+    "test:cloudflare-config-fixtures": "node scripts/test-cloudflare-config-fixtures.mjs",
     "test:cloudflare-optimization": "node scripts/test-cloudflare-optimization-audit.mjs",
     "test:build-enabled": "node --check scripts/build-enabled.mjs",
     "check:startup": "node scripts/check-worker-startup.mjs",
@@ -51,6 +52,8 @@
     "lighthouse:compare": "node scripts/lighthouse-compare.mjs"
   },
   "devDependencies": {
+    "jsonc-parser": "3.3.1",
+    "smol-toml": "1.6.1",
     "typescript": "6.0.3"
   },
   "engines": {

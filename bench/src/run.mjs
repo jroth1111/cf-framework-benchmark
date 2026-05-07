@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium, devices } from 'playwright';
 import { buildCloudflareAudit } from '../../scripts/cloudflare-config-audit.mjs';
 import { buildOptimizationAudit } from '../../scripts/cloudflare-optimization-audit.mjs';
+import { DEFAULT_TARGETS_PATH } from './config-v4.mjs';
 import { provenanceHashForRow, sha256 } from './provenance.mjs';
 
 export { provenanceHashForRow } from './provenance.mjs';
@@ -2455,7 +2456,7 @@ async function main() {
     dataset: datasetInfo,
     hashes: {
       matrix: hashFile('bench/framework-matrix.json'),
-      targets: hashFile('bench/targets.live.json'),
+      targets: hashFile(DEFAULT_TARGETS_PATH),
       lockfile: hashFile('pnpm-lock.yaml'),
       contract: benchmarkContractHash(),
       contractsJson: hashFile('contracts/v5.json'),

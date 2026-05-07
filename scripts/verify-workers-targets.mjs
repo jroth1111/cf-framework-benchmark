@@ -1,6 +1,11 @@
 #!/usr/bin/env node
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import {
+  DEFAULT_MATRIX_PATH,
+  DEFAULT_TARGETS_PATH,
+  loadMatrix,
+  loadTargets,
+  toAbsolutePath,
+} from '../bench/src/config-v4.mjs';
 
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);
@@ -9,16 +14,16 @@ function argValue(flag, fallback = null) {
 }
 
 async function main() {
-  const targetsPath = argValue('--targets', path.join(process.cwd(), 'bench', 'targets.live.json'));
-  const matrixPath = argValue('--matrix', path.join(process.cwd(), 'bench', 'framework-matrix.json'));
+  const targetsPath = toAbsolutePath(argValue('--targets', null), DEFAULT_TARGETS_PATH);
+  const matrixPath = toAbsolutePath(argValue('--matrix', null), DEFAULT_MATRIX_PATH);
 
-  const targetsDoc = JSON.parse(await fs.readFile(targetsPath, 'utf8'));
-  const matrixDoc = JSON.parse(await fs.readFile(matrixPath, 'utf8'));
+  const matrix = await loadMatrix(matrixPath);
+  const targetsDoc = await loadTargets(targetsPath);
 
-  const targets = Array.isArray(targetsDoc.targets) ? targetsDoc.targets : [];
-  const matrix = Array.isArray(matrixDoc.frameworks) ? matrixDoc.frameworks : [];
-  const matrixByName = new Map(matrix.map((fw) => [fw.name, fw]));
-  const expectedWorkers = matrix
+  const targets = targetsDoc.targets;
+  const matrixFrameworks = matrix.frameworks;
+  const matrixByName = matrix.byName;
+  const expectedWorkers = matrixFrameworks
     .filter((fw) => fw?.benchmarkEnabled && String(fw?.deploy?.type || '') === 'workers')
     .map((fw) => fw.name);
   const actualWorkers = targets.map((target) => target.framework).filter(Boolean);

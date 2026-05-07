@@ -8,9 +8,10 @@ import {
   fallbackScenarioContractForType,
   isCanonicalResultPath,
   provenanceHashForRow,
+  benchmarkContractHashInput,
   scenarioContractBucketKey,
 } from "../bench/src/run.mjs";
-import { defaultOutPathForSuite, defaultScenarioContract } from "../bench/src/run-v4.mjs";
+import { defaultOutPathForSuite, defaultScenarioContract, runnerPassthroughArgs } from "../bench/src/run-v4.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -28,6 +29,50 @@ assert.deepEqual(fallbackScenarioContractForType("document"), {
 assert.equal(
   defaultOutPathForSuite("spa_trading_media"),
   path.join(repoRoot, "bench", "results.v4.spa_trading_media.json")
+);
+
+assert.deepEqual(
+  runnerPassthroughArgs([
+    "node",
+    "run-v4.mjs",
+    "--suite",
+    "mpa_airbnb_hifi",
+    "--profile",
+    "mobile-hifi",
+    "--realdevice",
+    "browserstack:iphone-13",
+    "--flamegraphs",
+    "--flamegraph-dir",
+    "bench/flamegraphs/test",
+  ]),
+  [
+    "--flamegraphs",
+    "--profile",
+    "mobile-hifi",
+    "--realdevice",
+    "browserstack:iphone-13",
+    "--flamegraph-dir",
+    "bench/flamegraphs/test",
+  ],
+  "run-v4 must forward documented runner flags to run.mjs"
+);
+
+assert.equal(
+  runnerPassthroughArgs(["node", "run-v4.mjs", "--suite", "mpa_airbnb_hifi"]).includes("--realdevice"),
+  false,
+  "run-v4 must not synthesize real-device mode unless explicitly requested"
+);
+
+assert.equal(
+  typeof benchmarkContractHashInput().contracts.v5,
+  "string",
+  "benchmark provenance contract hash must include the v5 contract"
+);
+
+assert.equal(
+  typeof benchmarkContractHashInput().contracts.v6Addendum,
+  "string",
+  "benchmark provenance contract hash must include the v6 hifi addendum"
 );
 
 assert.equal(isCanonicalResultPath("bench/results.v4.mpa_airbnb.json"), true);

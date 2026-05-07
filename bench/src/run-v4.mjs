@@ -73,6 +73,43 @@ export function defaultOutPathForSuite(suiteName) {
   return path.join(BENCH_DIR, `results.v4.${suiteName}.json`);
 }
 
+export function runnerPassthroughArgs(argv = process.argv) {
+  const has = (name) => argv.includes(name);
+  const valueOf = (name, fallback = null) => {
+    const idx = argv.indexOf(name);
+    if (idx === -1) return fallback;
+    return argv[idx + 1] ?? fallback;
+  };
+
+  const passthroughArgs = [];
+  const passthroughFlags = ['--headed', '--skip-warmup', '--flamegraphs'];
+  const passthroughPairs = [
+    '--profile',
+    '--iterations',
+    '--seed',
+    '--throttle',
+    '--cpu',
+    '--network',
+    '--realdevice',
+    '--flamegraph-dir',
+    '--flamegraph-frameworks',
+    '--flamegraph-profiles',
+    '--flamegraph-scenarios',
+    '--flamegraph-phases',
+    '--flamegraph-max-iteration',
+    '--flamegraph-sample-interval',
+  ];
+
+  for (const flag of passthroughFlags) {
+    if (has(flag)) passthroughArgs.push(flag);
+  }
+  for (const pair of passthroughPairs) {
+    const value = valueOf(pair, null);
+    if (value != null) passthroughArgs.push(pair, value);
+  }
+  return passthroughArgs;
+}
+
 async function runLegacyRunner({ configPath, outPath, passthroughArgs }) {
   const child = spawn('node', ['./src/run.mjs', '--config', configPath, '--out', outPath, ...passthroughArgs], {
     cwd: BENCH_DIR,
@@ -209,31 +246,7 @@ async function main() {
   const tempConfigPath = path.join(tempDir, `config.${suiteName}.json`);
   await fs.writeFile(tempConfigPath, JSON.stringify(config, null, 2));
 
-  const passthroughArgs = [];
-  const passthroughFlags = ['--headed', '--skip-warmup', '--flamegraphs'];
-  const passthroughPairs = [
-    '--profile',
-    '--iterations',
-    '--seed',
-    '--throttle',
-    '--cpu',
-    '--network',
-    '--flamegraph-dir',
-    '--flamegraph-frameworks',
-    '--flamegraph-profiles',
-    '--flamegraph-scenarios',
-    '--flamegraph-phases',
-    '--flamegraph-max-iteration',
-    '--flamegraph-sample-interval',
-  ];
-
-  for (const flag of passthroughFlags) {
-    if (hasFlag(flag)) passthroughArgs.push(flag);
-  }
-  for (const pair of passthroughPairs) {
-    const value = argValue(pair, null);
-    if (value != null) passthroughArgs.push(pair, value);
-  }
+  const passthroughArgs = runnerPassthroughArgs();
 
   try {
     if (!hasFlag('--skip-contract-report')) {

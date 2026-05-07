@@ -166,6 +166,20 @@ export function assertCanonicalResultWritable({ outPath, gitInfo, allowDirtyProv
   };
 }
 
+export function benchmarkContractHashInput() {
+  return {
+    version: 1,
+    contracts: {
+      v5: hashFile('docs/contracts-v5.md') || hashFile('docs/contracts-v3.md'),
+      v6Addendum: hashFile('docs/contracts-v6-addendum.md'),
+    },
+  };
+}
+
+export function benchmarkContractHash() {
+  return sha256(benchmarkContractHashInput());
+}
+
 function parseCsvSet(value) {
   const tokens = String(value || '')
     .split(',')
@@ -2450,7 +2464,7 @@ async function main() {
       matrix: hashFile('bench/framework-matrix.json'),
       targets: hashFile('bench/targets.live.json'),
       lockfile: hashFile('pnpm-lock.yaml'),
-      contract: hashFile('docs/contracts-v5.md') || hashFile('docs/contracts-v3.md'),
+      contract: benchmarkContractHash(),
       cloudflarePlatform: hashFile(CLOUDFLARE_PLATFORM_ERAS_PATH),
       cloudflareConfig: sha256(cloudflareAuditStable),
       cloudflareOptimization: sha256(cloudflareOptimizationAuditStable),

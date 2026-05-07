@@ -725,11 +725,16 @@ function scenarioContractForFramework(fw, scenarioName) {
 }
 
 export function scenarioContractBucketKey({ delivery, implementationKind, tier, cloudflareMode, scenario, contract }) {
+  if (!cloudflareMode || cloudflareMode === 'unknown') {
+    throw new Error(
+      `scenarioContractBucketKey: cloudflareMode is required for scenario "${scenario}"; got ${JSON.stringify(cloudflareMode)}. The cloudflare audit row is missing or its wrangler config could not be parsed — fix the underlying wrangler.jsonc/wrangler.toml before running.`
+    );
+  }
   return [
     `delivery=${delivery || 'unknown'}`,
     `impl=${implementationKind || 'unknown'}`,
     `tier=${tier || 'unknown'}`,
-    `cf=${cloudflareMode || 'unknown'}`,
+    `cf=${cloudflareMode}`,
     `scenario=${scenario}`,
     `render=${contract.renderMode || 'unknown'}`,
     `data=${contract.initialData || 'unknown'}`,
@@ -737,11 +742,22 @@ export function scenarioContractBucketKey({ delivery, implementationKind, tier, 
   ].join('::');
 }
 
-function frameworkBucketKey(meta, scenarioNames) {
+export function frameworkBucketKey(meta, scenarioNames) {
+  const name = meta?.name ?? 'unknown';
+  const cloudflareMode = meta?.cloudflare?.wrangler?.assetRouting?.mode;
+  if (!cloudflareMode) {
+    const detail = meta?.cloudflare
+      ? meta.cloudflare.wrangler
+        ? 'wrangler.assetRouting.mode is unset'
+        : 'no wrangler config parsed (missing wrangler.jsonc/wrangler.toml or unreadable file)'
+      : 'no cloudflare audit row (framework absent from cloudflare-config-audit output)';
+    throw new Error(
+      `frameworkBucketKey: framework "${name}" cloudflare audit row is unusable — ${detail}. Fix the underlying wrangler config before running.`
+    );
+  }
   const delivery = meta?.delivery ?? 'unknown';
   const implementationKind = meta?.implementationKind ?? 'unknown';
   const tier = meta?.tier ?? 'unknown';
-  const cloudflareMode = meta?.cloudflare?.wrangler?.assetRouting?.mode ?? 'unknown';
   const segments = [
     `delivery=${delivery}`,
     `impl=${implementationKind}`,
@@ -2021,7 +2037,7 @@ async function main() {
       delivery,
       implementationKind,
       tier: meta?.tier ?? 'unknown',
-      cloudflareMode: meta?.cloudflare?.wrangler?.assetRouting?.mode ?? 'unknown',
+      cloudflareMode: meta?.cloudflare?.wrangler?.assetRouting?.mode ?? null,
       scenario,
       contract: scenarioContract,
     });

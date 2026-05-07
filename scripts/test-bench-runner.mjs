@@ -14,9 +14,11 @@ import {
   provenanceHashForRow,
   benchmarkContractHashInput,
   scenarioContractBucketKey,
+  frameworkBucketKey,
 } from "../bench/src/run.mjs";
 import { defaultOutPathForSuite, runnerPassthroughArgs } from "../bench/src/run-v4.mjs";
 import { loadMatrix, loadSuite } from "../bench/src/config-v4.mjs";
+import { buildCloudflareAudit } from "./cloudflare-config-audit.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -87,6 +89,8 @@ assert.equal(
   const matrix = await loadMatrix(path.join(repoRoot, "bench", "framework-matrix.json"));
   const suiteIds = ["mpa_airbnb", "spa_trading_media", "mpa_airbnb_hifi"];
   const enabled = matrix.frameworks.filter((fw) => fw.benchmarkEnabled);
+  const audit = await buildCloudflareAudit({ cwd: repoRoot });
+  const cloudflareByName = new Map(audit.frameworks.map((row) => [row.name, row]));
   let probes = 0;
   for (const suiteId of suiteIds) {
     const suite = await loadSuite(suiteId, path.join(repoRoot, "bench", "suites"));
@@ -97,15 +101,20 @@ assert.equal(
           contract && contract.renderMode && contract.initialData && contract.hydrationModel,
           `matrix lacks scenarioContract for framework=${fw.name} suite=${suiteId} scenario=${sc.name}`
         );
+        const cloudflareMode = cloudflareByName.get(fw.name)?.wrangler?.assetRouting?.mode;
+        assert.ok(
+          cloudflareMode,
+          `cloudflare audit row missing assetRouting.mode for enabled framework=${fw.name} — wrangler config gap`
+        );
         const bucketKey = scenarioContractBucketKey({
           delivery: "workers",
           implementationKind: fw.implementationKind || "native",
           tier: fw.tier || "unknown",
-          cloudflareMode: fw?.cloudflare?.wrangler?.assetRouting?.mode || "unknown",
+          cloudflareMode,
           scenario: sc.name,
           contract,
         });
-        const expected = `delivery=workers::impl=${fw.implementationKind || "native"}::tier=${fw.tier || "unknown"}::cf=${fw?.cloudflare?.wrangler?.assetRouting?.mode || "unknown"}::scenario=${sc.name}::render=${contract.renderMode}::data=${contract.initialData}::hydration=${contract.hydrationModel}`;
+        const expected = `delivery=workers::impl=${fw.implementationKind || "native"}::tier=${fw.tier || "unknown"}::cf=${cloudflareMode}::scenario=${sc.name}::render=${contract.renderMode}::data=${contract.initialData}::hydration=${contract.hydrationModel}`;
         assert.equal(bucketKey, expected, `bucket key drift for ${fw.name}/${suiteId}/${sc.name}`);
         probes += 1;
       }
@@ -113,6 +122,105 @@ assert.equal(
   }
   assert.ok(probes > 0, "bucket-key invariance probe ran zero triples");
   console.log(`bucket-key invariance verified across ${probes} (framework × suite × scenario) triples`);
+}
+
+// Strict cloudflare audit: bucket-key builders refuse to emit cf=unknown.
+// Without this, a missing wrangler.jsonc silently disqualifies a framework
+// from its scoring bucket and the bench keeps running. Probe each failure
+// mode (no audit row / wrangler unparsed / unknown literal / falsy) so a
+// regression is caught at unit-test time, not by visual inspection of a
+// canonical result file.
+{
+  assert.throws(
+    () => scenarioContractBucketKey({
+      delivery: "workers",
+      implementationKind: "native",
+      tier: "framework-runtime",
+      cloudflareMode: "unknown",
+      scenario: "stays",
+      contract: { renderMode: "ssr", initialData: "document", hydrationModel: "framework" },
+    }),
+    /cloudflareMode is required/,
+    "scenarioContractBucketKey must throw when cloudflareMode === 'unknown'"
+  );
+  assert.throws(
+    () => scenarioContractBucketKey({
+      delivery: "workers",
+      implementationKind: "native",
+      tier: "framework-runtime",
+      cloudflareMode: null,
+      scenario: "stays",
+      contract: { renderMode: "ssr", initialData: "document", hydrationModel: "framework" },
+    }),
+    /cloudflareMode is required/,
+    "scenarioContractBucketKey must throw when cloudflareMode is null"
+  );
+  assert.throws(
+    () => scenarioContractBucketKey({
+      delivery: "workers",
+      implementationKind: "native",
+      tier: "framework-runtime",
+      cloudflareMode: "",
+      scenario: "stays",
+      contract: { renderMode: "ssr", initialData: "document", hydrationModel: "framework" },
+    }),
+    /cloudflareMode is required/,
+    "scenarioContractBucketKey must throw when cloudflareMode is empty string"
+  );
+
+  const noAuditMeta = {
+    name: "phantom",
+    delivery: "workers",
+    implementationKind: "native",
+    tier: "framework-runtime",
+    cloudflare: null,
+    scenarioContracts: { home: { renderMode: "ssr", initialData: "document", hydrationModel: "framework" } },
+  };
+  assert.throws(
+    () => frameworkBucketKey(noAuditMeta, ["home"]),
+    /no cloudflare audit row/,
+    "frameworkBucketKey must throw when meta.cloudflare is missing"
+  );
+
+  const noWranglerMeta = {
+    name: "phantom",
+    delivery: "workers",
+    implementationKind: "native",
+    tier: "framework-runtime",
+    cloudflare: { wrangler: null },
+    scenarioContracts: { home: { renderMode: "ssr", initialData: "document", hydrationModel: "framework" } },
+  };
+  assert.throws(
+    () => frameworkBucketKey(noWranglerMeta, ["home"]),
+    /no wrangler config parsed/,
+    "frameworkBucketKey must throw when meta.cloudflare.wrangler is missing"
+  );
+
+  const noModeMeta = {
+    name: "phantom",
+    delivery: "workers",
+    implementationKind: "native",
+    tier: "framework-runtime",
+    cloudflare: { wrangler: { assetRouting: {} } },
+    scenarioContracts: { home: { renderMode: "ssr", initialData: "document", hydrationModel: "framework" } },
+  };
+  assert.throws(
+    () => frameworkBucketKey(noModeMeta, ["home"]),
+    /wrangler\.assetRouting\.mode is unset/,
+    "frameworkBucketKey must throw when meta.cloudflare.wrangler.assetRouting.mode is unset"
+  );
+
+  // Sanity: the strict path still produces a key when the audit row is real.
+  const goodMeta = {
+    name: "phantom",
+    delivery: "workers",
+    implementationKind: "native",
+    tier: "framework-runtime",
+    cloudflare: { wrangler: { assetRouting: { mode: "worker-only" } } },
+    scenarioContracts: { home: { renderMode: "ssr", initialData: "document", hydrationModel: "framework" } },
+  };
+  const goodKey = frameworkBucketKey(goodMeta, ["home"]);
+  assert.ok(/cf=worker-only/.test(goodKey), `frameworkBucketKey must include cf=worker-only when meta is valid; got ${goodKey}`);
 }
 
 // run.mjs must throw if the bench config does not declare scenarios — the

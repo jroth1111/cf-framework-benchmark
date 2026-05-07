@@ -99,6 +99,10 @@
       "status": "implemented",
       "benchmarkEnabled": true,
       "appDir": "apps/astro",
+      "hifi": {
+        "enabled": true,
+        "imageTransforms": "enabled"
+      },
       "scenarioContracts": {
         "mpa_airbnb": {
           "home": { "renderMode": "prerender" }

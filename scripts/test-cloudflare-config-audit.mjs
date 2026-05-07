@@ -46,7 +46,7 @@ const hifiReport = await buildCloudflareAudit({ hifiOnly: true });
 assert.equal(hifiReport.ok, true, "hifi-mode audit should pass after Phase 2 rollout");
 assert.equal(hifiReport.gapCount, 0, "hifi-mode audit should report no gaps");
 assert.equal(hifiReport.mode, "hifi");
-assert.equal(hifiReport.enabledWorkersCount, 19, "hifi-mode audit should target Phase 1 + Phase 2 frameworks");
+assert.equal(hifiReport.enabledWorkersCount, 20, "hifi-mode audit should target Phase 1 + Phase 2 frameworks");
 
 const hifiByName = new Map(hifiReport.frameworks.map((row) => [row.name, row]));
 const hifiEnabledFrameworks = [
@@ -61,6 +61,7 @@ const hifiEnabledFrameworks = [
   "honox",
   "hono-solid",
   "hono-vue",
+  "astro",
   "vue",
   "vue-c3",
   "nuxt",
@@ -83,13 +84,5 @@ for (const name of phase1Reference) {
   const row = hifiByName.get(name);
   assert.equal(row.hifi?.reference, true, `${name} should remain a hifi reference framework`);
 }
-
-const astroRow = byName.get("astro");
-assert.ok(astroRow, "astro audit row missing");
-assert.equal(
-  astroRow.hifi ?? null,
-  null,
-  "astro should remain hifi-pending (no @cf-bench/bench-contract integration to serve /__bench/sdk)"
-);
 
 console.log("Cloudflare config audit tests passed.");

@@ -46,7 +46,7 @@ classified separately when they are tracked but not authored as logic.
 | root/package scripts | inspected | Script graph inventoried from root `package.json` and package manifests. |
 | contract docs | inspected | `contracts-v3`, `contracts-v5`, and `contracts-v6-addendum` checked for API and route authority. |
 | shared packages | in progress | `bench-utils`, `dataset`, `bench-contract`, `bench-control` under active audit. |
-| benchmark runner/config | in progress | `run-v4` flag forwarding and provenance contract hashing audited/fixed; matrix, targets, result verification, and deeper runner paths still open. |
+| benchmark runner/config | in progress | `run-v4` flag forwarding, provenance contract hashing, and Astro hifi matrix eligibility audited/fixed; targets, result verification, and deeper runner paths still open. |
 | repo scripts | in progress | Contract report/test path audited; startup, static, deploy, verify, and live scripts still open. |
 | app routes/API integrations | not_started | Enabled app entrypoints and shared contract integration still open. |
 | disabled/experimental apps | not_started | Must classify as intentionally excluded or bug-bearing if referenced by active gates. |
@@ -256,3 +256,45 @@ Runner/provenance checkpoint:
   runner, contract-report, control, result verification, result-artifact
   policy, Cloudflare config/optimization audits, all benchmark-enabled builds,
   and Worker startup checks
+
+### F-006: Astro hifi routes were implemented but excluded by stale matrix metadata
+
+Bead: `cf-framework-benchmark-1xl`
+
+Status: `verified`
+
+Evidence:
+
+- Source requirement: `docs/contracts-v6-addendum.md` says hifi-enabled
+  frameworks are selected by matrix `hifi.enabled === true`, while hifi-pending
+  frameworks are those lacking hifi deployment support such as
+  `@cf-bench/bench-contract` integration.
+- Root cause: `apps/astro` now declares both `@cf-bench/bench-contract` and
+  `@cf-bench/hifi-shell` and contains `/hifi/stays` route files, but
+  `bench/framework-matrix.json` still omitted Astro's `hifi` block. The stale
+  regression still asserted Astro should remain hifi-pending because it lacked
+  bench-contract integration.
+- Fix evidence: the Astro matrix row now declares `hifi.enabled: true` and
+  `imageTransforms: enabled`; the stale hifi-pending assertion was replaced by
+  including Astro in the hifi-enabled framework list. The updated Astro Worker
+  was deployed to make the live target match the source/matrix state.
+- Positive probe:
+  - `pnpm check:matrix` passed.
+  - `pnpm test:cloudflare-config` passed with Astro in the hifi-enabled list.
+  - `pnpm cloudflare:config-audit -- --hifi --fail-on-gaps` passed with
+    20 hifi Workers targets and zero gaps.
+  - `pnpm test:contracts -- --suites mpa_airbnb_hifi --only astro --timeout 20000`
+    passed against the live Astro Worker after deploy.
+- Negative probe:
+  - before deploy, the same live hifi contract probe failed with 27 errors:
+    missing `mpa_airbnb_hifi` suite support plus 404s and missing hifi selectors
+    on `/hifi/stays` and `/hifi/stays/001`; after deploy the probe passed.
+  - `test:cloudflare-config` would fail if Astro lacks the hifi block or
+    required image transform metadata.
+- External-control action:
+  - deploy command: `pnpm -C apps/astro run deploy`.
+  - new deployed version: `4b7dda21-bd7c-4754-b0f7-c1a4619ce2f4`.
+  - rollback path recorded before deploy:
+    `pnpm -C apps/astro exec wrangler rollback --name cf-bench-astro 17270828-fc8c-4ab2-b387-56b2b0db8a61`.
+- Residual gap: broader all-framework hifi live verification remains outside
+  this targeted Astro fix checkpoint.

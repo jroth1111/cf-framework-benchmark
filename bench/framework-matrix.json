@@ -93,6 +93,7 @@
       "status": "blocked",
       "benchmarkEnabled": false,
       "appDir": "apps/analog",
+      "versionPackages": ["@analogjs/platform", "@analogjs/router", "@angular/core"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/analog run deploy"
@@ -115,6 +116,7 @@
           "media": { "renderMode": "prerender" }
         }
       },
+      "versionPackages": ["@angular/core", "@angular/router", "@angular/ssr", "@angular/build"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/angular run deploy"
@@ -139,6 +141,7 @@
           "media": { "renderMode": "prerender" }
         }
       },
+      "versionPackages": ["astro", "@astrojs/cloudflare"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/astro run deploy"
@@ -154,6 +157,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["hono"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono run deploy"
@@ -175,6 +179,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["hono", "solid-js", "vite-plugin-solid", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono-solid run deploy"
@@ -192,6 +197,7 @@
       "status": "scaffolded",
       "benchmarkEnabled": false,
       "appDir": "apps/hono-svelte",
+      "versionPackages": ["hono"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono-svelte run deploy"
@@ -213,6 +219,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["hono", "vue", "vue-router", "@vitejs/plugin-vue", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono-vue run deploy"
@@ -229,6 +236,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["hono", "honox", "@hono/vite-build", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/honox run deploy"
@@ -251,6 +259,7 @@
         "imageTransforms": "enabled",
         "reference": true
       },
+      "versionPackages": ["next", "@opennextjs/cloudflare", "react", "react-dom"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/next run deploy"
@@ -266,6 +275,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["nuxt", "vue", "h3", "nitropack"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/nuxt run deploy"
@@ -289,6 +299,7 @@
         "imageTransforms": "enabled",
         "reference": true
       },
+      "versionPackages": ["@qwik.dev/core", "@qwik.dev/router", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/qwik run deploy"
@@ -304,6 +315,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["react", "react-dom", "react-router-dom", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/react run deploy"
@@ -319,6 +331,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["react-router", "react", "react-dom", "@react-router/dev", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/react-router run deploy"
@@ -335,6 +348,7 @@
         "imageTransforms": "enabled",
         "reference": true
       },
+      "versionPackages": ["rwsdk", "react", "react-dom", "react-server-dom-webpack", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/redwood run deploy"
@@ -350,6 +364,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["solid-js", "@solidjs/router", "vite-plugin-solid", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/solid run deploy"
@@ -368,6 +383,7 @@
         "imageTransforms": "enabled",
         "reference": true
       },
+      "versionPackages": ["@solidjs/start", "@solidjs/router", "solid-js", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/solidstart run deploy"
@@ -384,6 +400,7 @@
         "imageTransforms": "enabled",
         "reference": true
       },
+      "versionPackages": ["@sveltejs/kit", "svelte", "@sveltejs/adapter-cloudflare", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/svelte run deploy"
@@ -399,6 +416,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["@tanstack/react-start", "@tanstack/react-router", "@cloudflare/vite-plugin", "react", "react-dom", "vinxi", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/tanstack-start run deploy"
@@ -426,6 +444,7 @@
           "media": { "renderMode": "prerender" }
         }
       },
+      "versionPackages": ["@tanstack/react-start", "@tanstack/react-router", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/tanstack-start run deploy"
@@ -443,6 +462,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["@tanstack/solid-start", "@tanstack/solid-router", "@cloudflare/vite-plugin", "solid-js", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/tanstack-start-solid run deploy"
@@ -471,6 +491,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["vike", "vike-react", "@photonjs/cloudflare", "react", "react-dom"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vike run deploy"
@@ -486,6 +507,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["vue", "vue-router", "@vitejs/plugin-vue", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vue run deploy"
@@ -503,6 +525,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["vue", "vue-router", "@vitejs/plugin-vue", "vite"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vue-c3 run deploy"
@@ -531,6 +554,7 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
+      "versionPackages": ["waku", "react", "react-dom", "react-server-dom-webpack"],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/waku run deploy"

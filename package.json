@@ -29,6 +29,7 @@
     "test:bench-stability": "node --check scripts/bench-stability.mjs",
     "test:cloudflare-config": "node scripts/test-cloudflare-config-audit.mjs",
     "test:cloudflare-config-fixtures": "node scripts/test-cloudflare-config-fixtures.mjs",
+    "test:version-packages": "node scripts/test-version-packages.mjs",
     "test:cloudflare-optimization": "node scripts/test-cloudflare-optimization-audit.mjs",
     "test:build-enabled": "node --check scripts/build-enabled.mjs",
     "check:startup": "node scripts/check-worker-startup.mjs",

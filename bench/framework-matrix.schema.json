@@ -140,7 +140,7 @@
     "framework": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "tier", "status", "benchmarkEnabled", "appDir", "deploy"],
+      "required": ["name", "tier", "status", "benchmarkEnabled", "appDir", "deploy", "versionPackages"],
       "properties": {
         "name": { "$ref": "#/$defs/frameworkName" },
         "c3Template": { "$ref": "#/$defs/frameworkName" },
@@ -157,6 +157,12 @@
         "composition": { "$ref": "#/$defs/compositionBlock" },
         "hifi": { "$ref": "#/$defs/hifiBlock" },
         "scenarioContracts": { "$ref": "#/$defs/scenarioContractsBySuite" },
+        "versionPackages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
         "deploy": { "$ref": "#/$defs/deployBlock" }
       }
     }

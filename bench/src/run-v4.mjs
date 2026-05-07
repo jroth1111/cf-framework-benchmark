@@ -190,6 +190,7 @@ async function main() {
       cloudflare: cloudflareByName.get(target.framework) ?? null,
       features: { clientNav: false },
       scenarioContracts,
+      versionPackages: target.matrix?.versionPackages ?? null,
       deploy: target.matrix?.deploy || null,
     });
   }

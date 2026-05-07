@@ -517,26 +517,20 @@ async function applyThrottling(page, throttling) {
   }
 }
 
-const FRAMEWORK_VERSION_KEYS = {
-  react: ['react', 'react-dom', 'react-router-dom', 'vite'],
-  astro: ['astro'],
-  next: ['next', '@opennextjs/cloudflare', 'react', 'react-dom'],
-  'tanstack-start': ['@tanstack/react-start', '@tanstack/react-router', '@cloudflare/vite-plugin', 'react', 'react-dom', 'vinxi', 'vite'],
-  'tanstack-start-solid': ['@tanstack/solid-start', '@tanstack/solid-router', '@cloudflare/vite-plugin', 'solid-js', 'vite'],
-  svelte: ['@sveltejs/kit', 'svelte', '@sveltejs/adapter-cloudflare', 'vite'],
-  qwik: ['@qwik.dev/core', '@qwik.dev/router', 'vite'],
-  solid: ['solid-js', 'vite'],
-};
-
-function pickFrameworkVersions(frameworkPackages) {
+export function pickFrameworkVersions(frameworks, frameworkPackages) {
   const out = {};
-  for (const [name, pkg] of Object.entries(frameworkPackages)) {
+  for (const fw of frameworks) {
+    const name = fw.name;
+    const pkg = frameworkPackages[name];
     if (!pkg) {
       out[name] = null;
       continue;
     }
+    const keys = Array.isArray(fw.versionPackages) ? fw.versionPackages : [];
+    if (!keys.length) {
+      throw new Error(`pickFrameworkVersions: framework "${name}" has no versionPackages declared. Set versionPackages in bench/framework-matrix.json.`);
+    }
     const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
-    const keys = FRAMEWORK_VERSION_KEYS[name] || [];
     const picked = {};
     for (const key of keys) {
       if (deps[key]) picked[key] = deps[key];
@@ -1793,7 +1787,7 @@ async function main() {
     }
   })();
   const frameworkPackages = await collectFrameworkPackages(frameworks);
-  const frameworkVersions = pickFrameworkVersions(frameworkPackages);
+  const frameworkVersions = pickFrameworkVersions(frameworks, frameworkPackages);
   const datasetInfo = await collectDatasetInfo();
   const cloudflarePlatform = await collectCloudflarePlatformEras();
   const gitInfo = getGitInfo();

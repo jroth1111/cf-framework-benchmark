@@ -54,6 +54,33 @@
           "initialData": "document",
           "hydrationModel": "framework"
         }
+      },
+      "mpa_airbnb_hifi": {
+        "home": {
+          "renderMode": "ssr",
+          "initialData": "document",
+          "hydrationModel": "framework"
+        },
+        "hifi_stays": {
+          "renderMode": "ssr",
+          "initialData": "document",
+          "hydrationModel": "framework"
+        },
+        "hifi_stay_detail": {
+          "renderMode": "ssr",
+          "initialData": "document",
+          "hydrationModel": "framework"
+        },
+        "blog": {
+          "renderMode": "ssr",
+          "initialData": "document",
+          "hydrationModel": "framework"
+        },
+        "blog_post": {
+          "renderMode": "ssr",
+          "initialData": "document",
+          "hydrationModel": "framework"
+        }
       }
     }
   },

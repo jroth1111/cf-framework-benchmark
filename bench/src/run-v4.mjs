@@ -54,21 +54,6 @@ function mapScenario(sc) {
   return out;
 }
 
-export function defaultScenarioContract(sc) {
-  if (sc.type === 'spa') {
-    return {
-      renderMode: 'spa',
-      initialData: 'client-fetch',
-      hydrationModel: 'framework',
-    };
-  }
-  return {
-    renderMode: 'ssr',
-    initialData: 'document',
-    hydrationModel: 'framework',
-  };
-}
-
 export function defaultOutPathForSuite(suiteName) {
   return path.join(BENCH_DIR, `results.v4.${suiteName}.json`);
 }
@@ -187,10 +172,13 @@ async function main() {
   for (const target of targets) {
     const scenarioContracts = {};
     for (const sc of scenarios) {
-      scenarioContracts[sc.name] = {
-        ...defaultScenarioContract(sc),
-        ...(target.matrix?.scenarioContracts?.[suiteName]?.[sc.name] || {}),
-      };
+      const matrixContract = target.matrix?.scenarioContracts?.[suiteName]?.[sc.name];
+      if (!matrixContract?.renderMode || !matrixContract?.initialData || !matrixContract?.hydrationModel) {
+        throw new Error(
+          `run-v4: matrix lacks scenario contract for framework="${target.framework}", suite="${suiteName}", scenario="${sc.name}". Add benchmarkDefaults.scenarioContracts.${suiteName}.${sc.name} or a per-framework override in bench/framework-matrix.json.`
+        );
+      }
+      scenarioContracts[sc.name] = { ...matrixContract };
     }
 
     frameworks.push({

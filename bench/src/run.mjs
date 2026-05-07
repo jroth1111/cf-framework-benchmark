@@ -671,43 +671,6 @@ function cloudflareTraceMetadata(headers = {}) {
   };
 }
 
-const DEFAULT_SCENARIOS = [
-  { name: 'home', path: '/', type: 'ssr' },
-  { name: 'stays', path: '/stays', type: 'ssr', waitFor: '[data-testid="stay-card"]' },
-  {
-    name: 'blog',
-    path: '/blog',
-    type: 'ssg',
-    waitFor: '[data-testid="blog-post-card"]',
-    waitUntil: 'domcontentloaded',
-    reload: false,
-  },
-  { name: 'chart', path: '/chart', interact: true, type: 'spa' },
-  {
-    name: 'spa_nav',
-    type: 'client-nav',
-    requiresFeature: 'clientNav',
-    clientNav: {
-      from: '/',
-      to: '/stays',
-      click: 'a[href="/stays"]',
-      waitFor: '[data-testid="stay-card"]',
-    },
-  },
-  {
-    name: 'spa_nav_dynamic',
-    type: 'client-nav',
-    requiresFeature: 'clientNav',
-    clientNav: {
-      from: '/stays',
-      waitForFrom: '[data-testid="stay-card"]',
-      click: '[data-testid="stay-card"]',
-      toPattern: '/stays/\\d+$',
-      waitFor: '[data-testid="stay-description"]',
-    },
-  },
-];
-
 function normalizeFrameworks(frameworks) {
   if (Array.isArray(frameworks)) return frameworks;
   if (!frameworks) return [];
@@ -717,18 +680,14 @@ function normalizeFrameworks(frameworks) {
   });
 }
 
-export function fallbackScenarioContractForType(type) {
-  if (type === 'spa') {
-    return { renderMode: 'spa', initialData: 'client-fetch', hydrationModel: 'framework' };
+function scenarioContractForFramework(fw, scenarioName) {
+  const explicit = fw?.scenarioContracts?.[scenarioName];
+  if (!explicit || !explicit.renderMode || !explicit.initialData || !explicit.hydrationModel) {
+    throw new Error(
+      `scenarioContractForFramework: framework "${fw?.name ?? 'unknown'}" missing explicit contract for scenario "${scenarioName}". Resolve via run-v4.mjs (matrix benchmarkDefaults.scenarioContracts) or framework override.`
+    );
   }
-  return { renderMode: 'ssr', initialData: 'document', hydrationModel: 'framework' };
-}
-
-function scenarioContractForFramework(fw, scenarioName, scenarioType) {
-  return {
-    ...fallbackScenarioContractForType(scenarioType),
-    ...(fw?.scenarioContracts?.[scenarioName] || {}),
-  };
+  return { ...explicit };
 }
 
 export function scenarioContractBucketKey({ delivery, implementationKind, tier, cloudflareMode, scenario, contract }) {
@@ -744,7 +703,7 @@ export function scenarioContractBucketKey({ delivery, implementationKind, tier, 
   ].join('::');
 }
 
-function frameworkBucketKey(meta, scenarioNames, scenarioTypesByName) {
+function frameworkBucketKey(meta, scenarioNames) {
   const delivery = meta?.delivery ?? 'unknown';
   const implementationKind = meta?.implementationKind ?? 'unknown';
   const tier = meta?.tier ?? 'unknown';
@@ -756,7 +715,7 @@ function frameworkBucketKey(meta, scenarioNames, scenarioTypesByName) {
     `cf=${cloudflareMode}`,
   ];
   for (const scenarioName of scenarioNames) {
-    const contract = scenarioContractForFramework(meta, scenarioName, scenarioTypesByName.get(scenarioName));
+    const contract = scenarioContractForFramework(meta, scenarioName);
     segments.push(
       `${scenarioName}[render=${contract.renderMode || 'unknown'},data=${contract.initialData || 'unknown'},hydration=${contract.hydrationModel || 'unknown'}]`
     );
@@ -1428,7 +1387,7 @@ async function runScenario(
   throttleApplied,
   flamegraphs
 ) {
-  const scenarioContract = scenarioContractForFramework(fw, sc.name, sc.type);
+  const scenarioContract = scenarioContractForFramework(fw, sc.name);
   const frameworkMeta = {
     delivery: fw.delivery ?? null,
     implementationKind: fw.implementationKind ?? null,
@@ -1689,7 +1648,10 @@ async function main() {
   const headless = !flag('--headed');
   const skipWarmup = flag('--skip-warmup');
   const warmupEnabled = skipWarmup ? false : Boolean(config.warmup ?? true);
-  const scenarios = Array.isArray(config.scenarios) ? config.scenarios : DEFAULT_SCENARIOS;
+  if (!Array.isArray(config.scenarios) || !config.scenarios.length) {
+    throw new Error(`bench config at ${configPath} must declare a non-empty scenarios array. Suite-defined scenarios are the single source of authority; the runner no longer ships defaults.`);
+  }
+  const scenarios = config.scenarios;
   const frameworks = normalizeFrameworks(config.frameworks);
   const profileArg = arg('--profile', null);
   const iterationsArg = arg('--iterations', null);
@@ -2020,7 +1982,7 @@ async function main() {
     const delivery = meta.delivery ?? 'unknown';
     const implementationKind = meta.implementationKind ?? 'unknown';
     const scenarioType = rows[0]?.scenarioType ?? scenarioTypesByName.get(scenario);
-    const scenarioContract = scenarioContractForFramework(meta, scenario, scenarioType);
+    const scenarioContract = scenarioContractForFramework(meta, scenario);
     const bucketKeyScenario = scenarioContractBucketKey({
       delivery,
       implementationKind,
@@ -2162,7 +2124,7 @@ async function main() {
   const buckets = new Map();
   for (const name of frameworkNames) {
     const meta = frameworkMetaByName.get(name) || {};
-    const key = frameworkBucketKey(meta, scenarioNames, scenarioTypesByName);
+    const key = frameworkBucketKey(meta, scenarioNames);
     const bucket = buckets.get(key) || { key, frameworks: [] };
     bucket.frameworks.push(name);
     buckets.set(key, bucket);

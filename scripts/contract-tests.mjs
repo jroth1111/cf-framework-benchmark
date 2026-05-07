@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { blogPosts, listings } from "../packages/dataset/src/index.js";
 import {
   DEFAULT_MATRIX_PATH,
@@ -9,6 +12,15 @@ import {
   resolveLiveTargets,
   toAbsolutePath,
 } from "../bench/src/config-v4.mjs";
+
+const CONTRACTS_PATH = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "contracts",
+  "v5.json"
+);
+const CONTRACTS = JSON.parse(await fs.readFile(CONTRACTS_PATH, "utf8"));
+const ROUTES_BY_PATH = new Map(CONTRACTS.routes.map((r) => [r.route, r]));
 
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);
@@ -129,10 +141,9 @@ async function fetchHtmlStatus(label, url) {
 }
 
 function routeSample(route) {
-  if (route === "/stays/:id") return "/stays/001";
-  if (route === "/hifi/stays/:id") return "/hifi/stays/001";
   if (route === "/blog/:slug") return `/blog/${blogPosts[0]?.slug || "why-this-benchmark-exists"}`;
-  return route;
+  const entry = ROUTES_BY_PATH.get(route);
+  return entry?.staticSample ?? route;
 }
 
 function routeSamples(route) {
@@ -143,69 +154,18 @@ function routeSamples(route) {
 }
 
 function requiredTestIdsForRoute(route) {
-  switch (route) {
-    case "/":
-      return [];
-    case "/stays":
-      return ["stay-card"];
-    case "/stays/:id":
-      return ["stay-description"];
-    case "/hifi/stays":
-      return ["stay-card"];
-    case "/hifi/stays/:id":
-      return [
-        "stay-hero-image",
-        "stay-gallery",
-        "stay-reviews",
-        "stay-booking-form",
-        "stay-booking-total",
-        "stay-map",
-      ];
-    case "/blog":
-      return ["blog-post-card"];
-    case "/blog/:slug":
-      return ["blog-html"];
-    case "/chart":
-      return ["chart-canvas", "symbol-select", "timeframe-select"];
-    case "/media":
-      return ["media-card", "media-player", "media-next"];
-    default:
-      return [];
-  }
+  return ROUTES_BY_PATH.get(route)?.requiredTestIds ?? [];
 }
 
 function expectedHtmlCache(route) {
-  switch (route) {
-    case "/stays":
-    case "/blog":
-    case "/hifi/stays":
-      return "s-maxage=60";
-    case "/stays/:id":
-    case "/blog/:slug":
-    case "/hifi/stays/:id":
-      return "s-maxage=300";
-    case "/":
-    case "/chart":
-    case "/media":
-      return "no-store";
-    default:
-      return null;
-  }
+  return ROUTES_BY_PATH.get(route)?.expectedHtmlCache ?? null;
 }
 
 function expectedDatasetContent(route) {
-  switch (route) {
-    case "/stays":
-    case "/stays/:id":
-    case "/hifi/stays":
-    case "/hifi/stays/:id":
-      return [listings[0]?.title].filter(Boolean);
-    case "/blog":
-    case "/blog/:slug":
-      return [blogPosts[0]?.title].filter(Boolean);
-    default:
-      return [];
-  }
+  const source = ROUTES_BY_PATH.get(route)?.expectedDatasetSource;
+  if (source === "listings") return [listings[0]?.title].filter(Boolean);
+  if (source === "blogPosts") return [blogPosts[0]?.title].filter(Boolean);
+  return [];
 }
 
 function frameworkSupportsHifi(framework) {

@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "1.0.0",
+  "contractVersion": "v5+v6-addendum",
+  "description": "Single source of truth for the per-route benchmark contract. Replaces switch statements previously embedded in scripts/contract-report.mjs, scripts/contract-tests.mjs, and the CONTRACT_ROUTES literal in scripts/cloudflare-config-audit.mjs. expectedDatasetSource names a dataset key (listings | blogPosts) the consumer resolves at runtime; staticSample is used by static-context consumers without dataset access.",
+  "routes": [
+    {
+      "route": "/",
+      "kind": "html",
+      "staticSample": "/",
+      "suites": ["mpa_airbnb", "mpa_airbnb_hifi"],
+      "requiredTestIds": [],
+      "expectedHtmlCache": "no-store",
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": true
+    },
+    {
+      "route": "/stays",
+      "kind": "html",
+      "staticSample": "/stays",
+      "suites": ["mpa_airbnb"],
+      "requiredTestIds": ["stay-card"],
+      "expectedHtmlCache": "s-maxage=60",
+      "expectedDatasetSource": "listings",
+      "includeInAssetClassification": true
+    },
+    {
+      "route": "/stays/:id",
+      "kind": "html",
+      "staticSample": "/stays/001",
+      "suites": ["mpa_airbnb"],
+      "requiredTestIds": ["stay-description"],
+      "expectedHtmlCache": "s-maxage=300",
+      "expectedDatasetSource": "listings",
+      "includeInAssetClassification": true
+    },
+    {
+      "route": "/blog",
+      "kind": "html",
+      "staticSample": "/blog",
+      "suites": ["mpa_airbnb", "mpa_airbnb_hifi"],
+      "requiredTestIds": ["blog-post-card"],
+      "expectedHtmlCache": "s-maxage=60",
+      "expectedDatasetSource": "blogPosts",
+      "includeInAssetClassification": true
+    },
+    {
+      "route": "/blog/:slug",
+      "kind": "html",
+      "staticSample": "/blog/why-this-benchmark-exists",
+      "suites": ["mpa_airbnb", "mpa_airbnb_hifi"],
+      "requiredTestIds": ["blog-html"],
+      "expectedHtmlCache": "s-maxage=300",
+      "expectedDatasetSource": "blogPosts",
+      "includeInAssetClassification": true
+    },
+    {
+      "route": "/chart",
+      "kind": "html",
+      "staticSample": "/chart",
+      "suites": ["spa_trading_media"],
+      "requiredTestIds": ["chart-canvas", "symbol-select", "timeframe-select"],
+      "expectedHtmlCache": "no-store",
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": true
+    },
+    {
+      "route": "/media",
+      "kind": "html",
+      "staticSample": "/media",
+      "suites": ["spa_trading_media"],
+      "requiredTestIds": ["media-card", "media-player", "media-next"],
+      "expectedHtmlCache": "no-store",
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": true
+    },
+    {
+      "route": "/hifi/stays",
+      "kind": "html",
+      "staticSample": "/hifi/stays",
+      "suites": ["mpa_airbnb_hifi"],
+      "requiredTestIds": ["stay-card"],
+      "expectedHtmlCache": "s-maxage=60",
+      "expectedDatasetSource": "listings",
+      "includeInAssetClassification": false
+    },
+    {
+      "route": "/hifi/stays/:id",
+      "kind": "html",
+      "staticSample": "/hifi/stays/001",
+      "suites": ["mpa_airbnb_hifi"],
+      "requiredTestIds": [
+        "stay-hero-image",
+        "stay-gallery",
+        "stay-reviews",
+        "stay-booking-form",
+        "stay-booking-total",
+        "stay-map"
+      ],
+      "expectedHtmlCache": "s-maxage=300",
+      "expectedDatasetSource": "listings",
+      "includeInAssetClassification": false
+    },
+    {
+      "route": "/api/bench",
+      "kind": "api",
+      "staticSample": "/api/bench",
+      "suites": [],
+      "requiredTestIds": [],
+      "expectedHtmlCache": null,
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": true
+    },
+    {
+      "route": "/api/listings",
+      "kind": "api",
+      "staticSample": "/api/listings?pageSize=1",
+      "suites": [],
+      "requiredTestIds": [],
+      "expectedHtmlCache": null,
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": false
+    },
+    {
+      "route": "/api/prices",
+      "kind": "api",
+      "staticSample": "/api/prices?symbol=BTC&timeframe=1h&points=120",
+      "suites": [],
+      "requiredTestIds": [],
+      "expectedHtmlCache": null,
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": false
+    },
+    {
+      "route": "/api/media",
+      "kind": "api",
+      "staticSample": "/api/media?pageSize=3",
+      "suites": [],
+      "requiredTestIds": [],
+      "expectedHtmlCache": null,
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": false
+    }
+  ]
+}

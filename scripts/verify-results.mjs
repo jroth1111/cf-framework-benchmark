@@ -42,7 +42,7 @@ export async function verifyResultPair(jsonPath, { requireRowHashes = true } = {
   if (result.provenance?.git?.dirty === true && !path.basename(jsonPath).includes(".dirty.")) {
     fail("dirty provenance written to non-.dirty result path", failures);
   }
-  for (const name of ["matrix", "targets", "lockfile", "contract", "cloudflarePlatform", "cloudflareConfig", "cloudflareOptimization"]) {
+  for (const name of ["matrix", "targets", "lockfile", "contract", "contractsJson", "cloudflarePlatform", "cloudflareConfig", "cloudflareOptimization"]) {
     if (!result.provenance?.hashes?.[name]) fail(`missing provenance.hashes.${name}`, failures);
   }
   if (!result.provenance?.cloudflarePlatform?.activeEra) fail("missing provenance.cloudflarePlatform.activeEra", failures);

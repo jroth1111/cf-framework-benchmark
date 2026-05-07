@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 import fs from "node:fs/promises";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const CONTRACTS_PATH = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "contracts",
+  "v5.json"
+);
+const CONTRACTS = JSON.parse(await fs.readFile(CONTRACTS_PATH, "utf8"));
 
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);
@@ -129,7 +137,9 @@ function routeMatchesPattern(route, pattern) {
   return false;
 }
 
-const CONTRACT_ROUTES = ["/", "/stays", "/stays/001", "/blog", "/blog/why-this-benchmark-exists", "/chart", "/media", "/api/bench"];
+const CONTRACT_ROUTES = CONTRACTS.routes
+  .filter((route) => route.includeInAssetClassification)
+  .map((route) => route.staticSample);
 
 function classifyAssetRouting(assets) {
   if (!assets) {

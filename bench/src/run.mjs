@@ -168,10 +168,11 @@ export function assertCanonicalResultWritable({ outPath, gitInfo, allowDirtyProv
 
 export function benchmarkContractHashInput() {
   return {
-    version: 1,
+    version: 2,
     contracts: {
       v5: hashFile('docs/contracts-v5.md') || hashFile('docs/contracts-v3.md'),
       v6Addendum: hashFile('docs/contracts-v6-addendum.md'),
+      contractsJson: hashFile('contracts/v5.json'),
     },
   };
 }
@@ -2465,6 +2466,7 @@ async function main() {
       targets: hashFile('bench/targets.live.json'),
       lockfile: hashFile('pnpm-lock.yaml'),
       contract: benchmarkContractHash(),
+      contractsJson: hashFile('contracts/v5.json'),
       cloudflarePlatform: hashFile(CLOUDFLARE_PLATFORM_ERAS_PATH),
       cloudflareConfig: sha256(cloudflareAuditStable),
       cloudflareOptimization: sha256(cloudflareOptimizationAuditStable),
@@ -2682,6 +2684,7 @@ async function main() {
   md += `| Matrix hash | ${provenance.hashes.matrix || '—'} |\n`;
   md += `| Targets hash | ${provenance.hashes.targets || '—'} |\n`;
   md += `| Contract hash | ${provenance.hashes.contract || '—'} |\n`;
+  md += `| Contracts JSON hash | ${provenance.hashes.contractsJson || '—'} |\n`;
   md += `| Cloudflare platform hash | ${provenance.hashes.cloudflarePlatform || '—'} |\n`;
   md += `| Cloudflare platform era | ${provenance.cloudflarePlatform?.activeEra || '—'} |\n`;
   md += `| Cloudflare config hash | ${provenance.hashes.cloudflareConfig || '—'} |\n`;

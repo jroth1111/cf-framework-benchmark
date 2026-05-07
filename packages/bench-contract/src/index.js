@@ -16,37 +16,21 @@ import {
   getAnalyticsSdkSource,
   getMapsSdkSource,
 } from "./sdk-fixtures.js";
+import { HIFI_SUITE_FRAMEWORKS } from "./hifi-suite-frameworks.generated.js";
+
+export { HIFI_SUITE_FRAMEWORKS };
 
 const BASE_SUITES = ["mpa_airbnb", "spa_trading_media"];
 const HIFI_SUITE = "mpa_airbnb_hifi";
-export const HIFI_SUITE_FRAMEWORKS = [
-  "astro",
-  "hono",
-  "hono-solid",
-  "hono-vue",
-  "honox",
-  "next",
-  "nuxt",
-  "qwik",
-  "react",
-  "react-router",
-  "redwood",
-  "solid",
-  "solidstart",
-  "svelte",
-  "tanstack-start",
-  "tanstack-start-solid",
-  "vike",
-  "vue",
-  "vue-c3",
-  "waku",
-];
 const HIFI_SUITE_FRAMEWORK_SET = new Set(HIFI_SUITE_FRAMEWORKS);
 const SDK_CACHE = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
 export { parseIntParam } from "@cf-bench/bench-utils";
 
 export function suiteSupportForFramework(framework) {
-  const normalized = String(framework || "").toLowerCase();
+  if (typeof framework !== "string" || framework.trim() === "") {
+    throw new Error("suiteSupportForFramework: framework must be a non-empty string.");
+  }
+  const normalized = framework.toLowerCase();
   return HIFI_SUITE_FRAMEWORK_SET.has(normalized) ? [...BASE_SUITES, HIFI_SUITE] : [...BASE_SUITES];
 }
 
@@ -59,6 +43,9 @@ export function json(data, options = {}) {
 }
 
 export function handleBench(framework) {
+  if (typeof framework !== "string" || framework.trim() === "") {
+    throw new Error("handleBench: framework must be a non-empty string identifying the app.");
+  }
   const start = performance.now();
   const g = globalThis;
   g.__CF_BENCH_ISOLATE_HITS = (g.__CF_BENCH_ISOLATE_HITS ?? 0) + 1;

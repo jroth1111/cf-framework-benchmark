@@ -11,7 +11,7 @@ export function json(data: unknown, options?: JsonOptions): Response;
 export function parseIntParam(value: string | null, fallback: number): number;
 export function parseIntParam(value: string | null, fallback: undefined): number | undefined;
 export function parseIntParam(value: string | null, fallback: number | undefined): number | undefined;
-export const HIFI_SUITE_FRAMEWORKS: string[];
+export const HIFI_SUITE_FRAMEWORKS: readonly string[];
 export function suiteSupportForFramework(framework: string): ("mpa_airbnb" | "spa_trading_media" | "mpa_airbnb_hifi" | string)[];
 
 export type BenchResponseV3 = {

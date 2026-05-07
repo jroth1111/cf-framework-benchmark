@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import {
   assertCanonicalResultWritable,
   isCanonicalResultPath,
+  loadScoringRubric,
+  scoringRubricHash,
   provenanceHashForRow,
   benchmarkContractHashInput,
   scenarioContractBucketKey,
@@ -20,6 +22,33 @@ assert.equal(
   defaultOutPathForSuite("spa_trading_media"),
   path.join(repoRoot, "bench", "results.v4.spa_trading_media.json")
 );
+
+// Scoring rubric loader: model literal lives in bench/scoring-rubric.json,
+// metricWeights and scenarioWeights each sum to 1.0, and the file produces
+// a non-null hash that the runner stamps into provenance.hashes.scoring.
+{
+  const rubric = loadScoringRubric();
+  assert.equal(rubric.model, "real-world-choice-v1");
+  const sumMetric = Object.values(rubric.metricWeights).reduce((s, w) => s + Number(w), 0);
+  const sumScenario = Object.values(rubric.scenarioWeights).reduce((s, w) => s + Number(w), 0);
+  assert.ok(Math.abs(sumMetric - 1) < 1e-6, `metricWeights must sum to 1.0 (got ${sumMetric})`);
+  assert.ok(Math.abs(sumScenario - 1) < 1e-6, `scenarioWeights must sum to 1.0 (got ${sumScenario})`);
+  const hash = scoringRubricHash();
+  assert.ok(typeof hash === "string" && hash.length === 64, `scoringRubricHash must be 64-char sha256 (got ${hash})`);
+}
+
+// run.mjs must reference the model literal "real-world-choice-v1" only inside
+// the loader path, not as inline scoring code; everything else must read from
+// the JSON file via loadScoringRubric().
+{
+  const runMjs = await fs.readFile(path.join(repoRoot, "bench/src/run.mjs"), "utf8");
+  const occurrences = (runMjs.match(/real-world-choice-v1/g) || []).length;
+  assert.equal(
+    occurrences,
+    0,
+    `bench/src/run.mjs must not contain the scoring model literal directly; the loader reads bench/scoring-rubric.json. Found ${occurrences}.`
+  );
+}
 
 // Bucket-key invariance: every (framework × suite × scenario) triple in the matrix
 // must produce a stable bucket key under the contract resolved from

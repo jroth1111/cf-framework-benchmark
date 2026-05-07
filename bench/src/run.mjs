@@ -181,6 +181,30 @@ export function benchmarkContractHash() {
   return sha256(benchmarkContractHashInput());
 }
 
+const SCORING_RUBRIC_PATH = 'bench/scoring-rubric.json';
+
+export function loadScoringRubric() {
+  const fullPath = path.resolve(REPO_ROOT, SCORING_RUBRIC_PATH);
+  const raw = readFileSync(fullPath, 'utf8');
+  const rubric = JSON.parse(raw);
+  if (!rubric || typeof rubric.model !== 'string' || !rubric.metricWeights || !rubric.scenarioWeights) {
+    throw new Error(`${SCORING_RUBRIC_PATH} must include model, metricWeights, scenarioWeights.`);
+  }
+  const sumMetric = Object.values(rubric.metricWeights).reduce((s, w) => s + Number(w || 0), 0);
+  const sumScenario = Object.values(rubric.scenarioWeights).reduce((s, w) => s + Number(w || 0), 0);
+  if (Math.abs(sumMetric - 1) > 1e-6) {
+    throw new Error(`${SCORING_RUBRIC_PATH}: metricWeights must sum to 1.0 (got ${sumMetric}).`);
+  }
+  if (Math.abs(sumScenario - 1) > 1e-6) {
+    throw new Error(`${SCORING_RUBRIC_PATH}: scenarioWeights must sum to 1.0 (got ${sumScenario}).`);
+  }
+  return rubric;
+}
+
+export function scoringRubricHash() {
+  return hashFile(SCORING_RUBRIC_PATH);
+}
+
 function parseCsvSet(value) {
   const tokens = String(value || '')
     .split(',')
@@ -2095,27 +2119,7 @@ async function main() {
   const clientNavScenarios = [...new Set(summary.filter(s => s.scenarioType === 'client-nav').map(s => s.scenario))];
   const phases = [...new Set(summary.map(s => s.phase))];
 
-  const scoringRubric = {
-    model: 'real-world-choice-v1',
-    direction: 'lower-is-better',
-    normalization: 'min-max per metric within each profile/phase/tier/contract bucket; missing metrics are omitted and remaining observed weights are renormalized',
-    metricWeights: {
-      lcp: 0.3,
-      tbt: 0.2,
-      ttfb: 0.15,
-      interaction: 0.15,
-      scriptBoot: 0.1,
-      jsBytes: 0.05,
-      heap: 0.05,
-    },
-    scenarioWeights: {
-      home: 0.1,
-      stays: 0.25,
-      blog: 0.2,
-      chart: 0.25,
-      media: 0.2,
-    },
-  };
+  const scoringRubric = loadScoringRubric();
   const metricWeights = scoringRubric.metricWeights;
   const scenarioWeights = scoringRubric.scenarioWeights;
 
@@ -2429,6 +2433,7 @@ async function main() {
       lockfile: hashFile('pnpm-lock.yaml'),
       contract: benchmarkContractHash(),
       contractsJson: hashFile('contracts/v5.json'),
+      scoring: scoringRubricHash(),
       cloudflarePlatform: hashFile(CLOUDFLARE_PLATFORM_ERAS_PATH),
       cloudflareConfig: sha256(cloudflareAuditStable),
       cloudflareOptimization: sha256(cloudflareOptimizationAuditStable),
@@ -2647,6 +2652,7 @@ async function main() {
   md += `| Targets hash | ${provenance.hashes.targets || '—'} |\n`;
   md += `| Contract hash | ${provenance.hashes.contract || '—'} |\n`;
   md += `| Contracts JSON hash | ${provenance.hashes.contractsJson || '—'} |\n`;
+  md += `| Scoring rubric hash | ${provenance.hashes.scoring || '—'} |\n`;
   md += `| Cloudflare platform hash | ${provenance.hashes.cloudflarePlatform || '—'} |\n`;
   md += `| Cloudflare platform era | ${provenance.cloudflarePlatform?.activeEra || '—'} |\n`;
   md += `| Cloudflare config hash | ${provenance.hashes.cloudflareConfig || '—'} |\n`;

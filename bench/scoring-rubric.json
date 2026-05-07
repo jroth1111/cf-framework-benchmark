@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "model": "real-world-choice-v1",
+  "direction": "lower-is-better",
+  "normalization": "min-max per metric within each profile/phase/tier/contract bucket; missing metrics are omitted and remaining observed weights are renormalized",
+  "metricWeights": {
+    "lcp": 0.3,
+    "tbt": 0.2,
+    "ttfb": 0.15,
+    "interaction": 0.15,
+    "scriptBoot": 0.1,
+    "jsBytes": 0.05,
+    "heap": 0.05
+  },
+  "scenarioWeights": {
+    "home": 0.1,
+    "stays": 0.25,
+    "blog": 0.2,
+    "chart": 0.25,
+    "media": 0.2
+  }
+}

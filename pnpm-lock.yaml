@@ -210,6 +210,9 @@ importers:
       '@cf-bench/bench-config':
         specifier: workspace:*
         version: link:../../packages/bench-config
+      '@cf-bench/bench-contract':
+        specifier: workspace:*
+        version: link:../../packages/bench-contract
       '@cf-bench/bench-types':
         specifier: workspace:*
         version: link:../../packages/bench-types
@@ -454,6 +457,9 @@ importers:
       '@cf-bench/bench-config':
         specifier: workspace:*
         version: link:../../packages/bench-config
+      '@cf-bench/bench-contract':
+        specifier: workspace:*
+        version: link:../../packages/bench-contract
       '@cf-bench/bench-types':
         specifier: workspace:*
         version: link:../../packages/bench-types

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "13.3.1",
+    "@cf-bench/bench-contract": "workspace:*",
     "@cf-bench/bench-config": "workspace:*",
     "@cf-bench/bench-types": "workspace:*",
     "@cf-bench/chart-core": "workspace:*",

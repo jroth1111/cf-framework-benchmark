@@ -97,6 +97,7 @@ export function queryMedia(params?: {
 
 export const chartSymbols: string[];
 export const chartTimeframes: readonly ['1m', '5m', '15m', '1h', '4h', '1d'];
+export const MAX_CANDLE_POINTS: 2000;
 export function timeframeToMs(tf: string): number;
 export function generateCandles(symbol: string, opts?: { points?: number; startPrice?: number; timeframe?: string }): Candle[];
 

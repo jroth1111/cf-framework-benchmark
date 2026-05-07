@@ -328,6 +328,11 @@ export function getListing(id) {
   return listings.find((l) => l.id === id);
 }
 
+function clampInt(value, fallback, min, max) {
+  const n = typeof value === 'number' && Number.isFinite(value) ? Math.trunc(value) : fallback;
+  return Math.max(min, Math.min(max, n));
+}
+
 /**
  * Server-ish helper used by multiple frameworks (SSR and API).
  * @param {{ city?: string; max?: number; sort?: 'relevance'|'price_asc'|'price_desc'|'rating_desc'; page?: number; pageSize?: number }} params
@@ -336,8 +341,8 @@ export function queryListings(params = {}) {
   const city = params.city || '';
   const max = typeof params.max === 'number' ? params.max : null;
   const sort = params.sort || 'relevance';
-  const pageSize = Math.max(1, Math.min(50, params.pageSize ?? 24));
-  const page = Math.max(1, params.page ?? 1);
+  const pageSize = clampInt(params.pageSize, 24, 1, 50);
+  const page = clampInt(params.page, 1, 1, Number.MAX_SAFE_INTEGER);
 
   let rows = listings.slice();
   if (city) rows = rows.filter((l) => l.city === city);
@@ -557,8 +562,8 @@ export function getMedia(id) {
  */
 export function queryMedia(params = {}) {
   const channel = params.channel || '';
-  const pageSize = Math.max(1, Math.min(50, params.pageSize ?? 20));
-  const page = Math.max(1, params.page ?? 1);
+  const pageSize = clampInt(params.pageSize, 20, 1, 50);
+  const page = clampInt(params.page, 1, 1, Number.MAX_SAFE_INTEGER);
 
   let rows = mediaItems.slice();
   if (channel) rows = rows.filter((m) => m.channel === channel);
@@ -579,6 +584,7 @@ export function queryMedia(params = {}) {
 
 export const chartSymbols = ['BTC', 'ETH', 'SOL', 'AAPL', 'TSLA', 'NVDA', 'GOOG', 'MSFT'];
 export const chartTimeframes = /** @type {const} */ (['1m', '5m', '15m', '1h', '4h', '1d']);
+export const MAX_CANDLE_POINTS = 2000;
 
 export function timeframeToMs(tf) {
   switch (tf) {
@@ -600,7 +606,7 @@ export function timeframeToMs(tf) {
  */
 export function generateCandles(symbol, opts = {}) {
   const timeframe = String(opts.timeframe || '1h').toLowerCase();
-  const points = opts.points ?? 360;
+  const points = clampInt(opts.points, 360, 1, MAX_CANDLE_POINTS);
   const seed = hashStringToSeed(`candle:${symbol}:${timeframe}`);
   const rand = mulberry32(seed);
   const startPrice = opts.startPrice ?? (symbol === 'BTC' ? 43000 : symbol === 'ETH' ? 2300 : 120);

@@ -6,8 +6,11 @@ import { CACHE, esc, parseIntParam, toUrl, withServerTiming } from "../packages/
 
 assert.equal(CACHE.noStore, "no-store");
 assert.equal(parseIntParam("12", 0), 12);
+assert.equal(parseIntParam("12.9", 0), 12);
+assert.equal(parseIntParam("-2.9", 0), -2);
 assert.equal(parseIntParam("", 5), 5);
 assert.equal(parseIntParam("x", undefined), undefined);
+assert.equal(parseIntParam("Infinity", 7), 7);
 assert.equal(toUrl("/stays?page=2").pathname, "/stays");
 assert.equal(esc(`<test>"'&`), "&lt;test&gt;&quot;&#39;&amp;");
 

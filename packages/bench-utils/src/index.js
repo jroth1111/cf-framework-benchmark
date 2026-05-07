@@ -38,7 +38,7 @@ export function withServerTiming(headers, start) {
 export function parseIntParam(value, fallback) {
   if (value == null || value === "") return fallback;
   const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
+  return Number.isFinite(n) ? Math.trunc(n) : fallback;
 }
 
 export function esc(value) {

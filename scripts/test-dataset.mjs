@@ -1,4 +1,4 @@
-import { BENCH_MEDIA_PAGE_SIZE, blogPosts, generateCandles, listings, mediaItems, queryMedia } from "../packages/dataset/src/index.js";
+import { BENCH_MEDIA_PAGE_SIZE, MAX_CANDLE_POINTS, blogPosts, generateCandles, listings, mediaItems, queryListings, queryMedia } from "../packages/dataset/src/index.js";
 
 const failures = [];
 
@@ -41,10 +41,27 @@ assert(
   "queryMedia should be deterministic for same params"
 );
 
+const fractionalListings = queryListings({ page: 1.9, pageSize: 2.9 });
+assert(fractionalListings.page === 1, `queryListings fractional page expected 1, got ${fractionalListings.page}`);
+assert(fractionalListings.pageSize === 2, `queryListings fractional pageSize expected 2, got ${fractionalListings.pageSize}`);
+assert(fractionalListings.results.length === 2, `queryListings fractional pageSize results expected 2, got ${fractionalListings.results.length}`);
+
+const clampedListings = queryListings({ page: -5, pageSize: 5000 });
+assert(clampedListings.page === 1, `queryListings negative page expected 1, got ${clampedListings.page}`);
+assert(clampedListings.pageSize === 50, `queryListings oversized pageSize expected 50, got ${clampedListings.pageSize}`);
+
+const fractionalMedia = queryMedia({ page: 2.9, pageSize: 3.9 });
+assert(fractionalMedia.page === 2, `queryMedia fractional page expected 2, got ${fractionalMedia.page}`);
+assert(fractionalMedia.pageSize === 3, `queryMedia fractional pageSize expected 3, got ${fractionalMedia.pageSize}`);
+assert(fractionalMedia.results.length === 3, `queryMedia fractional pageSize results expected 3, got ${fractionalMedia.results.length}`);
+
 const candlesA = generateCandles("BTC", { timeframe: "1h", points: 120 });
 const candlesB = generateCandles("BTC", { timeframe: "1h", points: 120 });
 assert(candlesA.length === 120, `generateCandles length expected 120, got ${candlesA.length}`);
 assert(candlesB.length === 120, `generateCandles length expected 120, got ${candlesB.length}`);
+assert(generateCandles("BTC", { timeframe: "1h", points: 2.9 }).length === 2, "generateCandles should truncate fractional point counts");
+assert(generateCandles("BTC", { timeframe: "1h", points: -10 }).length === 1, "generateCandles should clamp negative point counts to 1");
+assert(generateCandles("BTC", { timeframe: "1h", points: MAX_CANDLE_POINTS + 1 }).length === MAX_CANDLE_POINTS, "generateCandles should cap oversized point counts");
 
 const sampleIndexes = [0, Math.floor(candlesA.length / 2), candlesA.length - 1];
 for (const idx of sampleIndexes) {

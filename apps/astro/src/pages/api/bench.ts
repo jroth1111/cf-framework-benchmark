@@ -1,37 +1,7 @@
+import { handleContractApi } from "@cf-bench/bench-contract";
+
 export const prerender = false;
 
-function getIsolateId() {
-  const globalAny = globalThis as any;
-  if (!globalAny.__CF_BENCH_ISOLATE_ID) {
-    globalAny.__CF_BENCH_ISOLATE_ID = crypto.randomUUID();
-  }
-  return globalAny.__CF_BENCH_ISOLATE_ID as string;
-}
-
-function serverTiming(start: number) {
-  const dur = performance.now() - start;
-  return `cf_bench;dur=${dur.toFixed(1)};desc=\"${getIsolateId()}\"`;
-}
-
-export function GET() {
-  const start = performance.now();
-  (globalThis as any).__CF_BENCH_ISOLATE_HITS = ((globalThis as any).__CF_BENCH_ISOLATE_HITS ?? 0) + 1;
-  return new Response(
-    JSON.stringify({
-      isolateId: getIsolateId(),
-      hits: (globalThis as any).__CF_BENCH_ISOLATE_HITS,
-      now: Date.now(),
-      runtime: "cloudflare-workers",
-      framework: "astro",
-      contractVersion: "v3.0.0",
-      suiteSupport: ["mpa_airbnb", "spa_trading_media"],
-    }),
-    {
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "server-timing": serverTiming(start),
-      },
-    }
-  );
+export function GET({ request }: { request: Request }) {
+  return handleContractApi("astro", request)!;
 }

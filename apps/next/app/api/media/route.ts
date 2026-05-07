@@ -1,43 +1,5 @@
-import { queryMedia } from "@cf-bench/dataset";
-
-function getIsolateId() {
-  const globalAny = globalThis as any;
-  if (!globalAny.__CF_BENCH_ISOLATE_ID) {
-    globalAny.__CF_BENCH_ISOLATE_ID = crypto.randomUUID();
-  }
-  return globalAny.__CF_BENCH_ISOLATE_ID as string;
-}
-
-function json(data: unknown, init?: ResponseInit, timingStart?: number) {
-  const headers = new Headers(init?.headers);
-  headers.set("content-type", "application/json; charset=utf-8");
-  if (!headers.has("cache-control")) headers.set("cache-control", "public, max-age=0, s-maxage=60");
-  if (!headers.has("server-timing")) {
-    const dur = typeof timingStart === "number" ? performance.now() - timingStart : null;
-    headers.set(
-      "server-timing",
-      dur == null
-        ? `cf_bench;desc=\"${getIsolateId()}\"`
-        : `cf_bench;dur=${dur.toFixed(1)};desc=\"${getIsolateId()}\"`
-    );
-  }
-  return new Response(JSON.stringify(data), { ...init, headers });
-}
+import { handleContractApi } from "@cf-bench/bench-contract";
 
 export async function GET(req: Request) {
-  const start = performance.now();
-  const url = new URL(req.url);
-  const channel = url.searchParams.get("channel") || "";
-  const page = Number(url.searchParams.get("page") || "1");
-  const pageSize = Number(url.searchParams.get("pageSize") || "20");
-
-  return json(
-    queryMedia({
-      channel,
-      page: Number.isFinite(page) ? page : 1,
-      pageSize: Number.isFinite(pageSize) ? pageSize : 20,
-    }),
-    undefined,
-    start
-  );
+  return handleContractApi("next", req)!;
 }

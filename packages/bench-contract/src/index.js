@@ -17,9 +17,38 @@ import {
   getMapsSdkSource,
 } from "./sdk-fixtures.js";
 
-const SUITES = ["mpa_airbnb", "spa_trading_media", "mpa_airbnb_hifi"];
+const BASE_SUITES = ["mpa_airbnb", "spa_trading_media"];
+const HIFI_SUITE = "mpa_airbnb_hifi";
+export const HIFI_SUITE_FRAMEWORKS = [
+  "astro",
+  "hono",
+  "hono-solid",
+  "hono-vue",
+  "honox",
+  "next",
+  "nuxt",
+  "qwik",
+  "react",
+  "react-router",
+  "redwood",
+  "solid",
+  "solidstart",
+  "svelte",
+  "tanstack-start",
+  "tanstack-start-solid",
+  "vike",
+  "vue",
+  "vue-c3",
+  "waku",
+];
+const HIFI_SUITE_FRAMEWORK_SET = new Set(HIFI_SUITE_FRAMEWORKS);
 const SDK_CACHE = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
 export { parseIntParam } from "@cf-bench/bench-utils";
+
+export function suiteSupportForFramework(framework) {
+  const normalized = String(framework || "").toLowerCase();
+  return HIFI_SUITE_FRAMEWORK_SET.has(normalized) ? [...BASE_SUITES, HIFI_SUITE] : [...BASE_SUITES];
+}
 
 export function json(data, options = {}) {
   const { status = 200, cacheControl = null, headers = null, start = null } = options;
@@ -41,7 +70,7 @@ export function handleBench(framework) {
       runtime: "cloudflare-workers",
       framework,
       contractVersion: "v3.0.0",
-      suiteSupport: SUITES,
+      suiteSupport: suiteSupportForFramework(framework),
     },
     { cacheControl: CACHE.noStore, start }
   );

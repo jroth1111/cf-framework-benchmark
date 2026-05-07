@@ -398,3 +398,38 @@ Evidence:
 - Residual gap: live verification is for the current Cloudflare account's
   Workers targets only; it does not prove GitHub Actions execution, but the
   workflow wiring is covered by F-007.
+
+### F-009: Shared `/api/bench` source advertised hifi support for non-hifi frameworks
+
+Bead: `cf-framework-benchmark-8ba`
+
+Status: `verified`
+
+Evidence:
+
+- Source requirement: hifi participation is governed by matrix
+  `hifi.enabled === true`; non-hifi benchmark targets such as Angular must not
+  claim `mpa_airbnb_hifi` in `/api/bench`.
+- Root cause: `packages/bench-contract/src/index.js` hardcoded
+  `["mpa_airbnb", "spa_trading_media", "mpa_airbnb_hifi"]` for every
+  framework name. A fresh non-hifi deploy using shared `handleContractApi`
+  would therefore advertise unsupported hifi suite support.
+- Fix evidence: `suiteSupportForFramework()` now appends
+  `mpa_airbnb_hifi` only for framework names listed in
+  `HIFI_SUITE_FRAMEWORKS`; the regression checks that list against
+  `bench/framework-matrix.json` rows where `hifi.enabled === true`.
+- Positive probes:
+  - `pnpm test:bench-contract` passed.
+  - `node --check scripts/test-bench-contract.mjs`,
+    `node --check packages/bench-contract/src/index.js`, and
+    `git diff --check` passed.
+  - `pnpm verify:static` passed after wiring the regression into the static
+    gate.
+- Negative probes:
+  - `test-bench-contract` asserts `handleBench("angular")` and
+    `suiteSupportForFramework("control")` omit `mpa_airbnb_hifi`.
+  - the same test fails if the exported hifi framework list drifts from the
+    matrix `hifi.enabled` rows.
+- Residual gap: no live redeploy was performed for this fix because the
+  currently deployed non-hifi Angular Worker already omits hifi support and the
+  fix targets future source-built deployments.

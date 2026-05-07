@@ -18,16 +18,16 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaysIndexRouteImport } from './routes/stays.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as StaysIdRouteImport } from './routes/stays.$id'
+import { Route as HifiStaysRouteImport } from './routes/hifi.stays'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiPricesRouteImport } from './routes/api.prices'
 import { Route as ApiMediaRouteImport } from './routes/api.media'
 import { Route as ApiListingsRouteImport } from './routes/api.listings'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiBenchRouteImport } from './routes/api.bench'
-import { Route as ApiListingsIdRouteImport } from './routes/api.listings.$id'
-import { Route as HifiStaysRouteImport } from './routes/hifi.stays'
 import { Route as HifiStaysIndexRouteImport } from './routes/hifi.stays.index'
 import { Route as HifiStaysIdRouteImport } from './routes/hifi.stays.$id'
+import { Route as ApiListingsIdRouteImport } from './routes/api.listings.$id'
 
 const StaysRoute = StaysRouteImport.update({
   id: '/stays',
@@ -74,6 +74,11 @@ const StaysIdRoute = StaysIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => StaysRoute,
 } as any)
+const HifiStaysRoute = HifiStaysRouteImport.update({
+  id: '/stays',
+  path: '/stays',
+  getParentRoute: () => HifiRoute,
+} as any)
 const BlogSlugRoute = BlogSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -104,16 +109,6 @@ const ApiBenchRoute = ApiBenchRouteImport.update({
   path: '/api/bench',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiListingsIdRoute = ApiListingsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiListingsRoute,
-} as any)
-const HifiStaysRoute = HifiStaysRouteImport.update({
-  id: '/stays',
-  path: '/stays',
-  getParentRoute: () => HifiRoute,
-} as any)
 const HifiStaysIndexRoute = HifiStaysIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -123,6 +118,11 @@ const HifiStaysIdRoute = HifiStaysIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => HifiStaysRoute,
+} as any)
+const ApiListingsIdRoute = ApiListingsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiListingsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -328,6 +328,13 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof StaysIdRouteImport
       parentRoute: typeof StaysRoute
     }
+    '/hifi/stays': {
+      id: '/hifi/stays'
+      path: '/stays'
+      fullPath: '/hifi/stays'
+      preLoaderRoute: typeof HifiStaysRouteImport
+      parentRoute: typeof HifiRoute
+    }
     '/blog/$slug': {
       id: '/blog/$slug'
       path: '/$slug'
@@ -370,20 +377,6 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof ApiBenchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/listings/$id': {
-      id: '/api/listings/$id'
-      path: '/$id'
-      fullPath: '/api/listings/$id'
-      preLoaderRoute: typeof ApiListingsIdRouteImport
-      parentRoute: typeof ApiListingsRoute
-    }
-    '/hifi/stays': {
-      id: '/hifi/stays'
-      path: '/stays'
-      fullPath: '/hifi/stays'
-      preLoaderRoute: typeof HifiStaysRouteImport
-      parentRoute: typeof HifiRoute
-    }
     '/hifi/stays/': {
       id: '/hifi/stays/'
       path: '/'
@@ -397,6 +390,13 @@ declare module '@tanstack/solid-router' {
       fullPath: '/hifi/stays/$id'
       preLoaderRoute: typeof HifiStaysIdRouteImport
       parentRoute: typeof HifiStaysRoute
+    }
+    '/api/listings/$id': {
+      id: '/api/listings/$id'
+      path: '/$id'
+      fullPath: '/api/listings/$id'
+      preLoaderRoute: typeof ApiListingsIdRouteImport
+      parentRoute: typeof ApiListingsRoute
     }
   }
 }
@@ -412,30 +412,6 @@ const BlogRouteChildren: BlogRouteChildren = {
 }
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
-
-interface StaysRouteChildren {
-  StaysIdRoute: typeof StaysIdRoute
-  StaysIndexRoute: typeof StaysIndexRoute
-}
-
-const StaysRouteChildren: StaysRouteChildren = {
-  StaysIdRoute: StaysIdRoute,
-  StaysIndexRoute: StaysIndexRoute,
-}
-
-const StaysRouteWithChildren = StaysRoute._addFileChildren(StaysRouteChildren)
-
-interface ApiListingsRouteChildren {
-  ApiListingsIdRoute: typeof ApiListingsIdRoute
-}
-
-const ApiListingsRouteChildren: ApiListingsRouteChildren = {
-  ApiListingsIdRoute: ApiListingsIdRoute,
-}
-
-const ApiListingsRouteWithChildren = ApiListingsRoute._addFileChildren(
-  ApiListingsRouteChildren,
-)
 
 interface HifiStaysRouteChildren {
   HifiStaysIdRoute: typeof HifiStaysIdRoute
@@ -460,6 +436,30 @@ const HifiRouteChildren: HifiRouteChildren = {
 }
 
 const HifiRouteWithChildren = HifiRoute._addFileChildren(HifiRouteChildren)
+
+interface StaysRouteChildren {
+  StaysIdRoute: typeof StaysIdRoute
+  StaysIndexRoute: typeof StaysIndexRoute
+}
+
+const StaysRouteChildren: StaysRouteChildren = {
+  StaysIdRoute: StaysIdRoute,
+  StaysIndexRoute: StaysIndexRoute,
+}
+
+const StaysRouteWithChildren = StaysRoute._addFileChildren(StaysRouteChildren)
+
+interface ApiListingsRouteChildren {
+  ApiListingsIdRoute: typeof ApiListingsIdRoute
+}
+
+const ApiListingsRouteChildren: ApiListingsRouteChildren = {
+  ApiListingsIdRoute: ApiListingsIdRoute,
+}
+
+const ApiListingsRouteWithChildren = ApiListingsRoute._addFileChildren(
+  ApiListingsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,

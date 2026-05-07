@@ -1,4 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
+import { NgFor, isPlatformBrowser } from '@angular/common';
 import { AfterViewInit, Component, PLATFORM_ID, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
@@ -10,7 +10,7 @@ type BenchWindow = Window & {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [NgFor, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

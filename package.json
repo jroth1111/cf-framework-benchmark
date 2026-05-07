@@ -48,6 +48,13 @@
     "pnpm": ">=9.0.0"
   },
   "pnpm": {
+    "packageExtensions": {
+      "@analogjs/vite-plugin-nitro@2.5.0": {
+        "dependencies": {
+          "h3": "1.15.11"
+        }
+      }
+    },
     "onlyBuiltDependencies": [
       "esbuild",
       "sharp",

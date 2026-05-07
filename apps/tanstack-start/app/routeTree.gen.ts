@@ -16,13 +16,13 @@ import { Route as StaysIndexRouteImport } from './routes/stays/index'
 import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as StaysIdRouteImport } from './routes/stays/$id'
 import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
-import { Route as HifiStaysIndexRouteImport } from './routes/hifi/stays/index'
-import { Route as HifiStaysIdRouteImport } from './routes/hifi/stays/$id'
 import { Route as ApiPricesRouteImport } from './routes/api/prices'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiBenchRouteImport } from './routes/api/bench'
+import { Route as HifiStaysIndexRouteImport } from './routes/hifi/stays/index'
 import { Route as ApiListingsIndexRouteImport } from './routes/api/listings/index'
+import { Route as HifiStaysIdRouteImport } from './routes/hifi/stays/$id'
 import { Route as ApiListingsIdRouteImport } from './routes/api/listings/$id'
 
 const MediaRoute = MediaRouteImport.update({
@@ -60,20 +60,6 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/blog/$slug.lazy').then((d) => d.Route))
-const HifiStaysIndexRoute = HifiStaysIndexRouteImport.update({
-  id: '/hifi/stays/',
-  path: '/hifi/stays/',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() =>
-  import('./routes/hifi/stays/index.lazy').then((d) => d.Route),
-)
-const HifiStaysIdRoute = HifiStaysIdRouteImport.update({
-  id: '/hifi/stays/$id',
-  path: '/hifi/stays/$id',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() =>
-  import('./routes/hifi/stays/$id.lazy').then((d) => d.Route),
-)
 const ApiPricesRoute = ApiPricesRouteImport.update({
   id: '/api/prices',
   path: '/api/prices',
@@ -94,11 +80,25 @@ const ApiBenchRoute = ApiBenchRouteImport.update({
   path: '/api/bench',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HifiStaysIndexRoute = HifiStaysIndexRouteImport.update({
+  id: '/hifi/stays/',
+  path: '/hifi/stays/',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/hifi/stays/index.lazy').then((d) => d.Route),
+)
 const ApiListingsIndexRoute = ApiListingsIndexRouteImport.update({
   id: '/api/listings/',
   path: '/api/listings/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HifiStaysIdRoute = HifiStaysIdRouteImport.update({
+  id: '/hifi/stays/$id',
+  path: '/hifi/stays/$id',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/hifi/stays/$id.lazy').then((d) => d.Route),
+)
 const ApiListingsIdRoute = ApiListingsIdRouteImport.update({
   id: '/api/listings/$id',
   path: '/api/listings/$id',
@@ -118,8 +118,8 @@ export interface FileRoutesByFullPath {
   '/blog/': typeof BlogIndexRoute
   '/stays/': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
-  '/api/listings/': typeof ApiListingsIndexRoute
   '/hifi/stays/$id': typeof HifiStaysIdRoute
+  '/api/listings/': typeof ApiListingsIndexRoute
   '/hifi/stays/': typeof HifiStaysIndexRoute
 }
 export interface FileRoutesByTo {
@@ -135,8 +135,8 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogIndexRoute
   '/stays': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
-  '/api/listings': typeof ApiListingsIndexRoute
   '/hifi/stays/$id': typeof HifiStaysIdRoute
+  '/api/listings': typeof ApiListingsIndexRoute
   '/hifi/stays': typeof HifiStaysIndexRoute
 }
 export interface FileRoutesById {
@@ -153,8 +153,8 @@ export interface FileRoutesById {
   '/blog/': typeof BlogIndexRoute
   '/stays/': typeof StaysIndexRoute
   '/api/listings/$id': typeof ApiListingsIdRoute
-  '/api/listings/': typeof ApiListingsIndexRoute
   '/hifi/stays/$id': typeof HifiStaysIdRoute
+  '/api/listings/': typeof ApiListingsIndexRoute
   '/hifi/stays/': typeof HifiStaysIndexRoute
 }
 export interface FileRouteTypes {
@@ -172,8 +172,8 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/stays/'
     | '/api/listings/$id'
-    | '/api/listings/'
     | '/hifi/stays/$id'
+    | '/api/listings/'
     | '/hifi/stays/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -189,8 +189,8 @@ export interface FileRouteTypes {
     | '/blog'
     | '/stays'
     | '/api/listings/$id'
-    | '/api/listings'
     | '/hifi/stays/$id'
+    | '/api/listings'
     | '/hifi/stays'
   id:
     | '__root__'
@@ -206,8 +206,8 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/stays/'
     | '/api/listings/$id'
-    | '/api/listings/'
     | '/hifi/stays/$id'
+    | '/api/listings/'
     | '/hifi/stays/'
   fileRoutesById: FileRoutesById
 }
@@ -224,8 +224,8 @@ export interface RootRouteChildren {
   BlogIndexRoute: typeof BlogIndexRoute
   StaysIndexRoute: typeof StaysIndexRoute
   ApiListingsIdRoute: typeof ApiListingsIdRoute
-  ApiListingsIndexRoute: typeof ApiListingsIndexRoute
   HifiStaysIdRoute: typeof HifiStaysIdRoute
+  ApiListingsIndexRoute: typeof ApiListingsIndexRoute
   HifiStaysIndexRoute: typeof HifiStaysIndexRoute
 }
 
@@ -308,20 +308,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBenchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/listings/': {
-      id: '/api/listings/'
-      path: '/api/listings'
-      fullPath: '/api/listings/'
-      preLoaderRoute: typeof ApiListingsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/listings/$id': {
-      id: '/api/listings/$id'
-      path: '/api/listings/$id'
-      fullPath: '/api/listings/$id'
-      preLoaderRoute: typeof ApiListingsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/hifi/stays/': {
       id: '/hifi/stays/'
       path: '/hifi/stays'
@@ -329,11 +315,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HifiStaysIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/listings/': {
+      id: '/api/listings/'
+      path: '/api/listings'
+      fullPath: '/api/listings/'
+      preLoaderRoute: typeof ApiListingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/hifi/stays/$id': {
       id: '/hifi/stays/$id'
       path: '/hifi/stays/$id'
       fullPath: '/hifi/stays/$id'
       preLoaderRoute: typeof HifiStaysIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/listings/$id': {
+      id: '/api/listings/$id'
+      path: '/api/listings/$id'
+      fullPath: '/api/listings/$id'
+      preLoaderRoute: typeof ApiListingsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -352,8 +352,8 @@ const rootRouteChildren: RootRouteChildren = {
   BlogIndexRoute: BlogIndexRoute,
   StaysIndexRoute: StaysIndexRoute,
   ApiListingsIdRoute: ApiListingsIdRoute,
-  ApiListingsIndexRoute: ApiListingsIndexRoute,
   HifiStaysIdRoute: HifiStaysIdRoute,
+  ApiListingsIndexRoute: ApiListingsIndexRoute,
   HifiStaysIndexRoute: HifiStaysIndexRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,13 +1,25 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateOrThrow } from "./validate-schema.mjs";
 
 const BENCH_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_ROOT = path.resolve(BENCH_DIR, "..");
 
 export const DEFAULT_MATRIX_PATH = path.join(BENCH_DIR, "framework-matrix.json");
+export const DEFAULT_MATRIX_SCHEMA_PATH = path.join(BENCH_DIR, "framework-matrix.schema.json");
 export const DEFAULT_TARGETS_PATH = path.join(BENCH_DIR, "targets.live.json");
 export const DEFAULT_SUITES_DIR = path.join(BENCH_DIR, "suites");
+
+let cachedMatrixSchema = null;
+async function loadMatrixSchema(schemaPath = DEFAULT_MATRIX_SCHEMA_PATH) {
+  if (cachedMatrixSchema && cachedMatrixSchema.path === schemaPath) {
+    return cachedMatrixSchema.doc;
+  }
+  const doc = JSON.parse(await fs.readFile(schemaPath, "utf8"));
+  cachedMatrixSchema = { path: schemaPath, doc };
+  return doc;
+}
 
 const IMPLEMENTATION_KINDS = new Set(["native", "control"]);
 const RENDER_MODES = new Set(["ssr", "prerender", "spa"]);
@@ -93,6 +105,8 @@ function normalizeScenarioContracts(rawContracts, label) {
 
 export async function loadMatrix(matrixPath = DEFAULT_MATRIX_PATH) {
   const doc = await readJson(matrixPath);
+  const schema = await loadMatrixSchema();
+  validateOrThrow(schema, doc, `framework matrix at ${matrixPath}`);
   const rawFrameworks = Array.isArray(doc.frameworks) ? doc.frameworks : [];
   const benchmarkDefaults = doc.benchmarkDefaults || {};
   const defaultImplementationKind = expectEnum(

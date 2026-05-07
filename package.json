@@ -19,6 +19,7 @@
     "test:deploy-bench": "node scripts/test-deploy-bench.mjs",
     "test:bench-contract": "node scripts/test-bench-contract.mjs",
     "test:hifi-suite-frameworks": "node scripts/test-hifi-suite-frameworks.mjs",
+    "test:matrix-schema": "node scripts/test-matrix-schema.mjs",
     "test:bench-runner": "node scripts/test-bench-runner.mjs",
     "test:contract-report": "node scripts/test-contract-report.mjs",
     "test:control-package": "node scripts/test-control-package.mjs",

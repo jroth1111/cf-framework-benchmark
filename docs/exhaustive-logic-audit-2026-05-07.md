@@ -47,7 +47,7 @@ classified separately when they are tracked but not authored as logic.
 | contract docs | inspected | `contracts-v3`, `contracts-v5`, and `contracts-v6-addendum` checked for API and route authority. |
 | shared packages | in progress | `bench-utils`, `dataset`, `bench-contract`, `bench-control` under active audit. |
 | benchmark runner/config | not_started | `bench/src`, matrix, targets, result verification, and provenance still open. |
-| repo scripts | not_started | Contract, startup, static, deploy, report, verify, and live scripts still open. |
+| repo scripts | in progress | Contract report/test path audited; startup, static, deploy, verify, and live scripts still open. |
 | app routes/API integrations | not_started | Enabled app entrypoints and shared contract integration still open. |
 | disabled/experimental apps | not_started | Must classify as intentionally excluded or bug-bearing if referenced by active gates. |
 | CI/workflows | not_started | GitHub workflows and release/verification paths still open. |
@@ -135,6 +135,40 @@ Evidence:
 - Residual gap: broader app audit still needs to cover route/cache/hifi selector
   parity beyond these API files.
 
+### F-003: Contract report under-checked hifi routes
+
+Bead: `cf-framework-benchmark-4xo`
+
+Status: `verified`
+
+Evidence:
+
+- Source requirement: `docs/contracts-v6-addendum.md` requires `/hifi/stays` and
+  `/hifi/stays/:id` selectors, cache policies, and dataset content checks for
+  hifi-enabled frameworks. `contract-report` is part of `verify:live` and is the
+  persisted contract evidence artifact.
+- Root cause: `scripts/contract-tests.mjs` had hifi route sample, selector,
+  cache, dataset-content, and hifi-enabled filtering logic, but
+  `scripts/contract-report.mjs` only knew v5 route semantics. It would sample
+  `/hifi/stays/:id` literally, omit hifi selectors/cache/content, and probe hifi
+  routes for frameworks whose matrix did not enable hifi.
+- Fix evidence: `contract-report` now exports and uses hifi-aware route helpers,
+  filters hifi routes by `framework.matrix.hifi.enabled`, and has a dedicated
+  regression test in `scripts/test-contract-report.mjs`.
+- Positive probes:
+  - `pnpm test:contract-report` passed.
+  - `node --check scripts/contract-report.mjs && node --check scripts/verify-static.mjs` passed.
+  - `pnpm test:contracts` passed after the report changes.
+  - `pnpm verify:static` passed after wiring `test:contract-report` into the
+    static gate.
+- Negative probe:
+  - the new regression asserts non-hifi frameworks drop `/hifi/*` routes, while
+    hifi-enabled frameworks retain them; it also asserts `/hifi/stays/:id`
+    samples `/hifi/stays/001` and requires all v6 detail selectors.
+- Residual gap: live `pnpm verify:live -- --suites mpa_airbnb_hifi` was not run
+  in this checkpoint because it hits deployed targets; static and local contract
+  evidence passed.
+
 ## Checkpoint Evidence
 
 Shared API boundary checkpoint:
@@ -149,3 +183,10 @@ Shared API boundary checkpoint:
 - `pnpm verify:static`: passed, including matrix, targets, dataset, deploy,
   runner, control, result verification, Cloudflare config/optimization audits,
   all benchmark-enabled builds, and Worker startup checks
+
+Contract report hifi checkpoint:
+
+- `pnpm test:contract-report`: passed
+- `node --check scripts/contract-report.mjs && node --check scripts/verify-static.mjs`: passed
+- `pnpm test:contracts`: passed
+- `pnpm verify:static`: passed

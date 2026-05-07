@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import os from 'node:os';
@@ -203,6 +203,22 @@ export function loadScoringRubric() {
 
 export function scoringRubricHash() {
   return hashFile(SCORING_RUBRIC_PATH);
+}
+
+export function suitesHashInput() {
+  const suitesDir = path.resolve(REPO_ROOT, 'bench/suites');
+  const entries = readdirSync(suitesDir)
+    .filter((name) => name.endsWith('.json'))
+    .sort();
+  const out = {};
+  for (const entry of entries) {
+    out[entry] = hashFile(path.join('bench/suites', entry));
+  }
+  return out;
+}
+
+export function suitesHash() {
+  return sha256(suitesHashInput());
 }
 
 function parseCsvSet(value) {
@@ -2434,6 +2450,7 @@ async function main() {
       contract: benchmarkContractHash(),
       contractsJson: hashFile('contracts/v5.json'),
       scoring: scoringRubricHash(),
+      suites: suitesHash(),
       cloudflarePlatform: hashFile(CLOUDFLARE_PLATFORM_ERAS_PATH),
       cloudflareConfig: sha256(cloudflareAuditStable),
       cloudflareOptimization: sha256(cloudflareOptimizationAuditStable),
@@ -2653,6 +2670,7 @@ async function main() {
   md += `| Contract hash | ${provenance.hashes.contract || '—'} |\n`;
   md += `| Contracts JSON hash | ${provenance.hashes.contractsJson || '—'} |\n`;
   md += `| Scoring rubric hash | ${provenance.hashes.scoring || '—'} |\n`;
+  md += `| Suites hash | ${provenance.hashes.suites || '—'} |\n`;
   md += `| Cloudflare platform hash | ${provenance.hashes.cloudflarePlatform || '—'} |\n`;
   md += `| Cloudflare platform era | ${provenance.cloudflarePlatform?.activeEra || '—'} |\n`;
   md += `| Cloudflare config hash | ${provenance.hashes.cloudflareConfig || '—'} |\n`;

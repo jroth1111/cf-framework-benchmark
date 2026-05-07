@@ -9,6 +9,8 @@ import {
   isCanonicalResultPath,
   loadScoringRubric,
   scoringRubricHash,
+  suitesHash,
+  suitesHashInput,
   provenanceHashForRow,
   benchmarkContractHashInput,
   scenarioContractBucketKey,
@@ -35,6 +37,31 @@ assert.equal(
   assert.ok(Math.abs(sumScenario - 1) < 1e-6, `scenarioWeights must sum to 1.0 (got ${sumScenario})`);
   const hash = scoringRubricHash();
   assert.ok(typeof hash === "string" && hash.length === 64, `scoringRubricHash must be 64-char sha256 (got ${hash})`);
+}
+
+// suites hash: provenance.hashes.suites must (a) cover every JSON file in
+// bench/suites/ and (b) change when a suite's waitFor selector changes.
+// Mutating the on-disk file then restoring it proves the suites hash flows
+// from the file bytes — a stale or hard-coded hash would survive the swap.
+{
+  const suitesDir = path.join(repoRoot, "bench/suites");
+  const entries = (await fs.readdir(suitesDir)).filter((name) => name.endsWith(".json")).sort();
+  const input = suitesHashInput();
+  assert.deepEqual(Object.keys(input).sort(), entries, "suitesHashInput must cover every bench/suites/*.json file");
+  const baseline = suitesHash();
+
+  const target = path.join(suitesDir, entries[0]);
+  const original = await fs.readFile(target, "utf8");
+  const mutated = original.replace(/"waitFor":\s*"([^"]+)"/, '"waitFor": "$1__hash_test"');
+  assert.notEqual(mutated, original, "suite mutation probe must alter waitFor selector text");
+  await fs.writeFile(target, mutated, "utf8");
+  try {
+    const mutatedHash = suitesHash();
+    assert.notEqual(mutatedHash, baseline, "suites hash must change when a waitFor selector changes");
+  } finally {
+    await fs.writeFile(target, original, "utf8");
+  }
+  assert.equal(suitesHash(), baseline, "suites hash must restore to baseline after the suite file is restored");
 }
 
 // run.mjs must reference the model literal "real-world-choice-v1" only inside

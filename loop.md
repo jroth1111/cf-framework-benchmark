@@ -317,3 +317,6 @@ suite + targets, runs `contract-report.mjs --fail-on-violations` as a gate
 ## Background bench shell
 
 (Populated by the tick that kicks off `pnpm bench:all`; one line per attempt.)
+
+- shell `bqa1j0ju4` started 2026-05-07T18:30:09Z (`pnpm bench:all` — mpa_airbnb → spa_trading_media → mpa_airbnb_hifi)
+

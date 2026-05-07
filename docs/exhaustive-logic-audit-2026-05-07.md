@@ -45,13 +45,13 @@ classified separately when they are tracked but not authored as logic.
 | --- | --- | --- |
 | root/package scripts | inspected | Script graph inventoried from root `package.json` and package manifests. |
 | contract docs | inspected | `contracts-v3`, `contracts-v5`, and `contracts-v6-addendum` checked for API and route authority. |
-| shared packages | in progress | `bench-utils`, `dataset`, `bench-contract`, `bench-control` under active audit. |
-| benchmark runner/config | in progress | `run-v4` flag forwarding, provenance contract hashing, and Astro hifi matrix eligibility audited/fixed; targets, result verification, and deeper runner paths still open. |
-| repo scripts | in progress | Contract report/test path audited; startup, static, deploy, verify, and live scripts still open. |
-| app routes/API integrations | not_started | Enabled app entrypoints and shared contract integration still open. |
-| disabled/experimental apps | not_started | Must classify as intentionally excluded or bug-bearing if referenced by active gates. |
-| CI/workflows | in progress | Scheduled benchmark workflow hifi omission audited/fixed; broader CI workflow review still open. |
-| tracked generated artifacts | not_started | Must classify as generated authority, stale output, or ignorable build residue. |
+| shared packages | inspected | `bench-utils`, `dataset`, `bench-contract`, `bench-control`, `chart-core`, `hifi-shell`, and UI package behavior covered by package tests, contract tests, and enabled builds. |
+| benchmark runner/config | inspected | `run-v4`, `run.mjs`, live target resolution, result verification, matrix/target validation, startup checks, and contract provenance audited/fixed where confirmed. |
+| repo scripts | inspected | Contract report/tests, smoke, deploy, static/live verify, build-enabled, target checks, result verification, Cloudflare audits, workflow tests, startup checks, and remote/stability entrypoints inspected. |
+| app routes/API integrations | inspected | All 19 benchmark-enabled app dirs contain the shared `handleContractApi` path; route/cache/hifi behavior is covered by static builds plus live contract report/tests/smoke. |
+| disabled/experimental apps | inspected/classified | Disabled rows are excluded by `benchmarkEnabled` filters in build/deploy/targets/live/runner scripts; blocked hifi reference rows are intentionally included only in hifi config audit. |
+| CI/workflows | inspected | CI runs dataset plus `verify:static`; benchmark workflow preflights, runs, verifies, uploads, and optionally remote-tests all three canonical suites including hifi. |
+| tracked generated artifacts | inspected/classified | 14 `worker-configuration.d.ts` files are referenced by app tsconfigs/env files; 29 React `pages/**/*.html` files are intentional versioned static SPA pages/assets. Ignored benchmark outputs remain untracked cleanup artifacts. |
 
 ## Findings
 
@@ -134,6 +134,13 @@ Evidence:
     refreshed links; both builds then passed.
 - Residual gap: broader app audit still needs to cover route/cache/hifi selector
   parity beyond these API files.
+
+Post-audit closure note:
+
+- A focused enabled-app sweep found every benchmark-enabled app directory
+  contains `handleContractApi`, closing the earlier bypass concern for active
+  targets. Route/cache/hifi selector parity is covered by the live
+  `contract-report`, `contract-tests`, and `smoke` probes recorded in F-008.
 
 ### F-003: Contract report under-checked hifi routes
 
@@ -433,3 +440,37 @@ Evidence:
 - Residual gap: no live redeploy was performed for this fix because the
   currently deployed non-hifi Angular Worker already omits hifi support and the
   fix targets future source-built deployments.
+
+## Final Coverage Matrix
+
+| Requirement / Surface | Evidence | Status | Residual Risk |
+| --- | --- | --- | --- |
+| Inventory first-party runtime/config/script/contract/test surfaces | `git ls-files` inventory plus this matrix; root scripts, contracts, matrix/targets, packages, apps, scripts, workflows, and tracked generated artifacts classified above. | verified | Vendor/framework internals and ignored build/cache outputs were intentionally excluded unless active repo scripts consume them. |
+| Track confirmed findings | Beads `cf-framework-benchmark-e5m`, `gmd`, `4xo`, `6rq`, `7yt`, `1xl`, `4nf`, `hni`, and `8ba` were opened and closed for F-001 through F-009. | verified | Main audit bead remains open until final session close protocol. |
+| Fix confirmed source bugs | F-001 through F-009 record root cause, changed authority, and regression coverage. | verified | No additional confirmed bug is open after the final reconciliation pass. |
+| Add targeted regressions where practical | New/updated regressions cover dataset parsing, control parser, shared contract routing, contract report hifi semantics, runner passthrough/provenance, Cloudflare config hifi eligibility, workflow hifi wiring, live hifi header config, and framework-aware `/api/bench` suite support. | verified | GitHub Actions execution itself was not run locally; workflow content is covered by static regression. |
+| Verify fixes with positive and negative evidence | Each F-001 through F-009 section records positive probes and negative probes; final gates below re-ran the aggregate static and hifi live surfaces. | verified | Live verification covers the current Cloudflare Workers account only, not other accounts or future platform drift. |
+| Shared packages | `pnpm verify:static` includes dataset, bench-contract, control, runner, result verifier, Cloudflare audits, and all enabled builds; package-specific tests are named in F-001, F-004, F-005, and F-009. | verified | Historical result artifacts are not regenerated by source fixes. |
+| Benchmark runner/config | F-004 and F-005 fix runner flag/provenance gaps; `check:matrix`, `check:targets`, `test:bench-runner`, `verify:results`, `build:enabled`, and `check:startup` are included in `verify:static`. | verified | BrowserStack real-device provider availability was not exercised. |
+| Repo scripts | `verify:static` wires static gates; `verify:live` wires matrix, targets, contract report, contract tests, and smoke. Deploy/build scripts filter `benchmarkEnabled`. | verified | Deploy and remote WebPageTest actions are external-control paths; only targeted deploys were executed with rollback records. |
+| App routes/API integrations | Focused script showed all 19 benchmark-enabled app dirs contain `handleContractApi`; `pnpm verify:live -- --suites mpa_airbnb_hifi --timeout 20000` passed after source/header redeploys. | verified | Non-hifi Angular live target is intentionally not redeployed for F-009 because deployed behavior already omits hifi. |
+| Disabled/experimental apps | Matrix rows `analog`, `hono-svelte`, `qwik`, `solidstart`, and `tanstack-start-prerender` have `benchmarkEnabled` false; build/deploy/live/target scripts exclude disabled rows. | verified | `analog` and `solidstart` lack explicit `blockedReason`; they remain classified by disabled status and exclusion from canonical gates. |
+| CI/workflows | `.github/workflows/ci.yml` runs dataset and `verify:static`; `.github/workflows/benchmark.yml` preflights/runs/verifies/uploads all canonical suites; `test:ci-workflows` locks hifi wiring. | verified | Local inspection/regression does not prove GitHub runner secrets or external WebPageTest availability. |
+| Tracked/generated artifacts | `git ls-files` found 14 app `worker-configuration.d.ts` references and 29 React static HTML pages; ignored `bench/results*.json`, `bench/contract-report.json`, and `bench/flamegraphs/` are not tracked. | verified | Ignored benchmark outputs should be cleaned before final completion once no further verification needs them. |
+
+## Final Gate Results
+
+Final local gates before closing `cf-framework-benchmark-d8l`:
+
+- `pnpm verify:static`: passed. This included matrix/target validation,
+  dataset/deploy/bench-contract/runner/contract-report/control/result/workflow
+  regressions, Cloudflare config/optimization audits, all 19 enabled app builds,
+  and Worker startup checks.
+- `pnpm verify:live -- --suites mpa_airbnb_hifi --timeout 20000`: passed. This
+  included matrix/target validation, contract report, contract tests, and smoke
+  for all 19 live targets.
+- `git diff --check`: passed.
+- Ignored build/benchmark outputs from final verification were cleaned:
+  app build directories, `.wrangler` outputs, generated benchmark reports/results,
+  and startup flamegraphs. Remaining ignored entries are local environment state
+  such as `node_modules`, editor folders, and beads local metadata.

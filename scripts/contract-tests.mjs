@@ -17,6 +17,18 @@ import {
   resolveLiveTargets,
   toAbsolutePath,
 } from "../bench/src/config-v4.mjs";
+import {
+  resolveStaticSample,
+  routeSample,
+  routeSamples,
+  requiredTestIdsForRoute,
+  responseDefaults,
+  expectedDatasetContent,
+  hasTestId,
+  hasScriptHydrationEvidence,
+  frameworkSupportsHifi,
+  routesForFramework,
+} from "./contract-report.mjs";
 
 const CONTRACTS_PATH = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -72,16 +84,6 @@ function expectBodyIncludes(html, expected, label) {
     html.includes(expected),
     `${label} missing expected dataset content ${JSON.stringify(expected)}`
   );
-}
-
-function hasTestId(html, id) {
-  const marker = String(id).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(`data-testid=["']${marker}["']`);
-  return regex.test(html);
-}
-
-function hasScriptHydrationEvidence(html) {
-  return /<script\b/i.test(html);
 }
 
 async function fetchWithTimeout(url, init = {}) {
@@ -153,51 +155,6 @@ async function fetchHtmlStatus(label, url) {
   return { res, text: await res.text() };
 }
 
-function resolveStaticSample(staticSample, route) {
-  if (typeof staticSample === "string") return staticSample;
-  if (staticSample && typeof staticSample === "object" && typeof staticSample.from === "string") {
-    const match = /^dataset\.(\w+)\[(\d+)\]\.(\w+)$/.exec(staticSample.from);
-    if (!match) return route;
-    const [, collection, idxStr, field] = match;
-    const ds = { blogPosts, listings };
-    const val = ds[collection]?.[Number(idxStr)]?.[field];
-    return val != null ? route.replace(/:([^/]+)/, String(val)) : route;
-  }
-  return route;
-}
-
-function routeSample(route) {
-  const entry = ROUTES_BY_PATH.get(route);
-  if (!entry) return route;
-  return resolveStaticSample(entry.staticSample, route);
-}
-
-function routeSamples(route) {
-  const sample = routeSample(route);
-  if (sample === "/") return [sample];
-  if (route === "/chart" || route === "/media") return [sample];
-  return [sample, `${sample}/`];
-}
-
-function requiredTestIdsForRoute(route) {
-  return ROUTES_BY_PATH.get(route)?.requiredTestIds ?? [];
-}
-
-function responseDefaults(route) {
-  return ROUTES_BY_PATH.get(route)?.responseDefaults ?? null;
-}
-
-function expectedDatasetContent(route) {
-  const source = ROUTES_BY_PATH.get(route)?.expectedDatasetSource;
-  if (source === "listings") return [listings[0]?.title].filter(Boolean);
-  if (source === "blogPosts") return [blogPosts[0]?.title].filter(Boolean);
-  return [];
-}
-
-function frameworkSupportsHifi(framework) {
-  return framework?.matrix?.hifi?.enabled === true;
-}
-
 function suiteUsesHifi(suite) {
   return suite.requiredRoutes.some((route) => route.startsWith("/hifi/"));
 }
@@ -218,7 +175,7 @@ async function runFramework(framework, requiredRoutes, expectedSuiteSupport) {
     expect(typeof bench.body?.now === "number", `${framework.name} /api/bench now missing`);
     expect(bench.body?.runtime === "cloudflare-workers", `${framework.name} /api/bench runtime mismatch`);
     expect(bench.body?.framework === framework.name, `${framework.name} /api/bench framework mismatch`);
-    expect(bench.body?.contractVersion === "v3.0.0", `${framework.name} /api/bench contractVersion mismatch`);
+    expect(bench.body?.contractVersion === CONTRACTS.contractVersion, `${framework.name} /api/bench contractVersion mismatch`);
     expect(Array.isArray(bench.body?.suiteSupport), `${framework.name} /api/bench suiteSupport missing`);
     for (const suite of expectedSuiteSupport) {
       expect(
@@ -394,13 +351,8 @@ if (!listings.length || !blogPosts.length) {
   throw new Error("Dataset is missing required fixtures for contract route samples.");
 }
 
-function routesForFramework(framework) {
-  if (frameworkSupportsHifi(framework)) return requiredRoutes;
-  return requiredRoutes.filter((route) => !route.startsWith("/hifi/"));
-}
-
 for (const framework of frameworks) {
-  await runFramework(framework, routesForFramework(framework), suiteSupportForFramework(framework));
+  await runFramework(framework, routesForFramework(framework, requiredRoutes), suiteSupportForFramework(framework));
 }
 
 if (failures.length) {

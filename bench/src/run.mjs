@@ -8,7 +8,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium, devices } from 'playwright';
 import { buildCloudflareAudit } from '../../scripts/cloudflare-config-audit.mjs';
 import { buildOptimizationAudit } from '../../scripts/cloudflare-optimization-audit.mjs';
-import { DEFAULT_TARGETS_PATH } from './config-v4.mjs';
+import { DEFAULT_TARGETS_PATH, parseCsvSet } from './config-v4.mjs';
+import { interactionMs } from './metrics.mjs';
 import { provenanceHashForRow, sha256 } from './provenance.mjs';
 import { buildMarkdown, formatBytes, formatDuration } from './report.mjs';
 import { classifyGeography, canonicalClass, loadCanonicalGeography } from './canonical-class.mjs';
@@ -26,7 +27,7 @@ const REPO_ROOT = path.resolve(BENCH_ROOT, '..');
 const CLOUDFLARE_PLATFORM_ERAS_PATH = 'bench/cloudflare-platform-eras.json';
 
 const DEFAULT_OUT = new URL('../results.v4.json', import.meta.url);
-const NON_CANONICAL_RESULT_SUFFIXES = ['.smoke.', '.dirty.', '.flame.', '.stability.'];
+const NON_CANONICAL_RESULT_SUFFIXES = ['.smoke.', '.dirty.', '.regional.', '.flame.', '.stability.'];
 
 const TIMING = runnerTimingsCatalog.timing;
 const NAV_RETRY = runnerTimingsCatalog.navRetry;
@@ -97,6 +98,13 @@ export function isCanonicalResultPath(outPath) {
   return !NON_CANONICAL_RESULT_SUFFIXES.some((suffix) => baseName.includes(suffix));
 }
 
+export function suffixedResultPath(outPath, suffix) {
+  const parsed = path.parse(outPath);
+  const marker = `.${suffix}`;
+  if (parsed.name.endsWith(marker) || parsed.name.includes(`${marker}.`)) return outPath;
+  return path.join(parsed.dir, `${parsed.name}${marker}${parsed.ext || '.json'}`);
+}
+
 export function assertCanonicalResultWritable({ outPath, gitInfo, allowDirtyProvenance = false }) {
   const canonical = isCanonicalResultPath(outPath);
   const dirty = Boolean(gitInfo?.dirty);
@@ -115,18 +123,52 @@ export function assertCanonicalResultWritable({ outPath, gitInfo, allowDirtyProv
   };
 }
 
-export function assertCanonicalGeography({ outPath, edgeLocations, allowIncompleteGeography = false }) {
-  if (!isCanonicalResultPath(outPath)) return { checked: false };
+export function canonicalGeographyWriteDecision({ outPath, edgeLocations, allowIncompleteGeography = false }) {
+  const canonical = isCanonicalResultPath(outPath);
   const geoConfig = loadCanonicalGeography();
   const distinct = edgeLocations?.distinct || edgeLocations || [];
   const { regions, unknown, coverage } = classifyGeography(distinct);
   const required = new Set(geoConfig.requiredRegions || ['APAC', 'US', 'EU']);
   const missing = [...required].filter((r) => !regions.has(r));
+  if (!canonical) {
+    return { checked: false, outPath, coverage, regions, unknown, missing, redirected: false, allowedOverride: false };
+  }
+  if (missing.length > 0 && !allowIncompleteGeography) {
+    return {
+      checked: true,
+      outPath: suffixedResultPath(outPath, 'regional'),
+      requestedOutPath: outPath,
+      coverage,
+      regions,
+      unknown,
+      missing,
+      redirected: true,
+      allowedOverride: false,
+    };
+  }
+  return {
+    checked: true,
+    outPath,
+    coverage,
+    regions,
+    unknown,
+    missing,
+    redirected: false,
+    allowedOverride: missing.length > 0 && allowIncompleteGeography,
+  };
+}
+
+export function assertCanonicalGeography({ outPath, edgeLocations, allowIncompleteGeography = false }) {
+  const decision = canonicalGeographyWriteDecision({ outPath, edgeLocations, allowIncompleteGeography });
+  if (!decision.checked) return { checked: false };
+  const distinct = edgeLocations?.distinct || edgeLocations || [];
+  const required = loadCanonicalGeography().requiredRegions || ['APAC', 'US', 'EU'];
+  const { coverage, regions, unknown, missing } = decision;
   if (missing.length > 0 && !allowIncompleteGeography) {
     throw new Error(
       `Refusing to write canonical results to ${outPath}: geography coverage is "${coverage}" (missing regions: ${missing.join(', ')}).\n` +
-      `Required: ${[...required].join(', ')}. Edge locations observed: ${distinct.join(', ')}.\n` +
-      `  - Use a suffixed output path (e.g. results.v4.<suite>.dirty.json)\n` +
+      `Required: ${required.join(', ')}. Edge locations observed: ${distinct.join(', ')}.\n` +
+      `  - Use a suffixed output path (e.g. results.v4.<suite>.regional.json)\n` +
       `  - Pass --allow-incomplete-geography to override this check`
     );
   }
@@ -231,14 +273,6 @@ export function suitesHashInput() {
 
 export function suitesHash() {
   return sha256(suitesHashInput());
-}
-
-function parseCsvSet(value) {
-  const tokens = String(value || '')
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-  return new Set(tokens);
 }
 
 function mean(a) {
@@ -1363,7 +1397,7 @@ async function navigateWithRetry(page, options) {
         err.status = status;
         throw err;
       }
-      return { res, status, attempts: attempt };
+      return { res, status, attempts: attempt, degradedWait: currentWaitUntil !== waitUntil };
     } catch (err) {
       lastErr = err;
       if (attempt < NAV_RETRY.maxAttempts && isRetryableNavError(err)) {
@@ -1467,6 +1501,7 @@ async function runScenario(
   const hardTimeout = TIMING.SCENARIO_HARD_TIMEOUT_MS * timeoutScale;
   let status = null;
   let navAttempts = 0;
+  let degradedWait = false;
   let cdp = null;
   let profiler = null;
   let flamegraphFilePath = null;
@@ -1500,6 +1535,7 @@ async function runScenario(
         const res = navResult.res;
         status = navResult.status ?? null;
         navAttempts = navResult.attempts ?? 0;
+        degradedWait = navResult.degradedWait ?? false;
         if (nav.waitForFrom) await page.waitForSelector(nav.waitForFrom, { timeout: navTimeout });
         const start = Date.now();
         if (nav.click) await page.click(nav.click);
@@ -1532,6 +1568,7 @@ async function runScenario(
           ok: true,
           status,
           navAttempts,
+          degradedWait,
           clientNavMs: end - start,
           trace,
           earlyHints: earlyHintsForCdp(cdp),
@@ -1562,6 +1599,7 @@ async function runScenario(
       const res = navResult.res;
       status = navResult.status ?? null;
       navAttempts = navResult.attempts ?? 0;
+      degradedWait = navResult.degradedWait ?? false;
       if (sc.waitFor) await page.waitForSelector(sc.waitFor, { timeout: scenarioTimeout });
       if (sc.interact) {
         await waitForHydration(page, TIMING.HYDRATION_MAX_WAIT_MS * timeoutScale);
@@ -1606,6 +1644,7 @@ async function runScenario(
         ok: true,
         status,
         navAttempts,
+        degradedWait,
         trace,
         earlyHints: earlyHintsForCdp(cdp),
         headers: {
@@ -1624,7 +1663,7 @@ async function runScenario(
       return result;
     } catch (err) {
       const errStatus = typeof err?.status === 'number' ? err.status : status;
-      result = { ...base, ok: false, status: errStatus ?? null, navAttempts, error: errorToString(err) };
+      result = { ...base, ok: false, status: errStatus ?? null, navAttempts, degradedWait, error: errorToString(err) };
       return result;
     } finally {
       if (profiler && flamegraphFilePath) {
@@ -1647,7 +1686,7 @@ async function runScenario(
   try {
     return await withTimeout(run(), hardTimeout, 'scenario');
   } catch (err) {
-    return { ...base, ok: false, status: status ?? null, navAttempts, error: errorToString(err) };
+    return { ...base, ok: false, status: status ?? null, navAttempts, degradedWait, error: errorToString(err) };
   }
 }
 
@@ -1699,21 +1738,21 @@ async function warmupFramework(browser, fw, initScript, scenarios, throttling, t
     await applyThrottling(page, throttling);
   }
 
-  try {
-    // Hit all routes once to warm up isolates. For client-nav scenarios warm both the
-    // origin and destination URLs so warm-phase iterations don't hit a cold destination.
-    const seen = new Set();
-    for (const sc of scenarios) {
-      const warmPaths = [sc.path, sc.clientNav?.from, sc.clientNav?.to].filter(Boolean);
-      for (const warmPath of warmPaths) {
-        if (seen.has(warmPath)) continue;
-        seen.add(warmPath);
+  // Hit all routes once to warm up isolates. For client-nav scenarios warm both the
+  // origin and destination URLs so warm-phase iterations don't hit a cold destination.
+  const seen = new Set();
+  for (const sc of scenarios) {
+    const warmPaths = [sc.path, sc.clientNav?.from, sc.clientNav?.to].filter(Boolean);
+    for (const warmPath of warmPaths) {
+      if (seen.has(warmPath)) continue;
+      seen.add(warmPath);
+      try {
         await page.goto(fw.url + warmPath, { waitUntil: 'load', timeout: 15000 * timeoutScale });
         await page.waitForTimeout(TIMING.WARMUP_SETTLE_MS);
+      } catch (e) {
+        console.log(`  ⚠️  Warmup failed for ${fw.name} route ${warmPath}: ${e.message}`);
       }
     }
-  } catch (e) {
-    console.log(`  ⚠️  Warmup failed for ${fw.name}: ${e.message}`);
   }
 
   await ctx.close();
@@ -1844,6 +1883,7 @@ async function main() {
   const cloudflarePlatform = await collectCloudflarePlatformEras();
   const gitInfo = getGitInfo();
   const allowDirtyProvenance = flag('--allow-dirty-provenance');
+  const allowIncompleteGeography = flag('--allow-incomplete-geography');
   const provenanceGate = assertCanonicalResultWritable({ outPath, gitInfo, allowDirtyProvenance });
   if (provenanceGate.dirtyCanonicalOverride) {
     console.warn('\nWARNING: Writing canonical results with dirty working tree (--allow-dirty-provenance set).');
@@ -2147,21 +2187,6 @@ async function main() {
         fcpMissing,
         fcpMissingRate: expected ? fcpMissing / expected : null,
       },
-      server: {
-        ttfb: summarize(ttfb),
-      },
-      client: {
-        lcp: summarize(lcp),
-        cls: summarize(cls),
-        inp: summarize(inp),
-        tbt: summarize(tbt),
-        heapUsed: summarize(heap),
-        cpuTaskMs: summarize(cpuTask),
-        cpuScriptMs: summarize(cpuScript),
-        scriptBoot: summarize(scriptBootMs),
-        cpuLayoutMs: summarize(cpuLayout),
-        cpuRecalcStyleMs: summarize(cpuRecalc),
-      },
       ttfb: summarize(ttfb),
       lcp: summarize(lcp),
       cls: summarize(cls),
@@ -2171,6 +2196,8 @@ async function main() {
       heapUsed: summarize(heap),
       cpuTaskMs: summarize(cpuTask),
       cpuScriptMs: summarize(cpuScript),
+      cpuLayoutMs: summarize(cpuLayout),
+      cpuRecalcStyleMs: summarize(cpuRecalc),
       chartSwitchMs: summarize(chartSwitch),
       chartDrawMs: summarize(chartDraw),
       clientNavMs: summarize(clientNav),
@@ -2244,15 +2271,6 @@ async function main() {
       const scRows = summary
         .filter((s) => s.profile === profile && s.phase === phase && s.scenario === scenario)
         .filter((s) => eligible.includes(s.framework));
-      const interactionMs = (s) => {
-        const values = [
-          s.inp?.p50,
-          s.chartSwitchMs?.p50,
-          s.chartDrawMs?.p50,
-        ].filter((v) => Number.isFinite(v));
-        if (!values.length) return null;
-        return values.reduce((sum, value) => sum + value, 0) / values.length;
-      };
       const metrics = [
         { key: 'ttfb', get: (s) => s.ttfb.p50 },
         { key: 'lcp', get: (s) => s.lcp.p50 },
@@ -2307,6 +2325,18 @@ async function main() {
       return a.score - b.score;
     });
   };
+
+  const bucketScores = {};
+  for (const profile of profileNames) {
+    bucketScores[profile] = {};
+    for (const phase of phases) {
+      const byBucket = {};
+      for (const bucket of buckets.values()) {
+        byBucket[bucket.key] = scoreProfilePhaseBucket(profile, phase, bucket.frameworks);
+      }
+      bucketScores[profile][phase] = byBucket;
+    }
+  }
 
   for (const profile of profileNames) {
     console.log(`\n=== Profile: ${profile} ===`);
@@ -2379,7 +2409,7 @@ async function main() {
 
       console.log(`\nBucketed scores (${phase}, lower is better):`);
       for (const bucket of buckets.values()) {
-        const scored = scoreProfilePhaseBucket(profile, phase, bucket.frameworks);
+        const scored = bucketScores[profile][phase][bucket.key];
         if (!scored.length) continue;
         console.log(`  Bucket: ${formatBucketKey(bucket.key)}`);
         for (const row of scored) {
@@ -2390,17 +2420,6 @@ async function main() {
     }
   }
 
-  const bucketScores = {};
-  for (const profile of profileNames) {
-    bucketScores[profile] = {};
-    for (const phase of phases) {
-      const byBucket = {};
-      for (const bucket of buckets.values()) {
-        byBucket[bucket.key] = scoreProfilePhaseBucket(profile, phase, bucket.frameworks);
-      }
-      bucketScores[profile][phase] = byBucket;
-    }
-  }
 
   const failureSummaryOut = {};
   for (const [key, data] of failureSummary.entries()) {
@@ -2491,6 +2510,7 @@ async function main() {
     headless,
     skipWarmup,
     allowDirtyProvenance,
+    allowIncompleteGeography,
     flamegraphs: {
       enabled: flamegraphs.enabled,
       outputDir: flamegraphs.outputDirRelative,
@@ -2620,7 +2640,6 @@ async function main() {
   };
 
   // Compute canonical class self-label and enforce geography gate.
-  const allowIncompleteGeography = flag('--allow-incomplete-geography');
   const distinct = edgeLocations?.distinct || [];
   const geoResult = classifyGeography(distinct);
   out.canonical = {
@@ -2629,14 +2648,42 @@ async function main() {
     regions: [...geoResult.regions],
     unknown: geoResult.unknown,
   };
-  assertCanonicalGeography({ outPath, edgeLocations: distinct, allowIncompleteGeography });
+  const geographyDecision = canonicalGeographyWriteDecision({ outPath, edgeLocations: distinct, allowIncompleteGeography });
+  let writeOutPath = geographyDecision.redirected && provenanceGate.dirtyCanonicalOverride
+    ? suffixedResultPath(geographyDecision.outPath, 'dirty')
+    : geographyDecision.outPath;
+  if (geographyDecision.redirected) {
+    out.cli.requestedOutPath = geographyDecision.requestedOutPath;
+    out.cli.outPath = writeOutPath;
+    out.cli.geographyRedirect = {
+      reason: 'incomplete-geography',
+      coverage: geographyDecision.coverage,
+      missing: geographyDecision.missing,
+      edgeLocations: distinct,
+    };
+    console.warn(
+      `\nWARNING: Incomplete canonical geography (${geographyDecision.coverage}; missing ${geographyDecision.missing.join(', ')}). ` +
+      `Writing non-canonical regional results to ${writeOutPath}.`
+    );
+  } else {
+    assertCanonicalGeography({ outPath, edgeLocations: distinct, allowIncompleteGeography });
+    if (geographyDecision.allowedOverride) {
+      out.cli.geographyOverride = {
+        reason: 'allow-incomplete-geography',
+        coverage: geographyDecision.coverage,
+        missing: geographyDecision.missing,
+        edgeLocations: distinct,
+      };
+      console.warn('\nWARNING: Writing canonical results with incomplete geography (--allow-incomplete-geography set).');
+    }
+  }
 
-  await fs.writeFile(outPath, JSON.stringify(out, null, 2));
-  console.log(`\n✅ Results written to ${outPath}`);
+  await fs.writeFile(writeOutPath, JSON.stringify(out, null, 2));
+  console.log(`\n✅ Results written to ${writeOutPath}`);
   console.log(`Run duration: ${(durationMs / 1000).toFixed(1)}s`);
 
   // Also write a markdown summary
-  const mdPath = outPath.replace(/\.json$/, '.md');
+  const mdPath = writeOutPath.replace(/\.json$/, '.md');
   const md = buildMarkdown(out, { iterationsArg, suiteId });
   await fs.writeFile(new URL(mdPath, 'file://'), md);
   console.log(`📝 Markdown summary written to ${mdPath}`);

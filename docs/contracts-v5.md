@@ -170,7 +170,7 @@ The scoring rubric (`bench/scoring-rubric.json`) is versioned independently from
 
 Canonical geography coverage is defined in `bench/canonical-geography.json` as APAC + US + EU. The region-to-colo mapping is in `bench/colo-regions.json`. These regions are reported separately and are not averaged into a global winner because geography, network path, and Cloudflare colo behavior are material parts of Workers timing.
 
-The runner self-labels every result with `result.canonical.class` (see Result Classes above). Canonical writes that fail the geography requirement are redirected to a `.dirty.` filename unless `--allow-incomplete-geography` is passed explicitly. The Markdown report emits a Limitations note for any non-global coverage class.
+The runner self-labels every result with `result.canonical.class` (see Result Classes above). Canonical writes that fail the geography requirement are redirected to a `.regional.` filename unless `--allow-incomplete-geography` is passed explicitly. The Markdown report emits a Limitations note for any non-global coverage class.
 
 ## Failure Policy
 

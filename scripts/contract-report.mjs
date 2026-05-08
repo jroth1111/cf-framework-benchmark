@@ -43,7 +43,7 @@ const matrixPath = toAbsolutePath(argValue("--matrix", null), DEFAULT_MATRIX_PAT
 const suitesDir = toAbsolutePath(argValue("--suites-dir", null), DEFAULT_SUITES_DIR);
 const failOnViolations = hasFlag("--fail-on-violations");
 
-function resolveStaticSample(staticSample, route) {
+export function resolveStaticSample(staticSample, route) {
   if (typeof staticSample === "string") return staticSample;
   if (staticSample && typeof staticSample === "object" && typeof staticSample.from === "string") {
     const match = /^dataset\.(\w+)\[(\d+)\]\.(\w+)$/.exec(staticSample.from);
@@ -84,13 +84,17 @@ export function expectedApiCache(route) {
   return apiCacheHeader(route);
 }
 
-function hasTestId(html, id) {
+export function hasTestId(html, id) {
   const marker = String(id).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`data-testid=["']${marker}["']`).test(html);
 }
 
-function hasScriptHydrationEvidence(html) {
+export function hasScriptHydrationEvidence(html) {
   return /<script\b/i.test(html);
+}
+
+export function responseDefaults(route) {
+  return ROUTES_BY_PATH.get(route)?.responseDefaults ?? null;
 }
 
 export function expectedDatasetContent(route) {

@@ -128,6 +128,33 @@ try {
   await fs.rename(dirtyJsonPath, dirtySuffixedJsonPath);
   await fs.rename(path.join(tempDir, "results.v4.demo.md"), path.join(tempDir, "results.v4.demo.dirty.md"));
   assert.equal((await verifyResultArtifactPolicy(dirtySuffixedJsonPath)).ok, true);
+
+  const regionalJsonPath = path.join(tempDir, "results.v4.demo.regional.json");
+  await fs.writeFile(
+    regionalJsonPath,
+    JSON.stringify(
+      {
+        ts: "2026-05-05T00:00:00.000Z",
+        ...baseShape,
+        runOrder: { seed },
+        canonical: { class: "canonical-MEL-only", geographyCoverage: "apac-only", regions: ["APAC"], unknown: [] },
+        provenance: {
+          git,
+          hashes: { matrix: "m", targets: "t", lockfile: "l", contract: "c", contractsJson: "cj", scoring: "sr", suites: "su", cloudflarePlatform: "cfp", cloudflareConfig: "cf", cloudflareOptimization: "cfo", runnerTimings: "rt", profiles: "pr", coloRegions: "cr", canonicalGeography: "cg" },
+          cloudflarePlatform: { activeEra: "pingora-cache-2026-05-04" },
+          cloudflareAudit: { ok: true },
+          cloudflareOptimizationAudit: { ok: true },
+        },
+        scoring: { model: "real-world-choice-v1" },
+        failures: [],
+        rows: [],
+      },
+      null,
+      2
+    )
+  );
+  await fs.writeFile(path.join(tempDir, "results.v4.demo.regional.md"), "| Git dirty | false |\n\n> Limitations — Geography\n");
+  assert.equal((await verifyResultArtifactPolicy(regionalJsonPath)).ok, true);
 } finally {
   await fs.rm(tempDir, { recursive: true, force: true });
 }

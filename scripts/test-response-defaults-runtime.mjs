@@ -24,8 +24,13 @@ assert.ok(
   typeof rdByRoute["/api/prices"]?.defaultCandles === "number",
   "v5.json /api/prices must have responseDefaults.defaultCandles"
 );
+assert.ok(
+  typeof rdByRoute["/api/media"]?.defaultPageSize === "number",
+  "v5.json /api/media must have responseDefaults.defaultPageSize"
+);
 
 const expectedPageSize = rdByRoute["/api/listings"].defaultPageSize;
+const expectedMediaPageSize = rdByRoute["/api/media"].defaultPageSize;
 const expectedCandles = rdByRoute["/api/prices"].defaultCandles;
 
 // Static source probe: bench-contract/src/index.js must NOT hardcode the magic
@@ -49,6 +54,10 @@ assert.ok(
   "bench-contract must declare DEFAULT_PAGE_SIZE constant"
 );
 assert.ok(
+  benchContractSrc.includes("DEFAULT_MEDIA_PAGE_SIZE"),
+  "bench-contract must declare DEFAULT_MEDIA_PAGE_SIZE constant"
+);
+assert.ok(
   benchContractSrc.includes("DEFAULT_CANDLES"),
   "bench-contract must declare DEFAULT_CANDLES constant"
 );
@@ -63,6 +72,13 @@ assert.ok(
   `handleListings pageSize default must use a named constant, not bare ${listingsMatch?.[1]} — got "${listingsMatch?.[1]}"`
 );
 
+const mediaMatch = benchContractSrc.match(/handleMedia[\s\S]*?parseIntParam\(url\.searchParams\.get\("pageSize"\),\s*([^)]+)\)/);
+assert.ok(mediaMatch, "handleMedia must call parseIntParam for pageSize");
+assert.ok(
+  !mediaMatch[1].trim().match(/^\d+$/),
+  `handleMedia pageSize default must use a named constant, not bare ${mediaMatch?.[1]} — got "${mediaMatch?.[1]}"`
+);
+
 const pricesMatch = benchContractSrc.match(/parseIntParam\(url\.searchParams\.get\("points"\),\s*([^)]+)\)/);
 assert.ok(pricesMatch, "handlePrices must call parseIntParam for points");
 assert.ok(
@@ -71,5 +87,5 @@ assert.ok(
 );
 
 console.log(
-  `response-defaults-runtime: bench-contract derives DEFAULT_PAGE_SIZE=${expectedPageSize} and DEFAULT_CANDLES=${expectedCandles} from v5 responseDefaults`
+  `response-defaults-runtime: bench-contract derives DEFAULT_PAGE_SIZE=${expectedPageSize}, DEFAULT_MEDIA_PAGE_SIZE=${expectedMediaPageSize}, and DEFAULT_CANDLES=${expectedCandles} from v5 responseDefaults`
 );

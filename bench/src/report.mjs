@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { interactionMs } from './metrics.mjs';
 
 export function formatBytes(bytes) {
   if (bytes === 0) return '0 B';
@@ -184,17 +185,12 @@ export function buildMarkdown(out, derived = {}) {
 
   md += `## Stable Findings\n\n`;
   md += `Frameworks where the leader's median is materially ahead of both the next-best and the cohort median within the same contract bucket. Lower is better. Gate: bucket has ≥3 frameworks, leader is ≥10% better than the cohort median AND ≥5% better than the next-best. Top 10 by Δ vs median.\n\n`;
-  const stableInteractionMs = (s) => {
-    const values = [s.inp?.p50, s.chartSwitchMs?.p50, s.chartDrawMs?.p50].filter((v) => Number.isFinite(v));
-    if (!values.length) return null;
-    return values.reduce((a, b) => a + b, 0) / values.length;
-  };
   const stableMetrics = [
     { key: 'lcp', get: (s) => s.lcp?.p50, fmt: (v) => `${v.toFixed(0)}ms` },
     { key: 'ttfb', get: (s) => s.ttfb?.p50, fmt: (v) => `${v.toFixed(0)}ms` },
     { key: 'tbt', get: (s) => s.tbt?.p50, fmt: (v) => `${v.toFixed(0)}ms` },
     { key: 'scriptBoot', get: (s) => s.scriptBootMs?.p50, fmt: (v) => `${v.toFixed(0)}ms` },
-    { key: 'interaction', get: stableInteractionMs, fmt: (v) => `${v.toFixed(0)}ms` },
+    { key: 'interaction', get: interactionMs, fmt: (v) => `${v.toFixed(0)}ms` },
     { key: 'heap', get: (s) => s.heapUsed?.p50, fmt: formatBytes },
   ];
   const findings = [];

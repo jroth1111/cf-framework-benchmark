@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { classifyGeography, canonicalClass } from "../bench/src/canonical-class.mjs";
-import { assertCanonicalGeography } from "../bench/src/run.mjs";
+import { assertCanonicalGeography, canonicalGeographyWriteDecision } from "../bench/src/run.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -48,6 +48,7 @@ assert.ok(withUnknown.regions.has("APAC"), "known colos still classified");
 
 const canonicalPath = path.join(repoRoot, "bench", "results.v4.mpa_airbnb.json");
 const nonCanonicalPath = path.join(repoRoot, "bench", "results.v4.mpa_airbnb.dirty.json");
+const regionalPath = path.join(repoRoot, "bench", "results.v4.mpa_airbnb.regional.json");
 
 // Non-canonical path → gate is skipped (no throw even with empty locations)
 const skipped = assertCanonicalGeography({ outPath: nonCanonicalPath, edgeLocations: [], allowIncompleteGeography: false });
@@ -69,6 +70,17 @@ assert.throws(
 const optIn = assertCanonicalGeography({ outPath: canonicalPath, edgeLocations: ["MEL"], allowIncompleteGeography: true });
 assert.equal(optIn.checked, true);
 assert.ok(optIn.allowedOverride, "allowedOverride is true when opted in with incomplete geography");
+
+// Runner write decision redirects incomplete canonical geography to a
+// non-canonical regional artifact instead of throwing after the expensive run.
+const redirect = canonicalGeographyWriteDecision({ outPath: canonicalPath, edgeLocations: ["MEL"], allowIncompleteGeography: false });
+assert.equal(redirect.redirected, true, "incomplete canonical geography redirects");
+assert.equal(redirect.requestedOutPath, canonicalPath, "redirect records requested canonical path");
+assert.equal(redirect.outPath, regionalPath, "redirect uses .regional. suffix");
+
+const noRedirect = canonicalGeographyWriteDecision({ outPath: canonicalPath, edgeLocations: ["MEL", "IAD", "FRA"], allowIncompleteGeography: false });
+assert.equal(noRedirect.redirected, false, "global canonical geography writes to requested path");
+assert.equal(noRedirect.outPath, canonicalPath);
 
 // --- probe 3: data files present and well-formed ---
 const { default: coloRegions } = await import("../bench/colo-regions.json", { with: { type: "json" } });

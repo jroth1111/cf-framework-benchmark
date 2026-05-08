@@ -353,6 +353,7 @@ assert.equal(
 
 assert.equal(isCanonicalResultPath("bench/results.v4.mpa_airbnb.json"), true);
 assert.equal(isCanonicalResultPath("bench/results.v4.mpa_airbnb.dirty.json"), false);
+assert.equal(isCanonicalResultPath("bench/results.v4.mpa_airbnb.regional.json"), false);
 assert.equal(isCanonicalResultPath("bench/results.v4.spa_trading_media.smoke.json"), false);
 
 assert.throws(

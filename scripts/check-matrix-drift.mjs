@@ -33,6 +33,7 @@ const VALID_TIERS = new Set([
   'wrapper-baseline',
   'worker-baseline',
   'framework-experimental',
+  'control',
 ]);
 
 function diffSets(expected, actual) {
@@ -63,9 +64,10 @@ async function main() {
   const availableC3Frameworks = parseFrameworksFromHelp(helpText);
   const supportedC3Frameworks = availableC3Frameworks.filter((name) => !DEPRECATED_FRAMEWORKS.has(name));
   const validC3Frameworks = new Set(availableC3Frameworks);
-  const matrixC3Frameworks = matrixEntries.map((fw) => fw.c3Template || fw.name);
+  const c3ComparableEntries = matrixEntries.filter((fw) => fw.implementationKind !== 'control');
+  const matrixC3Frameworks = c3ComparableEntries.map((fw) => fw.c3Template || fw.name);
   const coveredC3Frameworks = [...new Set(matrixC3Frameworks)].sort((a, b) => a.localeCompare(b));
-  const invalidMappings = matrixEntries
+  const invalidMappings = c3ComparableEntries
     .filter((fw) => !validC3Frameworks.has(fw.c3Template || fw.name))
     .map((fw) => `${fw.name}:${fw.c3Template || fw.name}`);
   const { missing } = diffSets(supportedC3Frameworks, coveredC3Frameworks);

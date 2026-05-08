@@ -38,6 +38,9 @@
         "suites",
         "requiredTestIds",
         "expectedHtmlCache",
+        "expectedApiCache",
+        "expectedErrorApiCache",
+        "responseDefaults",
         "expectedDatasetSource",
         "includeInAssetClassification"
       ],

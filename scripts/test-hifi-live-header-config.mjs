@@ -19,27 +19,38 @@ function runWorkerFirst(path) {
 }
 
 const honoIndex = read("apps/hono/src/index.ts");
+const honoRender = read("apps/hono/src/render.ts");
 assert.match(
   honoIndex,
-  /app\.get\("\/hifi\/stays"[\s\S]*?c\.header\("server-timing"/,
-  "Hono hifi list route must emit Server-Timing directly"
+  /handleHonoPageRequest\(c\.req\.raw\)[\s\S]*?if \(page\) return page/,
+  "Hono catch-all must delegate document routes through handleHonoPageRequest"
 );
 assert.match(
-  honoIndex,
-  /app\.get\("\/hifi\/stays\/:id"[\s\S]*?c\.header\("server-timing"/,
-  "Hono hifi detail route must emit Server-Timing directly"
+  honoRender,
+  /pathname === "\/hifi\/stays"[\s\S]*?return \{ page: "hifi-stays" \}/,
+  "Hono hifi list route must be handled by the page renderer"
+);
+assert.match(
+  honoRender,
+  /\^\\\/hifi\\\/stays\\\/\(\[\^\/\]\+\)\$\//,
+  "Hono hifi detail route must be handled by the page renderer"
+);
+assert.match(
+  honoRender,
+  /function handleHonoPageRequest[\s\S]*?const headers = withServerTiming\(null, performance\.now\(\)\)[\s\S]*?new Response\(result\.html, \{ status: result\.status, headers \}\)/,
+  "Hono hifi document responses must emit Server-Timing through handleHonoPageRequest"
 );
 
 const svelteHook = read("apps/svelte/src/hooks.server.ts");
 assert.match(
   svelteHook,
-  /pathname === "\/hifi\/stays"[\s\S]*?return "list"/,
-  "Svelte hifi list pages must classify as cacheable benchmark list pages"
+  /htmlCacheHeaderForPath\(event\.url\.pathname, profile\)/,
+  "Svelte hifi pages must derive HTML cache policy from the shared cache package"
 );
 assert.match(
   svelteHook,
-  /\^\\\/hifi\\\/stays\\\/\[\^\/\]\+\$\//,
-  "Svelte hifi detail pages must classify as cacheable benchmark detail pages"
+  /response\.headers\.set\([\s\S]*?"server-timing"[\s\S]*?cf_bench/,
+  "Svelte hifi document responses must emit Server-Timing through the shared HTML hook"
 );
 
 for (const [name, configPath] of [

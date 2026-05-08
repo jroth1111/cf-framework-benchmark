@@ -7,87 +7,152 @@
       "route": "/",
       "kind": "html",
       "staticSample": "/",
-      "suites": ["mpa_airbnb", "mpa_airbnb_hifi"],
+      "suites": [
+        "mpa_airbnb",
+        "mpa_airbnb_hifi"
+      ],
       "requiredTestIds": [],
       "expectedHtmlCache": "no-store",
       "expectedDatasetSource": null,
-      "includeInAssetClassification": true
+      "includeInAssetClassification": true,
+      "expectedApiCache": null,
+      "expectedErrorApiCache": null,
+      "responseDefaults": null
     },
     {
       "route": "/stays",
       "kind": "html",
       "staticSample": "/stays",
-      "suites": ["mpa_airbnb"],
-      "requiredTestIds": ["stay-card"],
+      "suites": [
+        "mpa_airbnb"
+      ],
+      "requiredTestIds": [
+        "stay-card"
+      ],
       "expectedHtmlCache": "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
       "expectedDatasetSource": "listings",
-      "includeInAssetClassification": true
+      "includeInAssetClassification": true,
+      "expectedApiCache": null,
+      "expectedErrorApiCache": null,
+      "responseDefaults": null
     },
     {
       "route": "/stays/:id",
       "kind": "html",
       "staticSample": "/stays/001",
-      "suites": ["mpa_airbnb"],
-      "requiredTestIds": ["stay-description"],
+      "suites": [
+        "mpa_airbnb"
+      ],
+      "requiredTestIds": [
+        "stay-description"
+      ],
       "expectedHtmlCache": "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
       "expectedDatasetSource": "listings",
-      "includeInAssetClassification": true
+      "includeInAssetClassification": true,
+      "expectedApiCache": null,
+      "expectedErrorApiCache": null,
+      "responseDefaults": null
     },
     {
       "route": "/blog",
       "kind": "html",
       "staticSample": "/blog",
-      "suites": ["mpa_airbnb", "mpa_airbnb_hifi"],
-      "requiredTestIds": ["blog-post-card"],
+      "suites": [
+        "mpa_airbnb",
+        "mpa_airbnb_hifi"
+      ],
+      "requiredTestIds": [
+        "blog-post-card"
+      ],
       "expectedHtmlCache": "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
       "expectedDatasetSource": "blogPosts",
-      "includeInAssetClassification": true
+      "includeInAssetClassification": true,
+      "expectedApiCache": null,
+      "expectedErrorApiCache": null,
+      "responseDefaults": null
     },
     {
       "route": "/blog/:slug",
       "kind": "html",
-      "staticSample": { "from": "dataset.blogPosts[0].slug" },
-      "suites": ["mpa_airbnb", "mpa_airbnb_hifi"],
-      "requiredTestIds": ["blog-html"],
+      "staticSample": {
+        "from": "dataset.blogPosts[0].slug"
+      },
+      "suites": [
+        "mpa_airbnb",
+        "mpa_airbnb_hifi"
+      ],
+      "requiredTestIds": [
+        "blog-html"
+      ],
       "expectedHtmlCache": "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
       "expectedDatasetSource": "blogPosts",
-      "includeInAssetClassification": true
+      "includeInAssetClassification": true,
+      "expectedApiCache": null,
+      "expectedErrorApiCache": null,
+      "responseDefaults": null
     },
     {
       "route": "/chart",
       "kind": "html",
       "staticSample": "/chart",
-      "suites": ["spa_trading_media"],
-      "requiredTestIds": ["chart-canvas", "symbol-select", "timeframe-select"],
+      "suites": [
+        "spa_trading_media"
+      ],
+      "requiredTestIds": [
+        "chart-canvas",
+        "symbol-select",
+        "timeframe-select"
+      ],
       "expectedHtmlCache": "no-store",
       "expectedDatasetSource": null,
-      "includeInAssetClassification": true
+      "includeInAssetClassification": true,
+      "expectedApiCache": null,
+      "expectedErrorApiCache": null,
+      "responseDefaults": null
     },
     {
       "route": "/media",
       "kind": "html",
       "staticSample": "/media",
-      "suites": ["spa_trading_media"],
-      "requiredTestIds": ["media-card", "media-player", "media-next"],
+      "suites": [
+        "spa_trading_media"
+      ],
+      "requiredTestIds": [
+        "media-card",
+        "media-player",
+        "media-next"
+      ],
       "expectedHtmlCache": "no-store",
       "expectedDatasetSource": null,
-      "includeInAssetClassification": true
+      "includeInAssetClassification": true,
+      "expectedApiCache": null,
+      "expectedErrorApiCache": null,
+      "responseDefaults": null
     },
     {
       "route": "/hifi/stays",
       "kind": "html",
       "staticSample": "/hifi/stays",
-      "suites": ["mpa_airbnb_hifi"],
-      "requiredTestIds": ["stay-card"],
+      "suites": [
+        "mpa_airbnb_hifi"
+      ],
+      "requiredTestIds": [
+        "stay-card"
+      ],
       "expectedHtmlCache": "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
       "expectedDatasetSource": "listings",
-      "includeInAssetClassification": false
+      "includeInAssetClassification": false,
+      "expectedApiCache": null,
+      "expectedErrorApiCache": null,
+      "responseDefaults": null
     },
     {
       "route": "/hifi/stays/:id",
       "kind": "html",
       "staticSample": "/hifi/stays/001",
-      "suites": ["mpa_airbnb_hifi"],
+      "suites": [
+        "mpa_airbnb_hifi"
+      ],
       "requiredTestIds": [
         "stay-hero-image",
         "stay-gallery",
@@ -98,7 +163,10 @@
       ],
       "expectedHtmlCache": "public, max-age=0, s-maxage=300, stale-while-revalidate=86400",
       "expectedDatasetSource": "listings",
-      "includeInAssetClassification": false
+      "includeInAssetClassification": false,
+      "expectedApiCache": null,
+      "expectedErrorApiCache": null,
+      "responseDefaults": null
     },
     {
       "route": "/api/bench",

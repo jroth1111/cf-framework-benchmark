@@ -28,6 +28,7 @@ const _rd = Object.fromEntries(
   (v5Contract.routes ?? []).filter((r) => r.responseDefaults).map((r) => [r.route, r.responseDefaults])
 );
 const DEFAULT_PAGE_SIZE = _rd["/api/listings"]?.defaultPageSize ?? 20;
+const DEFAULT_MEDIA_PAGE_SIZE = _rd["/api/media"]?.defaultPageSize ?? 20;
 const DEFAULT_CANDLES = _rd["/api/prices"]?.defaultCandles ?? 360;
 
 export { HIFI_SUITE_FRAMEWORKS };
@@ -134,7 +135,7 @@ export function handleMedia(input) {
   const url = toUrl(input);
   const channel = url.searchParams.get("channel") || "";
   const page = parseIntParam(url.searchParams.get("page"), 1);
-  const pageSize = parseIntParam(url.searchParams.get("pageSize"), 20);
+  const pageSize = parseIntParam(url.searchParams.get("pageSize"), DEFAULT_MEDIA_PAGE_SIZE);
 
   return json(queryMedia({ channel, page, pageSize }), { cacheControl: apiCacheHeader("/api/media"), start });
 }

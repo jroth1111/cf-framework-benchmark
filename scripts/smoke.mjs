@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import {
   DEFAULT_MATRIX_PATH,
@@ -13,6 +14,32 @@ import { BENCH_MEDIA_PAGE_SIZE, chartSymbols, chartTimeframes } from "../package
 
 const require = createRequire(new URL("../bench/package.json", import.meta.url));
 const { chromium } = require("playwright");
+
+const contractV5 = JSON.parse(
+  readFileSync(new URL("../contracts/v5.json", import.meta.url), "utf8")
+);
+
+const REQUIRED_TEST_IDS_BY_ROUTE = new Map(
+  contractV5.routes.map((entry) => [entry.route, new Set(entry.requiredTestIds ?? [])])
+);
+
+function contractTestIdSelector(route, testId) {
+  const ids = REQUIRED_TEST_IDS_BY_ROUTE.get(route);
+  if (!ids?.has(testId)) {
+    const known = ids ? Array.from(ids).join(", ") : "<route missing>";
+    throw new Error(
+      `smoke.mjs requested data-testid "${testId}" for ${route}, but contracts/v5.json#requiredTestIds[${route}] = [${known}]`
+    );
+  }
+  return `[data-testid=${testId}]`;
+}
+
+const CHART_CANVAS = contractTestIdSelector("/chart", "chart-canvas");
+const CHART_SYMBOL_SELECT = contractTestIdSelector("/chart", "symbol-select");
+const CHART_TIMEFRAME_SELECT = contractTestIdSelector("/chart", "timeframe-select");
+const MEDIA_CARD = contractTestIdSelector("/media", "media-card");
+const MEDIA_PLAYER = contractTestIdSelector("/media", "media-player");
+const MEDIA_NEXT = contractTestIdSelector("/media", "media-next");
 
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);
@@ -141,13 +168,16 @@ async function waitForBenchHydration(page, scenario) {
 }
 
 async function runChartInteractions(page, scenario) {
-  await assertVisibleLocator(page, "[data-testid=chart-canvas]", "chart canvas");
-  await assertVisibleLocator(page, "[data-testid=symbol-select]", "chart symbol select");
-  await assertVisibleLocator(page, "[data-testid=timeframe-select]", "chart timeframe select");
-  const chartOptionCounts = await page.evaluate(() => ({
-    symbols: document.querySelectorAll('[data-testid="symbol-select"] option').length,
-    timeframes: document.querySelectorAll('[data-testid="timeframe-select"] option').length,
-  }));
+  await assertVisibleLocator(page, CHART_CANVAS, "chart canvas");
+  await assertVisibleLocator(page, CHART_SYMBOL_SELECT, "chart symbol select");
+  await assertVisibleLocator(page, CHART_TIMEFRAME_SELECT, "chart timeframe select");
+  const chartOptionCounts = await page.evaluate(
+    ({ symbolSelector, timeframeSelector }) => ({
+      symbols: document.querySelectorAll(symbolSelector + " option").length,
+      timeframes: document.querySelectorAll(timeframeSelector + " option").length,
+    }),
+    { symbolSelector: CHART_SYMBOL_SELECT, timeframeSelector: CHART_TIMEFRAME_SELECT }
+  );
   if (chartOptionCounts.symbols !== chartSymbols.length || chartOptionCounts.timeframes !== chartTimeframes.length) {
     throw new Error(
       `chart workload option count mismatch: ${JSON.stringify({
@@ -169,12 +199,15 @@ async function runChartInteractions(page, scenario) {
   const targetSymbol = config?.targetSymbol || "ETH";
   const targetTimeframe = config?.targetTimeframe || "15m";
 
-  const symbolSelect = page.locator("[data-testid=symbol-select]");
-  const timeframeSelect = page.locator("[data-testid=timeframe-select]");
-  const before = await page.evaluate(() => ({
-    symbol: document.querySelector('[data-testid="symbol-select"]')?.value ?? null,
-    timeframe: document.querySelector('[data-testid="timeframe-select"]')?.value ?? null,
-  }));
+  const symbolSelect = page.locator(CHART_SYMBOL_SELECT);
+  const timeframeSelect = page.locator(CHART_TIMEFRAME_SELECT);
+  const before = await page.evaluate(
+    ({ symbolSelector, timeframeSelector }) => ({
+      symbol: document.querySelector(symbolSelector)?.value ?? null,
+      timeframe: document.querySelector(timeframeSelector)?.value ?? null,
+    }),
+    { symbolSelector: CHART_SYMBOL_SELECT, timeframeSelector: CHART_TIMEFRAME_SELECT }
+  );
 
   try {
     await symbolSelect.selectOption(targetSymbol);
@@ -190,10 +223,13 @@ async function runChartInteractions(page, scenario) {
     if ((await options.count()) > 1) await timeframeSelect.selectOption({ index: 1 });
   }
 
-  const after = await page.evaluate(() => ({
-    symbol: document.querySelector('[data-testid="symbol-select"]')?.value ?? null,
-    timeframe: document.querySelector('[data-testid="timeframe-select"]')?.value ?? null,
-  }));
+  const after = await page.evaluate(
+    ({ symbolSelector, timeframeSelector }) => ({
+      symbol: document.querySelector(symbolSelector)?.value ?? null,
+      timeframe: document.querySelector(timeframeSelector)?.value ?? null,
+    }),
+    { symbolSelector: CHART_SYMBOL_SELECT, timeframeSelector: CHART_TIMEFRAME_SELECT }
+  );
   if (after.symbol === before.symbol && after.timeframe === before.timeframe) {
     throw new Error(`chart controls did not change state: ${JSON.stringify({ before, after })}`);
   }
@@ -231,7 +267,7 @@ async function waitForMediaChange(page, beforeText, beforeMediaId, label) {
   const deadline = Date.now() + timeoutMs;
   let last = { text: null, id: null };
   while (Date.now() < deadline) {
-    last.text = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
+    last.text = await page.locator(MEDIA_PLAYER).first().textContent().catch(() => null);
     last.id = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
     if (beforeText ? last.text && last.text !== beforeText : last.id && last.id !== beforeMediaId) return;
     await page.waitForTimeout(100);
@@ -246,7 +282,7 @@ async function clickMediaAndWaitForChange(page, locator, beforeText, beforeMedia
     await locator.click().catch(() => null);
     const settleUntil = Math.min(Date.now() + 500, deadline);
     while (Date.now() < settleUntil) {
-      last.text = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
+      last.text = await page.locator(MEDIA_PLAYER).first().textContent().catch(() => null);
       last.id = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
       if (beforeText ? last.text && last.text !== beforeText : last.id && last.id !== beforeMediaId) return;
       await page.waitForTimeout(100);
@@ -256,7 +292,7 @@ async function clickMediaAndWaitForChange(page, locator, beforeText, beforeMedia
 }
 
 async function waitForMediaCardCount(page) {
-  const cards = page.locator("[data-testid=media-card]");
+  const cards = page.locator(MEDIA_CARD);
   const deadline = Date.now() + timeoutMs;
   let lastCount = 0;
   while (Date.now() < deadline) {
@@ -268,28 +304,28 @@ async function waitForMediaCardCount(page) {
 }
 
 async function runMediaInteractions(page) {
-  await assertVisibleLocator(page, "[data-testid=media-card]", "media card");
+  await assertVisibleLocator(page, MEDIA_CARD, "media card");
   await waitForMediaCardCount(page);
-  const before = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
+  const before = await page.locator(MEDIA_PLAYER).first().textContent().catch(() => null);
   const beforeId = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
-  const cards = page.locator("[data-testid=media-card]");
+  const cards = page.locator(MEDIA_CARD);
   const cardTexts = await cards.allTextContents();
   const targetIndex = Math.max(
     0,
     cardTexts.findIndex((text, index) => index > 0 && before && !before.includes(text.trim().split(/\s+/).slice(0, 4).join(" ")))
   );
   const targetCard = (await cards.count()) > 1 ? cards.nth(targetIndex > 0 ? targetIndex : 1) : cards.first();
-  await assertVisibleLocator(page, "[data-testid=media-player]", "media player");
+  await assertVisibleLocator(page, MEDIA_PLAYER, "media player");
   await clickMediaAndWaitForChange(page, targetCard, before, beforeId, "media-card");
 
-  const next = page.locator("[data-testid=media-next]");
+  const next = page.locator(MEDIA_NEXT);
   if (await next.count()) {
-    const beforeNext = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
+    const beforeNext = await page.locator(MEDIA_PLAYER).first().textContent().catch(() => null);
     const beforeNextId = await page.evaluate(() => globalThis.__CF_BENCH__?.media?.currentId ?? null).catch(() => null);
     await clickMediaAndWaitForChange(page, next.first(), beforeNext, beforeNextId, "media-next");
   }
-  await assertVisibleLocator(page, "[data-testid=media-player]", "media player after next");
-  const after = await page.locator("[data-testid=media-player]").first().textContent().catch(() => null);
+  await assertVisibleLocator(page, MEDIA_PLAYER, "media player after next");
+  const after = await page.locator(MEDIA_PLAYER).first().textContent().catch(() => null);
   if (before && after && before === after) {
     throw new Error("media interaction did not change player text");
   }

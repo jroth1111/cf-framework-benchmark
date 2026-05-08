@@ -56,6 +56,7 @@ await run("test:no-direct-targets-read", "pnpm", ["test:no-direct-targets-read"]
 await run("test:app-delegation", "pnpm", ["test:app-delegation"]);
 await run("test:cloudflare-optimization", "pnpm", ["test:cloudflare-optimization"]);
 await run("test:cloudflare-optimization-variants-schema", "pnpm", ["test:cloudflare-optimization-variants-schema"]);
+await run("test:smoke-contract-selectors", "pnpm", ["test:smoke-contract-selectors"]);
 await run("cloudflare:config-audit", "pnpm", ["cloudflare:config-audit", "--fail-on-gaps"]);
 await run("cloudflare:optimization-audit", "pnpm", ["cloudflare:optimization-audit", "--fail-on-gaps"]);
 await run("test:build-enabled", "pnpm", ["test:build-enabled"]);

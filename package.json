@@ -34,6 +34,7 @@
     "test:app-delegation": "node scripts/test-app-delegation.mjs",
     "test:cloudflare-optimization": "node scripts/test-cloudflare-optimization-audit.mjs",
     "test:cloudflare-optimization-variants-schema": "node scripts/test-cloudflare-optimization-variants-schema.mjs",
+    "test:smoke-contract-selectors": "node scripts/test-smoke-contract-selectors.mjs",
     "test:build-enabled": "node --check scripts/build-enabled.mjs",
     "check:startup": "node scripts/check-worker-startup.mjs",
     "test:contracts": "node scripts/contract-tests.mjs",

@@ -210,7 +210,36 @@ export function loadScoringRubric() {
       throw new Error(`${SCORING_RUBRIC_PATH}: scenarioWeights["${suiteId}"] must sum to 1.0 (got ${sum}).`);
     }
   }
+  if (rubric.profileMetricWeights !== undefined) {
+    if (!rubric.profileMetricWeights || typeof rubric.profileMetricWeights !== 'object' || Array.isArray(rubric.profileMetricWeights)) {
+      throw new Error(`${SCORING_RUBRIC_PATH}: profileMetricWeights must be an object mapping profile → metric overrides.`);
+    }
+    for (const [profile, override] of Object.entries(rubric.profileMetricWeights)) {
+      if (!override || typeof override !== 'object' || Array.isArray(override)) {
+        throw new Error(`${SCORING_RUBRIC_PATH}: profileMetricWeights["${profile}"] must be an object.`);
+      }
+      const effective = { ...rubric.metricWeights, ...override };
+      const sumEffective = Object.values(effective).reduce((s, w) => s + Number(w || 0), 0);
+      if (Math.abs(sumEffective - 1) > 1e-6) {
+        throw new Error(
+          `${SCORING_RUBRIC_PATH}: profileMetricWeights["${profile}"] does not sum to 1.0 with non-overridden defaults (got ${sumEffective}). ` +
+          `Each profile's override + non-overridden defaults must sum to 1.0.`
+        );
+      }
+    }
+  }
   return rubric;
+}
+
+export function effectiveMetricWeight(metric, profile, rubric) {
+  const profiles = rubric.profileMetricWeights || null;
+  if (profiles) {
+    const override = profiles[profile] ?? profiles['*'] ?? null;
+    if (override && Object.prototype.hasOwnProperty.call(override, metric)) {
+      return Number(override[metric] || 0);
+    }
+  }
+  return Number(rubric.metricWeights?.[metric] || 0);
 }
 
 export function scoringRubricHash() {
@@ -1651,6 +1680,45 @@ async function runScenario(
   }
 }
 
+async function captureBundleSizes(browser, fw, scenarios, throttling, timeoutScale, benchHeaders, deviceContext, bundleSizes) {
+  // Bundle Sizes capture must run BEFORE warmupFramework: Resource Timing
+  // transferSize is 0 on cache hits, and warmupFramework primes the HTTP
+  // cache for every route. A dedicated cold context per framework keeps
+  // chart-route resources uncached so transferSize reflects real bytes.
+  const chartScenario = scenarios.find((s) => s.name === 'chart');
+  if (!chartScenario) {
+    return; // Suite has no chart scenario; downstream scoring null-routes via measured=false.
+  }
+  const ctx = await browser.newContext({ ...(deviceContext || { viewport: VIEWPORT }), extraHTTPHeaders: benchHeaders || undefined });
+  const page = await ctx.newPage();
+  if (throttling) {
+    await applyThrottling(page, throttling);
+  }
+  try {
+    await page.goto(fw.url + chartScenario.path, { waitUntil: 'load', timeout: 15000 * timeoutScale });
+    const resources = await page.evaluate(() => {
+      const list = performance.getEntriesByType('resource') || [];
+      const out = { js: 0, css: 0, total: 0 };
+      for (const r of list) {
+        const t = r.transferSize || 0;
+        out.total += t;
+        const name = r.name || '';
+        if (name.endsWith('.js') || name.includes('.js?')) out.js += t;
+        else if (name.endsWith('.css') || name.includes('.css?')) out.css += t;
+      }
+      return out;
+    });
+    bundleSizes[fw.name].js = resources.js;
+    bundleSizes[fw.name].css = resources.css;
+    bundleSizes[fw.name].total = resources.total;
+    bundleSizes[fw.name].measured = true;
+  } catch (e) {
+    console.log(`  ⚠️  Bundle size capture failed for ${fw.name}: ${e.message}`);
+  } finally {
+    await ctx.close();
+  }
+}
+
 async function warmupFramework(browser, fw, initScript, scenarios, throttling, timeoutScale, benchHeaders, deviceContext) {
   console.log(`  ⏳ Warming up ${fw.name}...`);
   const ctx = await browser.newContext({ ...(deviceContext || { viewport: VIEWPORT }), extraHTTPHeaders: benchHeaders || undefined });
@@ -1899,11 +1967,15 @@ async function main() {
     const timeoutScale = timeoutScaleByProfile[profile] || 1;
 
     for (const fw of shuffled(frameworks, `${runSeed}:${profile}:warmup`)) {
+      bundleSizes[fw.name] = { js: 0, css: 0, total: 0, measured: false };
+      // Size capture runs in a fresh, no-warmup context so transferSize reflects
+      // real bytes. The chart-cold-iter-0 fallback at the runScenario site stays
+      // in place but becomes a no-op once measured=true.
+      await captureBundleSizes(browser, fw, scenarios, throttling, timeoutScale, benchHeaders, deviceContext, bundleSizes);
       if (profileWarmup) {
         console.log(`\n▶ ${fw.name} (${fw.url})`);
         await warmupFramework(browser, fw, initScript, scenarios, throttling, timeoutScale, benchHeaders, deviceContext);
       }
-      bundleSizes[fw.name] = { js: 0, css: 0, total: 0, measured: false };
     }
 
     const runUnits = [];
@@ -2143,7 +2215,6 @@ async function main() {
   const phases = [...new Set(summary.map(s => s.phase))];
 
   const scoringRubric = loadScoringRubric();
-  const metricWeights = scoringRubric.metricWeights;
   const suiteId = path.basename(outPath).match(/^results\.v4\.([^.]+)/)?.[1] ?? null;
   if (!suiteId) {
     throw new Error(
@@ -2226,7 +2297,7 @@ async function main() {
         const min = Math.min(...values);
         const max = Math.max(...values);
         if (min === max) continue;
-        const weight = scWeight * (metricWeights[m.key] ?? 0);
+        const weight = scWeight * effectiveMetricWeight(m.key, profile, scoringRubric);
         if (!weight) continue;
 
         for (const fw of eligible) {
@@ -2496,6 +2567,11 @@ async function main() {
     frameworkPackages,
     frameworkVersions,
     benchApi: benchApiByFramework,
+    scoring: {
+      model: scoringRubric.model,
+      modelChangedAt: scoringRubric.modelChangedAt ?? null,
+      prevModel: scoringRubric.prevModel ?? null,
+    },
   };
 
   const runEnd = Date.now();

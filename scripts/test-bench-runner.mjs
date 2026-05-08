@@ -33,9 +33,14 @@ assert.equal(
 // the runner stamps into provenance.hashes.scoring.
 {
   const rubric = loadScoringRubric();
-  assert.equal(rubric.model, "real-world-choice-v1");
+  assert.equal(rubric.model, "real-world-choice-v2");
+  assert.equal(rubric.prevModel, "real-world-choice-v1");
   const sumMetric = Object.values(rubric.metricWeights).reduce((s, w) => s + Number(w), 0);
   assert.ok(Math.abs(sumMetric - 1) < 1e-6, `metricWeights must sum to 1.0 (got ${sumMetric})`);
+  // v2 model: TBT weight is 0; LCP and scriptBoot absorb the freed budget.
+  assert.equal(rubric.metricWeights.tbt, 0, "v2 metricWeights.tbt must be 0");
+  assert.ok(rubric.metricWeights.lcp >= 0.4, `v2 metricWeights.lcp must absorb TBT (got ${rubric.metricWeights.lcp})`);
+  assert.ok(rubric.metricWeights.scriptBoot >= 0.2, `v2 metricWeights.scriptBoot must absorb TBT (got ${rubric.metricWeights.scriptBoot})`);
   const suiteIds = Object.keys(rubric.scenarioWeights);
   assert.ok(suiteIds.length > 0, "scenarioWeights must declare at least one suite");
   for (const suiteId of suiteIds) {
@@ -43,6 +48,17 @@ assert.equal(
     assert.ok(weights && typeof weights === "object" && !Array.isArray(weights), `scenarioWeights["${suiteId}"] must be an object`);
     const sum = Object.values(weights).reduce((s, w) => s + Number(w), 0);
     assert.ok(Math.abs(sum - 1) < 1e-6, `scenarioWeights["${suiteId}"] must sum to 1.0 (got ${sum})`);
+  }
+  // profileMetricWeights: each profile's override + non-overridden defaults must sum to 1.0.
+  if (rubric.profileMetricWeights) {
+    for (const [profile, override] of Object.entries(rubric.profileMetricWeights)) {
+      const effective = { ...rubric.metricWeights, ...override };
+      const sumEffective = Object.values(effective).reduce((s, w) => s + Number(w), 0);
+      assert.ok(
+        Math.abs(sumEffective - 1) < 1e-6,
+        `profileMetricWeights["${profile}"] must sum to 1.0 with non-overridden defaults (got ${sumEffective})`
+      );
+    }
   }
   const hash = scoringRubricHash();
   assert.ok(typeof hash === "string" && hash.length === 64, `scoringRubricHash must be 64-char sha256 (got ${hash})`);
@@ -73,17 +89,18 @@ assert.equal(
   assert.equal(suitesHash(), baseline, "suites hash must restore to baseline after the suite file is restored");
 }
 
-// run.mjs must reference the model literal "real-world-choice-v1" only inside
-// the loader path, not as inline scoring code; everything else must read from
-// the JSON file via loadScoringRubric().
+// run.mjs must reference the model literals only via the loader path; the
+// score model name lives exclusively in bench/scoring-rubric.json.
 {
   const runMjs = await fs.readFile(path.join(repoRoot, "bench/src/run.mjs"), "utf8");
-  const occurrences = (runMjs.match(/real-world-choice-v1/g) || []).length;
-  assert.equal(
-    occurrences,
-    0,
-    `bench/src/run.mjs must not contain the scoring model literal directly; the loader reads bench/scoring-rubric.json. Found ${occurrences}.`
-  );
+  for (const literal of ["real-world-choice-v1", "real-world-choice-v2"]) {
+    const occurrences = (runMjs.match(new RegExp(literal, "g")) || []).length;
+    assert.equal(
+      occurrences,
+      0,
+      `bench/src/run.mjs must not contain the scoring model literal "${literal}" directly; the loader reads bench/scoring-rubric.json. Found ${occurrences}.`
+    );
+  }
 }
 
 // Bucket-key invariance: every (framework × suite × scenario) triple in the matrix

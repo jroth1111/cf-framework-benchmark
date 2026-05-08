@@ -1,16 +1,26 @@
 {
-  "schemaVersion": "1.1.0",
-  "model": "real-world-choice-v1",
+  "schemaVersion": "1.2.0",
+  "model": "real-world-choice-v2",
+  "modelChangedAt": "2026-05-08",
+  "prevModel": "real-world-choice-v1",
   "direction": "lower-is-better",
   "normalization": "min-max per metric within each profile/phase/tier/contract bucket; missing metrics are omitted and remaining observed weights are renormalized",
   "metricWeights": {
-    "lcp": 0.3,
-    "tbt": 0.2,
+    "lcp": 0.4,
+    "tbt": 0.0,
     "ttfb": 0.15,
     "interaction": 0.15,
-    "scriptBoot": 0.1,
+    "scriptBoot": 0.2,
     "jsBytes": 0.05,
     "heap": 0.05
+  },
+  "profileMetricWeights": {
+    "mobile-cold": {},
+    "*": {
+      "interaction": 0.0,
+      "lcp": 0.5,
+      "ttfb": 0.2
+    }
   },
   "scenarioWeights": {
     "mpa_airbnb": {

@@ -363,6 +363,10 @@ export function buildMarkdown(out, derived = {}) {
   md += `| Contract hash | ${provenance.hashes?.contract || '—'} |\n`;
   md += `| Contracts JSON hash | ${provenance.hashes?.contractsJson || '—'} |\n`;
   md += `| Scoring rubric hash | ${provenance.hashes?.scoring || '—'} |\n`;
+  md += `| Scoring model | ${provenance.scoring?.model || scoringRubric.model || '—'} |\n`;
+  if (provenance.scoring?.modelChangedAt || provenance.scoring?.prevModel) {
+    md += `| Scoring model changed | ${provenance.scoring?.modelChangedAt || '—'} (prev: ${provenance.scoring?.prevModel || '—'}) |\n`;
+  }
   md += `| Suites hash | ${provenance.hashes?.suites || '—'} |\n`;
   md += `| Cloudflare platform hash | ${provenance.hashes?.cloudflarePlatform || '—'} |\n`;
   md += `| Cloudflare platform era | ${provenance.cloudflarePlatform?.activeEra || '—'} |\n`;
@@ -681,7 +685,19 @@ export function buildMarkdown(out, derived = {}) {
   const scenarioMixLabel = isPerSuite
     ? `Scenario mix (${suiteId || 'unknown suite'}) is ${scenarioMix || '—'}`
     : `Scenario mix is ${scenarioMix}`;
-  md += `> **Scoring rubric (${scoringRubric.model})**: lower is better. Metrics are min-max normalized within each profile/phase/tier/contract bucket, then weighted as LCP ${metricWeights.lcp}, TBT ${metricWeights.tbt}, TTFB ${metricWeights.ttfb}, interaction ${metricWeights.interaction}, script boot ${metricWeights.scriptBoot}, JS transfer ${metricWeights.jsBytes}, heap ${metricWeights.heap}. ${scenarioMixLabel}. Missing metrics are omitted and observed weights are renormalized. Failed or incomplete framework/scenario runs are not ranked.\n\n`;
+  md += `> **Scoring rubric (${scoringRubric.model})**: lower is better. Metrics are min-max normalized within each profile/phase/tier/contract bucket, then weighted as LCP ${metricWeights.lcp}, TBT ${metricWeights.tbt}, TTFB ${metricWeights.ttfb}, interaction ${metricWeights.interaction}, script boot ${metricWeights.scriptBoot}, JS transfer ${metricWeights.jsBytes}, heap ${metricWeights.heap}. ${scenarioMixLabel}. Missing metrics are omitted and observed weights are renormalized. Failed or incomplete framework/scenario runs are not ranked.\n`;
+  const profileMetricWeights = scoringRubric.profileMetricWeights || null;
+  if (profileMetricWeights && Object.keys(profileMetricWeights).length) {
+    const overrideLines = Object.entries(profileMetricWeights)
+      .map(([profile, override]) => {
+        const entries = Object.entries(override || {});
+        if (!entries.length) return `\`${profile}\` keeps the default weights`;
+        return `\`${profile}\` overrides ${entries.map(([m, w]) => `${m}=${w}`).join(', ')}`;
+      })
+      .join('; ');
+    md += `> Profile overrides: ${overrideLines}. Per-profile sums equal 1.0 once non-overridden defaults are layered in.\n`;
+  }
+  md += `\n`;
   for (const profile of profileNames) {
     md += `### Profile: ${profile}\n\n`;
     for (const phase of phases) {

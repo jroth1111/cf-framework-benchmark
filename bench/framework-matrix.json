@@ -93,7 +93,19 @@
       "status": "blocked",
       "benchmarkEnabled": false,
       "appDir": "apps/analog",
-      "versionPackages": ["@analogjs/platform", "@analogjs/router", "@angular/core"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+        "adapter": "Angular/Analog Worker scaffold",
+        "cloudflareSupport": "experimental",
+        "maturity": "experimental",
+        "benchmarkMode": "experimental-blocked",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "@analogjs/platform",
+        "@analogjs/router",
+        "@angular/core"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/analog run deploy"
@@ -107,16 +119,39 @@
       "appDir": "apps/angular",
       "scenarioContracts": {
         "mpa_airbnb": {
-          "home": { "renderMode": "prerender" },
-          "stays": { "renderMode": "prerender" },
-          "blog": { "renderMode": "prerender" }
+          "home": {
+            "renderMode": "prerender"
+          },
+          "stays": {
+            "renderMode": "prerender"
+          },
+          "blog": {
+            "renderMode": "prerender"
+          }
         },
         "spa_trading_media": {
-          "chart": { "renderMode": "prerender" },
-          "media": { "renderMode": "prerender" }
+          "chart": {
+            "renderMode": "prerender"
+          },
+          "media": {
+            "renderMode": "prerender"
+          }
         }
       },
-      "versionPackages": ["@angular/core", "@angular/router", "@angular/ssr", "@angular/build"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/angular/",
+        "adapter": "Angular SSR Worker output",
+        "cloudflareSupport": "official-guide",
+        "maturity": "stable",
+        "benchmarkMode": "prerender/static-heavy",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "@angular/core",
+        "@angular/router",
+        "@angular/ssr",
+        "@angular/build"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/angular run deploy"
@@ -134,17 +169,65 @@
       },
       "scenarioContracts": {
         "mpa_airbnb": {
-          "home": { "renderMode": "prerender" }
+          "home": {
+            "renderMode": "prerender"
+          }
         },
         "spa_trading_media": {
-          "chart": { "renderMode": "prerender" },
-          "media": { "renderMode": "prerender" }
+          "chart": {
+            "renderMode": "prerender"
+          },
+          "media": {
+            "renderMode": "prerender"
+          }
         }
       },
-      "versionPackages": ["astro", "@astrojs/cloudflare"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/astro/",
+        "adapter": "@astrojs/cloudflare",
+        "cloudflareSupport": "official-guide",
+        "maturity": "stable",
+        "benchmarkMode": "hybrid/prerender-static-heavy",
+        "verificationTarget": "wrangler/workerd",
+        "notes": "Astro 6 requires Node 22+ in Workers Builds."
+      },
+      "versionPackages": [
+        "astro",
+        "@astrojs/cloudflare"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/astro run deploy"
+      }
+    },
+    {
+      "name": "control",
+      "tier": "control",
+      "status": "implemented",
+      "benchmarkEnabled": false,
+      "excludeFromScoreboards": true,
+      "appDir": "apps/control",
+      "implementationKind": "control",
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/",
+        "adapter": "Shared control renderer baseline (Hono Worker)",
+        "cloudflareSupport": "internal-baseline",
+        "maturity": "stable",
+        "benchmarkMode": "control-baseline",
+        "verificationTarget": "wrangler/workerd",
+        "notes": "Shared control renderer baseline. Not part of the framework matrix or headline scoreboards."
+      },
+      "liveTarget": {
+        "platform": "workers",
+        "url": "https://cf-bench-control.gwizz.workers.dev"
+      },
+      "versionPackages": [
+        "@cf-bench/bench-control",
+        "@cf-bench/bench-contract"
+      ],
+      "deploy": {
+        "type": "workers",
+        "command": "pnpm -C apps/control run deploy"
       }
     },
     {
@@ -157,7 +240,17 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["hono"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/hono/",
+        "adapter": "Hono Worker",
+        "cloudflareSupport": "official-guide",
+        "maturity": "stable",
+        "benchmarkMode": "worker-baseline",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "hono"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono run deploy"
@@ -179,7 +272,20 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["hono", "solid-js", "vite-plugin-solid", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/hono/",
+        "adapter": "Hono Worker plus Solid client assets",
+        "cloudflareSupport": "composition",
+        "maturity": "stable-composite",
+        "benchmarkMode": "worker-baseline-composite",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "hono",
+        "solid-js",
+        "vite-plugin-solid",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono-solid run deploy"
@@ -197,7 +303,17 @@
       "status": "scaffolded",
       "benchmarkEnabled": false,
       "appDir": "apps/hono-svelte",
-      "versionPackages": ["hono"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/hono/",
+        "adapter": "Hono Worker plus Svelte client assets",
+        "cloudflareSupport": "composition",
+        "maturity": "scaffolded-composite",
+        "benchmarkMode": "worker-baseline-composite-disabled",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "hono"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono-svelte run deploy"
@@ -219,7 +335,21 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["hono", "vue", "vue-router", "@vitejs/plugin-vue", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/hono/",
+        "adapter": "Hono Worker plus Vue client assets",
+        "cloudflareSupport": "composition",
+        "maturity": "stable-composite",
+        "benchmarkMode": "worker-baseline-composite",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "hono",
+        "vue",
+        "vue-router",
+        "@vitejs/plugin-vue",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/hono-vue run deploy"
@@ -236,7 +366,21 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["hono", "honox", "@hono/vite-build", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/hono/",
+        "adapter": "HonoX Worker via Hono-compatible Cloudflare deployment",
+        "cloudflareSupport": "hono-derived",
+        "maturity": "stable-adapter",
+        "benchmarkMode": "full-stack-ssr",
+        "verificationTarget": "wrangler/workerd",
+        "notes": "HonoX is tracked as a Hono-derived framework entry because create-cloudflare does not expose a distinct honox template."
+      },
+      "versionPackages": [
+        "hono",
+        "honox",
+        "@hono/vite-build",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/honox run deploy"
@@ -250,8 +394,12 @@
       "appDir": "apps/next",
       "scenarioContracts": {
         "mpa_airbnb": {
-          "blog": { "renderMode": "prerender" },
-          "blog_post": { "renderMode": "prerender" }
+          "blog": {
+            "renderMode": "prerender"
+          },
+          "blog_post": {
+            "renderMode": "prerender"
+          }
         }
       },
       "hifi": {
@@ -259,7 +407,20 @@
         "imageTransforms": "enabled",
         "reference": true
       },
-      "versionPackages": ["next", "@opennextjs/cloudflare", "react", "react-dom"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/",
+        "adapter": "@opennextjs/cloudflare",
+        "cloudflareSupport": "official-guide",
+        "maturity": "stable-adapter",
+        "benchmarkMode": "full-stack-ssr-with-prerendered-blog",
+        "verificationTarget": "OpenNext Cloudflare build/preview/deploy"
+      },
+      "versionPackages": [
+        "next",
+        "@opennextjs/cloudflare",
+        "react",
+        "react-dom"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/next run deploy"
@@ -275,7 +436,20 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["nuxt", "vue", "h3", "nitropack"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/nuxt/",
+        "adapter": "Nitro Cloudflare preset",
+        "cloudflareSupport": "official-guide",
+        "maturity": "stable",
+        "benchmarkMode": "full-stack-ssr",
+        "verificationTarget": "Nitro Cloudflare Worker output"
+      },
+      "versionPackages": [
+        "nuxt",
+        "vue",
+        "h3",
+        "nitropack"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/nuxt run deploy"
@@ -290,8 +464,12 @@
       "appDir": "apps/qwik",
       "scenarioContracts": {
         "mpa_airbnb": {
-          "blog": { "renderMode": "prerender" },
-          "blog_post": { "renderMode": "prerender" }
+          "blog": {
+            "renderMode": "prerender"
+          },
+          "blog_post": {
+            "renderMode": "prerender"
+          }
         }
       },
       "hifi": {
@@ -299,7 +477,20 @@
         "imageTransforms": "enabled",
         "reference": true
       },
-      "versionPackages": ["@qwik.dev/core", "@qwik.dev/router", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/frameworks/framework-guides/qwik/",
+        "adapter": "Qwik City Cloudflare output",
+        "cloudflareSupport": "official-guide",
+        "maturity": "beta",
+        "benchmarkMode": "experimental-blocked",
+        "verificationTarget": "wrangler/workerd",
+        "notes": "Fresh Worker deploys with @qwik.dev/router 2.0.0-beta.34 return Qwik Q14 task-resolution error pages; excluded from canonical runs until a source-built Worker passes v5 live contracts."
+      },
+      "versionPackages": [
+        "@qwik.dev/core",
+        "@qwik.dev/router",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/qwik run deploy"
@@ -315,7 +506,20 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["react", "react-dom", "react-router-dom", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/vite-plugin/tutorial/",
+        "adapter": "Custom Worker plus React/Vite assets",
+        "cloudflareSupport": "custom-worker",
+        "maturity": "stable-wrapper",
+        "benchmarkMode": "wrapper-baseline",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "react",
+        "react-dom",
+        "react-router-dom",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/react run deploy"
@@ -331,7 +535,22 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["react-router", "react", "react-dom", "@react-router/dev", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/react-router/",
+        "adapter": "Cloudflare Vite plugin",
+        "cloudflareSupport": "official-guide",
+        "maturity": "stable",
+        "benchmarkMode": "full-stack-ssr",
+        "verificationTarget": "Cloudflare Vite plugin Worker output",
+        "notes": "Cloudflare's React Router framework path is not the SPA or prerender mode."
+      },
+      "versionPackages": [
+        "react-router",
+        "react",
+        "react-dom",
+        "@react-router/dev",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/react-router run deploy"
@@ -348,7 +567,21 @@
         "imageTransforms": "enabled",
         "reference": true
       },
-      "versionPackages": ["rwsdk", "react", "react-dom", "react-server-dom-webpack", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+        "adapter": "RedwoodSDK Worker",
+        "cloudflareSupport": "workers-native-framework",
+        "maturity": "beta",
+        "benchmarkMode": "full-stack-ssr",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "rwsdk",
+        "react",
+        "react-dom",
+        "react-server-dom-webpack",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/redwood run deploy"
@@ -364,7 +597,20 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["solid-js", "@solidjs/router", "vite-plugin-solid", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/vite-plugin/tutorial/",
+        "adapter": "Custom Worker plus Solid/Vite assets",
+        "cloudflareSupport": "custom-worker",
+        "maturity": "stable-wrapper",
+        "benchmarkMode": "wrapper-baseline",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "solid-js",
+        "@solidjs/router",
+        "vite-plugin-solid",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/solid run deploy"
@@ -383,7 +629,20 @@
         "imageTransforms": "enabled",
         "reference": true
       },
-      "versionPackages": ["@solidjs/start", "@solidjs/router", "solid-js", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+        "adapter": "SolidStart Worker scaffold",
+        "cloudflareSupport": "experimental",
+        "maturity": "experimental",
+        "benchmarkMode": "experimental-blocked",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "@solidjs/start",
+        "@solidjs/router",
+        "solid-js",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/solidstart run deploy"
@@ -400,7 +659,20 @@
         "imageTransforms": "enabled",
         "reference": true
       },
-      "versionPackages": ["@sveltejs/kit", "svelte", "@sveltejs/adapter-cloudflare", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/svelte/",
+        "adapter": "@sveltejs/adapter-cloudflare",
+        "cloudflareSupport": "official-guide",
+        "maturity": "stable",
+        "benchmarkMode": "full-stack-ssr",
+        "verificationTarget": "SvelteKit Cloudflare Worker output"
+      },
+      "versionPackages": [
+        "@sveltejs/kit",
+        "svelte",
+        "@sveltejs/adapter-cloudflare",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/svelte run deploy"
@@ -416,7 +688,23 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["@tanstack/react-start", "@tanstack/react-router", "@cloudflare/vite-plugin", "react", "react-dom", "vinxi", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+        "adapter": "TanStack Start Worker output",
+        "cloudflareSupport": "workers-compatible",
+        "maturity": "stable-adapter",
+        "benchmarkMode": "full-stack-ssr",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "@tanstack/react-start",
+        "@tanstack/react-router",
+        "@cloudflare/vite-plugin",
+        "react",
+        "react-dom",
+        "vinxi",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/tanstack-start run deploy"
@@ -433,18 +721,44 @@
       "appDir": "apps/tanstack-start",
       "scenarioContracts": {
         "mpa_airbnb": {
-          "home": { "renderMode": "prerender" },
-          "stays": { "renderMode": "prerender" },
-          "stay_detail": { "renderMode": "prerender" },
-          "blog": { "renderMode": "prerender" },
-          "blog_post": { "renderMode": "prerender" }
+          "home": {
+            "renderMode": "prerender"
+          },
+          "stays": {
+            "renderMode": "prerender"
+          },
+          "stay_detail": {
+            "renderMode": "prerender"
+          },
+          "blog": {
+            "renderMode": "prerender"
+          },
+          "blog_post": {
+            "renderMode": "prerender"
+          }
         },
         "spa_trading_media": {
-          "chart": { "renderMode": "prerender" },
-          "media": { "renderMode": "prerender" }
+          "chart": {
+            "renderMode": "prerender"
+          },
+          "media": {
+            "renderMode": "prerender"
+          }
         }
       },
-      "versionPackages": ["@tanstack/react-start", "@tanstack/react-router", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+        "adapter": "TanStack Start native prerender Worker output",
+        "cloudflareSupport": "workers-compatible",
+        "maturity": "stable-adapter",
+        "benchmarkMode": "framework-prerender-blocked",
+        "verificationTarget": "distinct live Workers prerender target required"
+      },
+      "versionPackages": [
+        "@tanstack/react-start",
+        "@tanstack/react-router",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/tanstack-start run deploy"
@@ -462,7 +776,21 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["@tanstack/solid-start", "@tanstack/solid-router", "@cloudflare/vite-plugin", "solid-js", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+        "adapter": "TanStack Start Solid Worker output",
+        "cloudflareSupport": "workers-compatible",
+        "maturity": "stable-adapter",
+        "benchmarkMode": "full-stack-ssr",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "@tanstack/solid-start",
+        "@tanstack/solid-router",
+        "@cloudflare/vite-plugin",
+        "solid-js",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/tanstack-start-solid run deploy"
@@ -476,22 +804,50 @@
       "appDir": "apps/vike",
       "scenarioContracts": {
         "mpa_airbnb": {
-          "home": { "renderMode": "prerender" },
-          "stays": { "renderMode": "prerender" },
-          "stay_detail": { "renderMode": "prerender" },
-          "blog": { "renderMode": "prerender" },
-          "blog_post": { "renderMode": "prerender" }
+          "home": {
+            "renderMode": "prerender"
+          },
+          "stays": {
+            "renderMode": "prerender"
+          },
+          "stay_detail": {
+            "renderMode": "prerender"
+          },
+          "blog": {
+            "renderMode": "prerender"
+          },
+          "blog_post": {
+            "renderMode": "prerender"
+          }
         },
         "spa_trading_media": {
-          "chart": { "renderMode": "prerender" },
-          "media": { "renderMode": "prerender" }
+          "chart": {
+            "renderMode": "prerender"
+          },
+          "media": {
+            "renderMode": "prerender"
+          }
         }
       },
       "hifi": {
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["vike", "vike-react", "@photonjs/cloudflare", "react", "react-dom"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/",
+        "adapter": "Vike Worker output",
+        "cloudflareSupport": "workers-compatible",
+        "maturity": "stable",
+        "benchmarkMode": "prerender/static-heavy",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "vike",
+        "vike-react",
+        "@photonjs/cloudflare",
+        "react",
+        "react-dom"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vike run deploy"
@@ -507,7 +863,20 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["vue", "vue-router", "@vitejs/plugin-vue", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/vite-plugin/tutorial/",
+        "adapter": "Custom Worker plus Vue/Vite assets",
+        "cloudflareSupport": "custom-worker",
+        "maturity": "stable-wrapper",
+        "benchmarkMode": "wrapper-baseline",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "vue",
+        "vue-router",
+        "@vitejs/plugin-vue",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vue run deploy"
@@ -525,7 +894,20 @@
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["vue", "vue-router", "@vitejs/plugin-vue", "vite"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/vite-plugin/tutorial/",
+        "adapter": "Custom Worker plus Vue/Vite assets",
+        "cloudflareSupport": "custom-worker",
+        "maturity": "stable-wrapper",
+        "benchmarkMode": "wrapper-baseline",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "vue",
+        "vue-router",
+        "@vitejs/plugin-vue",
+        "vite"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/vue-c3 run deploy"
@@ -539,22 +921,49 @@
       "appDir": "apps/waku",
       "scenarioContracts": {
         "mpa_airbnb": {
-          "home": { "renderMode": "prerender" },
-          "stays": { "renderMode": "prerender" },
-          "stay_detail": { "renderMode": "prerender" },
-          "blog": { "renderMode": "prerender" },
-          "blog_post": { "renderMode": "prerender" }
+          "home": {
+            "renderMode": "prerender"
+          },
+          "stays": {
+            "renderMode": "prerender"
+          },
+          "stay_detail": {
+            "renderMode": "prerender"
+          },
+          "blog": {
+            "renderMode": "prerender"
+          },
+          "blog_post": {
+            "renderMode": "prerender"
+          }
         },
         "spa_trading_media": {
-          "chart": { "renderMode": "prerender" },
-          "media": { "renderMode": "prerender" }
+          "chart": {
+            "renderMode": "prerender"
+          },
+          "media": {
+            "renderMode": "prerender"
+          }
         }
       },
       "hifi": {
         "enabled": true,
         "imageTransforms": "enabled"
       },
-      "versionPackages": ["waku", "react", "react-dom", "react-server-dom-webpack"],
+      "cloudflare": {
+        "officialGuide": "https://developers.cloudflare.com/workers/framework-guides/web-apps/more-web-frameworks/waku/",
+        "adapter": "Waku Worker",
+        "cloudflareSupport": "official-guide",
+        "maturity": "alpha",
+        "benchmarkMode": "prerender/static-heavy-in-this-repo",
+        "verificationTarget": "wrangler/workerd"
+      },
+      "versionPackages": [
+        "waku",
+        "react",
+        "react-dom",
+        "react-server-dom-webpack"
+      ],
       "deploy": {
         "type": "workers",
         "command": "pnpm -C apps/waku run deploy"

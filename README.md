@@ -12,7 +12,7 @@ Framework entries are classified before they are ranked:
 | `worker-baseline` | Hono, Hono + frontend composites | Worker/Hono baselines; useful context, not framework-runtime rankings. |
 | `framework-experimental` | Analog, Qwik, SolidStart variants, incomplete composites | Excluded until the matrix marks them benchmark-enabled. |
 
-The standalone control implementation lives in `apps/control` and `bench/controls.json`. It is used for live verification and appendix baselines, not headline framework scoreboards.
+The standalone control implementation lives in `apps/control` and is recorded as the `tier: "control"` row in `bench/framework-matrix.json` (with `excludeFromScoreboards: true`). It is used for live verification and appendix baselines, not headline framework scoreboards.
 
 ## What this demo site contains
 

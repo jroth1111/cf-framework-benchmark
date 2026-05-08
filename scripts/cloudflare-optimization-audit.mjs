@@ -399,7 +399,6 @@ function disclosureSummary(row) {
 export async function buildOptimizationAudit({
   cwd = process.cwd(),
   matrixPath = path.join(cwd, "bench", "framework-matrix.json"),
-  metadataPath = path.join(cwd, "bench", "cloudflare-frameworks.json"),
   variantsPath = path.join(cwd, "bench", "cloudflare-optimization-variants.json"),
   variantsSchemaPath = path.join(cwd, "bench", "cloudflare-optimization-variants.schema.json"),
 } = {}) {
@@ -407,7 +406,7 @@ export async function buildOptimizationAudit({
   const optimizationVariantsDoc = await readJson(variantsPath);
   const variantsSchema = await readJson(variantsSchemaPath);
   validateOrThrow(variantsSchema, optimizationVariantsDoc, `Cloudflare optimization variants at ${variantsPath}`);
-  const configAudit = await buildCloudflareAudit({ cwd, matrixPath, metadataPath });
+  const configAudit = await buildCloudflareAudit({ cwd, matrixPath });
   const configByName = new Map(configAudit.frameworks.map((row) => [row.name, row]));
   const optimizationVariantGaps = validateOptimizationVariants(optimizationVariantsDoc);
   const variants = Array.isArray(optimizationVariantsDoc?.variants) ? optimizationVariantsDoc.variants : [];
@@ -544,12 +543,11 @@ function markdown(report) {
 
 async function main() {
   const matrixPath = path.resolve(argValue("--matrix", path.join(process.cwd(), "bench", "framework-matrix.json")));
-  const metadataPath = path.resolve(argValue("--metadata", path.join(process.cwd(), "bench", "cloudflare-frameworks.json")));
   const variantsPath = path.resolve(argValue("--variants", path.join(process.cwd(), "bench", "cloudflare-optimization-variants.json")));
   const outPath = argValue("--out", null);
   const markdownPath = argValue("--markdown", null);
   const failOnGaps = hasFlag("--fail-on-gaps");
-  const report = await buildOptimizationAudit({ matrixPath, metadataPath, variantsPath });
+  const report = await buildOptimizationAudit({ matrixPath, variantsPath });
 
   if (outPath) {
     await fs.mkdir(path.dirname(path.resolve(outPath)), { recursive: true });

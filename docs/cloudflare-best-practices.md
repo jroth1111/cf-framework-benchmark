@@ -14,9 +14,9 @@ pnpm cloudflare:config-audit --fail-on-gaps
 
 The audit records each app's framework guide, adapter, maturity label, Wrangler
 entrypoint, assets directory, compatibility date, compatibility flags,
-observability setting, and Workers Static Assets routing mode. The source
-metadata lives in `bench/cloudflare-frameworks.json`; live Wrangler settings are
-read from each app's `wrangler.toml` or `wrangler.jsonc`.
+observability setting, and Workers Static Assets routing mode. Cloudflare-support
+metadata lives in the `cloudflare` block on each row of `bench/framework-matrix.json`;
+live Wrangler settings are read from each app's `wrangler.toml` or `wrangler.jsonc`.
 
 ## Workers Static Assets Routing
 

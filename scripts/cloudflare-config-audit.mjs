@@ -203,12 +203,9 @@ function markdownTable(rows) {
 export async function buildCloudflareAudit({
   cwd = process.cwd(),
   matrixPath = path.join(cwd, "bench", "framework-matrix.json"),
-  metadataPath = path.join(cwd, "bench", "cloudflare-frameworks.json"),
   hifiOnly = false,
 } = {}) {
   const matrixDoc = JSON.parse(await fs.readFile(matrixPath, "utf8"));
-  const metadataDoc = JSON.parse(await fs.readFile(metadataPath, "utf8"));
-  const metadataByName = metadataDoc.frameworks ?? {};
   const frameworks = [];
 
   for (const framework of matrixDoc.frameworks ?? []) {
@@ -217,7 +214,7 @@ export async function buildCloudflareAudit({
     frameworks.push(
       buildFrameworkRow({
         framework,
-        metadata: metadataByName[framework.name] ?? null,
+        metadata: framework.cloudflare ?? null,
         config: wranglerConfig,
         hifiOnly,
       })
@@ -231,7 +228,6 @@ export async function buildCloudflareAudit({
     schemaVersion: "1.0.0",
     generatedAt: new Date().toISOString(),
     matrixPath,
-    metadataPath,
     mode: hifiOnly ? "hifi" : "default",
     ok: targetRows.every((row) => row.ok),
     gapCount: targetRows.reduce((count, row) => count + row.gaps.length, 0),
@@ -244,12 +240,11 @@ export async function buildCloudflareAudit({
 
 async function main() {
   const matrixPath = path.resolve(argValue("--matrix", path.join(process.cwd(), "bench", "framework-matrix.json")));
-  const metadataPath = path.resolve(argValue("--metadata", path.join(process.cwd(), "bench", "cloudflare-frameworks.json")));
   const outPath = argValue("--out", null);
   const markdownPath = argValue("--markdown", null);
   const failOnGaps = hasFlag("--fail-on-gaps");
   const hifiOnly = hasFlag("--hifi");
-  const report = await buildCloudflareAudit({ matrixPath, metadataPath, hifiOnly });
+  const report = await buildCloudflareAudit({ matrixPath, hifiOnly });
 
   if (outPath) {
     await fs.mkdir(path.dirname(path.resolve(outPath)), { recursive: true });

@@ -29,6 +29,7 @@
     "test:bench-stability": "node --check scripts/bench-stability.mjs",
     "test:cloudflare-config": "node scripts/test-cloudflare-config-audit.mjs",
     "test:cloudflare-config-fixtures": "node scripts/test-cloudflare-config-fixtures.mjs",
+    "test:single-framework-registry": "node scripts/test-single-framework-registry.mjs",
     "test:version-packages": "node scripts/test-version-packages.mjs",
     "test:no-direct-targets-read": "node scripts/test-no-direct-targets-read.mjs",
     "test:app-delegation": "node scripts/test-app-delegation.mjs",

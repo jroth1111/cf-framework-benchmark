@@ -67,7 +67,8 @@
         "framework-prerender",
         "wrapper-baseline",
         "worker-baseline",
-        "framework-experimental"
+        "framework-experimental",
+        "control"
       ]
     },
     "frameworkStatus": {
@@ -137,10 +138,40 @@
         "reference": { "type": "boolean" }
       }
     },
+    "cloudflareBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "officialGuide",
+        "adapter",
+        "cloudflareSupport",
+        "maturity",
+        "benchmarkMode",
+        "verificationTarget"
+      ],
+      "properties": {
+        "officialGuide": { "type": "string", "minLength": 1 },
+        "adapter": { "type": "string", "minLength": 1 },
+        "cloudflareSupport": { "type": "string", "minLength": 1 },
+        "maturity": { "type": "string", "minLength": 1 },
+        "benchmarkMode": { "type": "string", "minLength": 1 },
+        "verificationTarget": { "type": "string", "minLength": 1 },
+        "notes": { "type": "string", "minLength": 1 }
+      }
+    },
+    "liveTargetBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "url"],
+      "properties": {
+        "platform": { "type": "string", "enum": ["workers"] },
+        "url": { "type": "string", "format": "uri", "minLength": 1 }
+      }
+    },
     "framework": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "tier", "status", "benchmarkEnabled", "appDir", "deploy", "versionPackages"],
+      "required": ["name", "tier", "status", "benchmarkEnabled", "appDir", "deploy", "versionPackages", "cloudflare"],
       "properties": {
         "name": { "$ref": "#/$defs/frameworkName" },
         "c3Template": { "$ref": "#/$defs/frameworkName" },
@@ -148,6 +179,7 @@
         "tier": { "$ref": "#/$defs/tierName" },
         "status": { "$ref": "#/$defs/frameworkStatus" },
         "benchmarkEnabled": { "type": "boolean" },
+        "excludeFromScoreboards": { "type": "boolean" },
         "blockedReason": { "type": "string", "minLength": 1 },
         "appDir": {
           "type": "string",
@@ -156,6 +188,8 @@
         "implementationKind": { "$ref": "#/$defs/implementationKind" },
         "composition": { "$ref": "#/$defs/compositionBlock" },
         "hifi": { "$ref": "#/$defs/hifiBlock" },
+        "cloudflare": { "$ref": "#/$defs/cloudflareBlock" },
+        "liveTarget": { "$ref": "#/$defs/liveTargetBlock" },
         "scenarioContracts": { "$ref": "#/$defs/scenarioContractsBySuite" },
         "versionPackages": {
           "type": "array",

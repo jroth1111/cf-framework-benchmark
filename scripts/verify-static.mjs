@@ -53,6 +53,7 @@ await run("test:cloudflare-config", "pnpm", ["test:cloudflare-config"]);
 await run("test:cloudflare-config-fixtures", "pnpm", ["test:cloudflare-config-fixtures"]);
 await run("test:version-packages", "pnpm", ["test:version-packages"]);
 await run("test:no-direct-targets-read", "pnpm", ["test:no-direct-targets-read"]);
+await run("test:app-delegation", "pnpm", ["test:app-delegation"]);
 await run("test:cloudflare-optimization", "pnpm", ["test:cloudflare-optimization"]);
 await run("cloudflare:config-audit", "pnpm", ["cloudflare:config-audit", "--fail-on-gaps"]);
 await run("cloudflare:optimization-audit", "pnpm", ["cloudflare:optimization-audit", "--fail-on-gaps"]);

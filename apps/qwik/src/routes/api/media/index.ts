@@ -1,32 +1,6 @@
 import type { RequestHandler } from "@qwik.dev/router";
-import { queryMedia } from "@cf-bench/dataset";
+import { handleContractApi } from "@cf-bench/bench-contract";
 
-function getIsolateId() {
-  const globalAny = globalThis as any;
-  if (!globalAny.__CF_BENCH_ISOLATE_ID) {
-    globalAny.__CF_BENCH_ISOLATE_ID = crypto.randomUUID();
-  }
-  return globalAny.__CF_BENCH_ISOLATE_ID as string;
-}
-
-function serverTiming(start: number) {
-  const dur = performance.now() - start;
-  return `cf_bench;dur=${dur.toFixed(1)};desc=\"${getIsolateId()}\"`;
-}
-
-export const onGet: RequestHandler = async ({ json, headers, url }) => {
-  const start = performance.now();
-  const channel = url.searchParams.get("channel") || "";
-  const page = Number(url.searchParams.get("page") || "1");
-  const pageSize = Number(url.searchParams.get("pageSize") || "20");
-
-  headers.set("content-type", "application/json; charset=utf-8");
-  headers.set("cache-control", "public, max-age=0, s-maxage=60, stale-while-revalidate=300");
-  headers.set("server-timing", serverTiming(start));
-
-  json(200, queryMedia({
-    channel,
-    page: Number.isFinite(page) ? page : 1,
-    pageSize: Number.isFinite(pageSize) ? pageSize : 20,
-  }));
+export const onGet: RequestHandler = ({ send, url }) => {
+  send(handleContractApi("qwik", url.href)!);
 };

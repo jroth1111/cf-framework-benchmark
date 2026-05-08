@@ -31,6 +31,7 @@
     "test:cloudflare-config-fixtures": "node scripts/test-cloudflare-config-fixtures.mjs",
     "test:version-packages": "node scripts/test-version-packages.mjs",
     "test:no-direct-targets-read": "node scripts/test-no-direct-targets-read.mjs",
+    "test:app-delegation": "node scripts/test-app-delegation.mjs",
     "test:cloudflare-optimization": "node scripts/test-cloudflare-optimization-audit.mjs",
     "test:build-enabled": "node --check scripts/build-enabled.mjs",
     "check:startup": "node scripts/check-worker-startup.mjs",

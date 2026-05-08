@@ -318,5 +318,6 @@ suite + targets, runs `contract-report.mjs --fail-on-violations` as a gate
 
 (Populated by the tick that kicks off `pnpm bench:all`; one line per attempt.)
 
-- shell `bqa1j0ju4` started 2026-05-07T18:30:09Z (`pnpm bench:all` — mpa_airbnb → spa_trading_media → mpa_airbnb_hifi)
+- shell `bqa1j0ju4` started 2026-05-07T18:30:09Z (`pnpm bench:all` — mpa_airbnb → spa_trading_media → mpa_airbnb_hifi); failed before first canonical write — tree-dirty refusal during loop.md edit landing.
+- shell `b42e8khkp` started 2026-05-07T18:31:04Z (`pnpm bench:all` — mpa_airbnb → spa_trading_media → mpa_airbnb_hifi); exit 0; mpa_airbnb / spa_trading_media / mpa_airbnb_hifi result files written; provenance.hashes.scoring + suites + contract non-null; zero `cf=unknown`; `pnpm verify:results` passes for all three.
 

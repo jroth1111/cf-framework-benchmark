@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.0.0",
+  "description": "Declarative schema for window.__CF_BENCH__ payload emitted by benchmark apps. Used to validate marker payloads at collection time in run.mjs.",
+  "schema": {
+    "chart": {
+      "ready": "boolean",
+      "symbol": "string",
+      "timeframe": "string",
+      "lastRenderTs": "number",
+      "switchDurationMs": "number",
+      "error": "boolean?",
+      "errorMessage": "string?",
+      "switchStartTs": "number?"
+    },
+    "chartCore": {
+      "avgDrawTimeMs": "number",
+      "maxDrawTimeMs": "number",
+      "drawCount": "number",
+      "totalDrawTimeMs": "number"
+    },
+    "media": {
+      "ready": "boolean",
+      "currentId": "string?",
+      "openDurationMs": "number?",
+      "nextDurationMs": "number?",
+      "error": "boolean?",
+      "errorMessage": "string?"
+    },
+    "hifi": {
+      "stayTitle": "string?",
+      "stayImagesLoaded": "boolean?",
+      "heroImageSrc": "string?"
+    }
+  },
+  "requiredFields": {
+    "chart": ["ready"],
+    "chartCore": ["avgDrawTimeMs", "maxDrawTimeMs", "drawCount", "totalDrawTimeMs"],
+    "media": ["ready"],
+    "hifi": []
+  }
+}

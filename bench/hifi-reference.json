@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0.0",
+  "referenceUrl": "https://www.airbnb.com/rooms/47648006",
+  "description": "Baseline reference URL for scripts/lighthouse-compare.mjs. The hifi suite benchmarks framework rendering against this real-world listing page.",
+  "metricMapping": {
+    "lcp":         { "lighthouseAuditId": "largest-contentful-paint", "diagnostic": false },
+    "tbt":         { "lighthouseAuditId": "total-blocking-time",       "diagnostic": true,  "reason": "Weight is 0 in scoring-rubric.json v2; retained for diagnostic reference only." },
+    "ttfb":        { "lighthouseAuditId": "server-response-time",      "diagnostic": false },
+    "interaction": { "lighthouseAuditId": "interactive",               "diagnostic": true,  "reason": "TTI is an approximation; runner measures chart-switch/chart-draw latency directly, not INP." },
+    "scriptBoot":  { "lighthouseAuditId": "bootup-time",               "diagnostic": false },
+    "jsBytes":     { "lighthouseAuditId": "script-treemap-data",        "diagnostic": false },
+    "heap":        { "lighthouseAuditId": null,                         "diagnostic": true,  "reason": "No Lighthouse audit for JS heap; runner reads performance.memory directly." }
+  }
+}

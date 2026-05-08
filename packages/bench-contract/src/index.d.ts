@@ -20,7 +20,7 @@ export type BenchResponseV3 = {
   now: number;
   runtime: "cloudflare-workers";
   framework: string;
-  contractVersion: "v3.0.0";
+  contractVersion: string;
   suiteSupport: ("mpa_airbnb" | "spa_trading_media" | "mpa_airbnb_hifi" | string)[];
 };
 

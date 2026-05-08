@@ -3,8 +3,13 @@ import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const DEFAULT_REFERENCE_URL = "https://www.airbnb.com/rooms/47648006";
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const HIFI_REF_PATH = path.join(REPO_ROOT, "bench", "hifi-reference.json");
+const hifiRef = JSON.parse(await fs.readFile(HIFI_REF_PATH, "utf8"));
+
+const DEFAULT_REFERENCE_URL = hifiRef.referenceUrl;
 const DEFAULT_OUT = path.join(process.cwd(), "bench", "lighthouse-compare.json");
 
 function arg(name, fallback = null) {
@@ -172,6 +177,7 @@ async function main() {
     skipNetwork,
     targetUrl,
     referenceUrl,
+    metricMapping: hifiRef.metricMapping,
     target: targetSummary,
     reference: referenceSummary,
     diff,

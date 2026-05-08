@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateOrThrow } from "./validate-schema.mjs";
+import matrixSchemaDef from "../framework-matrix.schema.json" with { type: "json" };
 
 const BENCH_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_ROOT = path.resolve(BENCH_DIR, "..");
@@ -74,10 +75,11 @@ async function loadMatrixSchema(schemaPath = DEFAULT_MATRIX_SCHEMA_PATH) {
   return doc;
 }
 
-const IMPLEMENTATION_KINDS = new Set(["native", "control"]);
-const RENDER_MODES = new Set(["ssr", "prerender", "spa"]);
-const INITIAL_DATA_MODES = new Set(["document", "client-fetch"]);
-const HYDRATION_MODELS = new Set(["framework", "none"]);
+const _schemaDefs = matrixSchemaDef.$defs ?? {};
+const IMPLEMENTATION_KINDS = new Set(_schemaDefs.implementationKind?.enum ?? []);
+const RENDER_MODES = new Set(_schemaDefs.renderMode?.enum ?? []);
+const INITIAL_DATA_MODES = new Set(_schemaDefs.initialDataMode?.enum ?? []);
+const HYDRATION_MODELS = new Set(_schemaDefs.hydrationModel?.enum ?? []);
 
 export function parseCsvSet(value) {
   const tokens = String(value || "")

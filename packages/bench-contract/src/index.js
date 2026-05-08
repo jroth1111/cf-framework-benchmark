@@ -22,6 +22,13 @@ import {
   getMapsSdkSource,
 } from "./sdk-fixtures.js";
 import { HIFI_SUITE_FRAMEWORKS } from "./hifi-suite-frameworks.generated.js";
+import v5Contract from "../../../contracts/v5.json" with { type: "json" };
+
+const _rd = Object.fromEntries(
+  (v5Contract.routes ?? []).filter((r) => r.responseDefaults).map((r) => [r.route, r.responseDefaults])
+);
+const DEFAULT_PAGE_SIZE = _rd["/api/listings"]?.defaultPageSize ?? 20;
+const DEFAULT_CANDLES = _rd["/api/prices"]?.defaultCandles ?? 360;
 
 export { HIFI_SUITE_FRAMEWORKS };
 
@@ -60,7 +67,7 @@ export function handleBench(framework) {
       now: Date.now(),
       runtime: "cloudflare-workers",
       framework,
-      contractVersion: "v3.0.0",
+      contractVersion: v5Contract.contractVersion,
       suiteSupport: suiteSupportForFramework(framework),
     },
     { cacheControl: apiCacheHeader("/api/bench"), start }
@@ -79,7 +86,7 @@ export function handleListings(input) {
   const max = parseIntParam(url.searchParams.get("max"), undefined);
   const sort = url.searchParams.get("sort") || "relevance";
   const page = parseIntParam(url.searchParams.get("page"), 1);
-  const pageSize = parseIntParam(url.searchParams.get("pageSize"), 20);
+  const pageSize = parseIntParam(url.searchParams.get("pageSize"), DEFAULT_PAGE_SIZE);
 
   return json(
     queryListings({
@@ -107,7 +114,7 @@ export function handlePrices(input) {
   const url = toUrl(input);
   const symbol = (url.searchParams.get("symbol") || "").toUpperCase() || "BTC";
   const timeframe = url.searchParams.get("timeframe") || "1h";
-  const points = parseIntParam(url.searchParams.get("points"), 360);
+  const points = parseIntParam(url.searchParams.get("points"), DEFAULT_CANDLES);
 
   if (!chartSymbols.includes(symbol)) {
     return json({ error: "unknown_symbol" }, { status: 400, cacheControl: errorApiCacheHeader("/api/prices"), start });

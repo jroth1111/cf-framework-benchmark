@@ -8,7 +8,11 @@ import {
   getPost,
   queryListings,
 } from "@cf-bench/dataset";
-import { getHifiHeadHtml } from "@cf-bench/hifi-shell";
+import {
+  getHifiHeadHtml,
+  renderHifiStaysListBody,
+  getHifiStayDetailParts,
+} from "@cf-bench/hifi-shell";
 import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
 
 type HonoPageMatch =
@@ -18,7 +22,9 @@ type HonoPageMatch =
   | { page: "blog" }
   | { page: "post"; slug: string }
   | { page: "chart" }
-  | { page: "media" };
+  | { page: "media" }
+  | { page: "hifi-stays" }
+  | { page: "hifi-stay"; id: string };
 
 function toUrl(input: URL | Request | string) {
   if (input instanceof URL) return input;
@@ -378,6 +384,25 @@ function mediaPage() {
   );
 }
 
+function hifiStaysPage() {
+  const listings = queryListings({ page: 1, pageSize: 12 }).results;
+  return shell("Stays (hifi)", renderHifiStaysListBody(listings), getHifiHeadHtml());
+}
+
+function hifiStayDetailPage(id: string) {
+  const listing = getListing(id);
+  const parts = getHifiStayDetailParts(listing);
+  const inlineScript = listing ? `<script>${parts.script}</script>` : "";
+  return {
+    html: shell(
+      listing ? listing.title : "Stay not found",
+      `${parts.body}${inlineScript}`,
+      getHifiHeadHtml()
+    ),
+    status: listing ? 200 : 404,
+  };
+}
+
 function matchHonoPage(pathname: string): HonoPageMatch | null {
   pathname = pathname.replace(/\/+$/, "") || "/";
   if (pathname === "/") return { page: "home" };
@@ -385,52 +410,55 @@ function matchHonoPage(pathname: string): HonoPageMatch | null {
   if (pathname === "/blog") return { page: "blog" };
   if (pathname === "/chart") return { page: "chart" };
   if (pathname === "/media") return { page: "media" };
+  if (pathname === "/hifi/stays") return { page: "hifi-stays" };
   const stay = pathname.match(/^\/stays\/([^/]+)$/);
   if (stay) return { page: "stay", id: stay[1] };
   const blog = pathname.match(/^\/blog\/([^/]+)$/);
   if (blog) return { page: "post", slug: blog[1] };
+  const hifiStay = pathname.match(/^\/hifi\/stays\/([^/]+)$/);
+  if (hifiStay) return { page: "hifi-stay", id: hifiStay[1] };
   return null;
 }
 
-function renderHonoPage(input: URL | Request | string) {
+function renderHonoPage(input: URL | Request | string): { html: string; status: number } | null {
   const url = toUrl(input);
   const match = matchHonoPage(url.pathname);
   if (!match) return null;
 
   switch (match.page) {
     case "home":
-      return homePage();
+      return { html: homePage(), status: 200 };
     case "stays":
-      return staysPage(url);
+      return { html: staysPage(url), status: 200 };
     case "stay":
-      return stayDetailPage(match.id);
+      return { html: stayDetailPage(match.id), status: 200 };
     case "blog":
-      return blogPage();
+      return { html: blogPage(), status: 200 };
     case "post":
-      return blogPostPage(match.slug);
+      return { html: blogPostPage(match.slug), status: 200 };
     case "chart":
-      return chartPage();
+      return { html: chartPage(), status: 200 };
     case "media":
-      return mediaPage();
+      return { html: mediaPage(), status: 200 };
+    case "hifi-stays":
+      return { html: hifiStaysPage(), status: 200 };
+    case "hifi-stay":
+      return hifiStayDetailPage(match.id);
     default:
       return null;
   }
-}
-
-export function renderHifiShell(title: string, bodyHtml: string) {
-  return shell(title, bodyHtml, getHifiHeadHtml());
 }
 
 export function handleHonoPageRequest(request: Request) {
   const url = toUrl(request);
   if (request.method.toUpperCase() !== "GET") return null;
 
-  const html = renderHonoPage(url);
-  if (!html) return null;
+  const result = renderHonoPage(url);
+  if (!result) return null;
 
   const profile = request.headers.get("x-cf-bench-profile");
   const headers = withServerTiming(null, performance.now());
   headers.set("content-type", "text/html; charset=utf-8");
   headers.set("cache-control", htmlCacheHeaderForPath(url.pathname, profile));
-  return new Response(html, { status: 200, headers });
+  return new Response(result.html, { status: result.status, headers });
 }

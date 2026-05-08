@@ -22,6 +22,8 @@ const ALLOWED_PREFIX = "packages/dataset/";
 const violations = [];
 for (const relPath of trackedFiles) {
   if (relPath.startsWith(ALLOWED_PREFIX)) continue;
+  // Test scripts themselves may reference the literal as part of their own assertions
+  if (path.basename(relPath).startsWith("test-") && relPath.startsWith("scripts/")) continue;
   // Only check text files likely to contain slugs
   if (
     !relPath.endsWith(".ts") &&

@@ -55,7 +55,7 @@ export interface BenchResponseV3 {
   now: number;
   runtime: "cloudflare-workers";
   framework: string;
-  contractVersion: "v3.0.0";
+  contractVersion: string;
   suiteSupport: string[];
 }
 

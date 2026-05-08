@@ -67,6 +67,12 @@ await run("test:runner-imports-timings", "pnpm", ["test:runner-imports-timings"]
 await run("test:profile-catalog-external", "pnpm", ["test:profile-catalog-external"]);
 await run("test:canonical-geography", "pnpm", ["test:canonical-geography"]);
 await run("test:platform-era-stamp", "pnpm", ["test:platform-era-stamp"]);
+await run("test:marker-contract", "pnpm", ["test:marker-contract"]);
+await run("test:contract-version-derived", "pnpm", ["test:contract-version-derived"]);
+await run("test:lighthouse-rubric-parity", "pnpm", ["test:lighthouse-rubric-parity"]);
+await run("test:config-v4-enum-parity", "pnpm", ["test:config-v4-enum-parity"]);
+await run("test:response-defaults-runtime", "pnpm", ["test:response-defaults-runtime"]);
+await run("test:no-inline-route-registration", "pnpm", ["test:no-inline-route-registration"]);
 await run("cloudflare:config-audit", "pnpm", ["cloudflare:config-audit", "--fail-on-gaps"]);
 await run("cloudflare:optimization-audit", "pnpm", ["cloudflare:optimization-audit", "--fail-on-gaps"]);
 await run("test:build-enabled", "pnpm", ["test:build-enabled"]);

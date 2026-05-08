@@ -27,6 +27,9 @@ const ALLOWED_FILES = new Set([
   "bench/profiles.schema.json",
   "scripts/test-cache-derivation.mjs",
   "scripts/test-contract-api-cache.mjs",
+  "scripts/test-contract-api-functional.mjs",
+  "scripts/test-contract-kind-invariants.mjs",
+  "scripts/test-bench-cache-classify.mjs",
   "package.json",
 ]);
 

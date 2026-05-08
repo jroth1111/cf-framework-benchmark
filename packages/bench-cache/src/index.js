@@ -7,10 +7,9 @@ import profilesCatalog from "../../../bench/profiles.json" with { type: "json" }
 
 export const NO_STORE = "no-store";
 
-// SDK fixtures (`/__bench/sdk/*.js`) have a uniform long-TTL cache contract that
-// is not yet declared per-route in contracts/v5.json (Phase E4 formalizes via
-// `kind: "sdk-fixture"`). Living here keeps the literal out of bench-contract
-// so the single-cache-source invariant holds today.
+// SDK fixtures (`/__bench/sdk/*.js`) have a uniform long-TTL cache contract.
+// Declared per-route in contracts/v5.json as `kind: "sdk-fixture"` with
+// expectedApiCache matching this value. test-contract-api-cache verifies parity.
 export const SDK_CACHE_HEADER = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
 
 const ROUTES_BY_PATH = new Map(contracts.routes.map((r) => [r.route, r]));

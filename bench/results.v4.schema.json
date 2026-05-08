@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cf-bench.local/schemas/bench/results.v4.schema.json",
+  "title": "bench results v4 schema",
+  "description": "Validates bench/results.v4.<suite>.json shape. Required provenance hash key list lives here so that verify-results.mjs and bench/src/run.mjs can derive it from a single source instead of duplicating string arrays. Permissive on deep substructure (rows, summary, bucketScores entries) — tighten incrementally as fields stabilize.",
+  "type": "object",
+  "required": [
+    "ts",
+    "iterations",
+    "frameworks",
+    "profiles",
+    "phases",
+    "scenarios",
+    "scoring",
+    "provenance",
+    "runOrder",
+    "rows"
+  ],
+  "properties": {
+    "ts": { "type": "string", "minLength": 1 },
+    "runStartedAt": { "type": "string" },
+    "durationMs": { "type": "number" },
+    "iterations": { "type": "integer", "minimum": 1 },
+    "iterationsByProfile": { "type": "object", "additionalProperties": true },
+    "warmupEnabled": { "type": "boolean" },
+    "warmupByProfile": { "type": "object", "additionalProperties": true },
+    "frameworks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "url": { "type": "string" },
+          "tier": { "type": "string" },
+          "delivery": { "type": "string" },
+          "deploy": { "type": ["string", "object"] },
+          "implementationKind": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "phases": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "scenarios": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "scoring": {
+      "type": "object",
+      "required": ["model"],
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "schemaVersion": { "type": "string" },
+        "direction": { "type": "string" },
+        "normalization": { "type": "string" },
+        "metricWeights": { "type": "object", "additionalProperties": true },
+        "scenarioWeights": { "type": "object", "additionalProperties": true },
+        "profileMetricWeights": { "type": "object", "additionalProperties": true },
+        "modelChangedAt": { "type": "string" },
+        "prevModel": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["git", "hashes", "cloudflarePlatform"],
+      "properties": {
+        "git": {
+          "type": "object",
+          "required": ["commit"],
+          "properties": {
+            "commit": { "type": "string", "minLength": 1 },
+            "branch": { "type": "string" },
+            "describe": { "type": "string" },
+            "dirty": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        },
+        "hashes": {
+          "type": "object",
+          "required": [
+            "matrix",
+            "targets",
+            "lockfile",
+            "contract",
+            "contractsJson",
+            "scoring",
+            "suites",
+            "cloudflarePlatform",
+            "cloudflareConfig",
+            "cloudflareOptimization"
+          ],
+          "properties": {
+            "matrix": { "type": "string", "minLength": 1 },
+            "targets": { "type": "string", "minLength": 1 },
+            "lockfile": { "type": "string", "minLength": 1 },
+            "contract": { "type": "string", "minLength": 1 },
+            "contractsJson": { "type": "string", "minLength": 1 },
+            "scoring": { "type": "string", "minLength": 1 },
+            "suites": { "type": "string", "minLength": 1 },
+            "cloudflarePlatform": { "type": "string", "minLength": 1 },
+            "cloudflareConfig": { "type": "string", "minLength": 1 },
+            "cloudflareOptimization": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": true
+        },
+        "cloudflarePlatform": {
+          "type": "object",
+          "required": ["activeEra"],
+          "properties": {
+            "activeEra": { "type": "string", "minLength": 1 },
+            "schemaVersion": { "type": "string" },
+            "generatedAt": { "type": "string" },
+            "eras": { "type": "array" }
+          },
+          "additionalProperties": true
+        },
+        "cloudflareAudit": { "type": "object", "additionalProperties": true },
+        "cloudflareOptimizationAudit": { "type": "object", "additionalProperties": true },
+        "benchApi": { "type": "object", "additionalProperties": true },
+        "dataset": { "type": "object", "additionalProperties": true },
+        "frameworkPackages": { "type": "object", "additionalProperties": true },
+        "frameworkVersions": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
+    "runOrder": {
+      "type": "object",
+      "required": ["seed"],
+      "properties": {
+        "seed": { "type": "string", "minLength": 1 },
+        "frameworkOrder": { "type": "array" },
+        "phaseOrder": { "type": "array" },
+        "scenarioOrder": { "type": "array" },
+        "order": { "type": "array" },
+        "randomization": { "type": ["object", "string"] }
+      },
+      "additionalProperties": true
+    },
+    "config": {
+      "type": "object",
+      "required": ["data"],
+      "properties": {
+        "path": { "type": "string" },
+        "data": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
+    "summary": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["framework", "profile", "phase", "scenario", "iteration"],
+        "properties": {
+          "framework": { "type": "string", "minLength": 1 },
+          "profile": { "type": "string", "minLength": 1 },
+          "phase": { "type": "string", "minLength": 1 },
+          "scenario": { "type": "string", "minLength": 1 },
+          "iteration": { "type": "integer", "minimum": 0 },
+          "ok": { "type": "boolean" },
+          "url": { "type": "string" },
+          "provenanceHash": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "failures": { "type": "array" },
+    "failureSummary": { "type": "object", "additionalProperties": true },
+    "bucketScores": { "type": "object", "additionalProperties": true },
+    "bundleSizes": { "type": "object", "additionalProperties": true },
+    "edgeLocations": { "type": "object", "additionalProperties": true },
+    "environment": { "type": "object", "additionalProperties": true },
+    "network": { "type": "object", "additionalProperties": true },
+    "cache": { "type": "object", "additionalProperties": true },
+    "cacheControlSummary": { "type": "object", "additionalProperties": true },
+    "cacheStatusSummary": { "type": "object", "additionalProperties": true },
+    "linkHeaderSummary": { "type": "object", "additionalProperties": true },
+    "serverTimingSummary": { "type": "object", "additionalProperties": true },
+    "traceCorrelation": { "type": "object", "additionalProperties": true },
+    "flamegraphs": { "type": ["object", "array", "null"] },
+    "cli": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

@@ -315,6 +315,18 @@ assert.equal(
   "benchmark provenance contract hash must include the v6 hifi addendum"
 );
 
+assert.equal(
+  typeof benchmarkContractHashInput().contracts.contractSchema,
+  "string",
+  "benchmark provenance contract hash must include contracts/v5.schema.json (E4)"
+);
+
+assert.equal(
+  typeof benchmarkContractHashInput().contracts.resultsSchema,
+  "string",
+  "benchmark provenance contract hash must include bench/results.v4.schema.json (E4)"
+);
+
 assert.equal(isCanonicalResultPath("bench/results.v4.mpa_airbnb.json"), true);
 assert.equal(isCanonicalResultPath("bench/results.v4.mpa_airbnb.dirty.json"), false);
 assert.equal(isCanonicalResultPath("bench/results.v4.spa_trading_media.smoke.json"), false);

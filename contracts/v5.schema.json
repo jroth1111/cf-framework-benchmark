@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cf-bench.local/schemas/contracts/v5.schema.json",
+  "title": "v5 contract schema",
+  "description": "Validates contracts/v5.json. The contract is the single source of truth for per-route benchmark behaviour: route surface, kind, suite membership, required test ids, cache headers, response defaults, and dataset source. Schema is the machine-checked authority for that file shape; adding a field to the contract requires updating this schema.",
+  "type": "object",
+  "required": ["schemaVersion", "contractVersion", "routes"],
+  "properties": {
+    "schemaVersion": { "type": "string", "minLength": 1 },
+    "contractVersion": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "routes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/route" }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "kind": {
+      "type": "string",
+      "enum": ["html", "api", "sdk-fixture", "beacon"]
+    },
+    "datasetSource": {
+      "type": ["string", "null"],
+      "enum": ["listings", "blogPosts", null]
+    },
+    "responseDefaults": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    },
+    "route": {
+      "type": "object",
+      "required": [
+        "route",
+        "kind",
+        "staticSample",
+        "suites",
+        "requiredTestIds",
+        "expectedHtmlCache",
+        "expectedDatasetSource",
+        "includeInAssetClassification"
+      ],
+      "properties": {
+        "route": { "type": "string", "pattern": "^/" },
+        "kind": { "$ref": "#/$defs/kind" },
+        "staticSample": { "type": "string", "minLength": 1 },
+        "suites": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "requiredTestIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "expectedHtmlCache": { "type": ["string", "null"] },
+        "expectedApiCache": { "type": ["string", "null"] },
+        "expectedErrorApiCache": { "type": ["string", "null"] },
+        "responseDefaults": { "$ref": "#/$defs/responseDefaults" },
+        "expectedDatasetSource": { "$ref": "#/$defs/datasetSource" },
+        "includeInAssetClassification": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

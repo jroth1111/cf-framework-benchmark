@@ -11,6 +11,9 @@ import { buildOptimizationAudit } from '../../scripts/cloudflare-optimization-au
 import { DEFAULT_TARGETS_PATH } from './config-v4.mjs';
 import { provenanceHashForRow, sha256 } from './provenance.mjs';
 import { buildMarkdown, formatBytes, formatDuration } from './report.mjs';
+import resultsSchema from '../results.v4.schema.json' with { type: 'json' };
+
+const REQUIRED_PROVENANCE_HASHES = resultsSchema.properties.provenance.properties.hashes.required;
 
 export { provenanceHashForRow } from './provenance.mjs';
 
@@ -175,6 +178,8 @@ export function benchmarkContractHashInput() {
       v5: hashFile('docs/contracts-v5.md') || hashFile('docs/contracts-v3.md'),
       v6Addendum: hashFile('docs/contracts-v6-addendum.md'),
       contractsJson: hashFile('contracts/v5.json'),
+      contractSchema: hashFile('contracts/v5.schema.json'),
+      resultsSchema: hashFile('bench/results.v4.schema.json'),
     },
   };
 }
@@ -2546,21 +2551,27 @@ async function main() {
   const cloudflareAuditStable = stableCloudflareAuditInput(cloudflareAudit);
   const cloudflareOptimizationAudit = await buildOptimizationAudit({ cwd: REPO_ROOT });
   const cloudflareOptimizationAuditStable = stableCloudflareOptimizationAuditInput(cloudflareOptimizationAudit);
+  const provenanceHashes = {
+    matrix: hashFile('bench/framework-matrix.json'),
+    targets: hashFile(DEFAULT_TARGETS_PATH),
+    lockfile: hashFile('pnpm-lock.yaml'),
+    contract: benchmarkContractHash(),
+    contractsJson: hashFile('contracts/v5.json'),
+    scoring: scoringRubricHash(),
+    suites: suitesHash(),
+    cloudflarePlatform: hashFile(CLOUDFLARE_PLATFORM_ERAS_PATH),
+    cloudflareConfig: sha256(cloudflareAuditStable),
+    cloudflareOptimization: sha256(cloudflareOptimizationAuditStable),
+  };
+  for (const key of REQUIRED_PROVENANCE_HASHES) {
+    if (!provenanceHashes[key]) {
+      throw new Error(`provenance.hashes is missing required key "${key}" declared by bench/results.v4.schema.json. Update emission in bench/src/run.mjs or update the schema's required list.`);
+    }
+  }
   const provenance = {
     git: gitInfo,
     dataset: datasetInfo,
-    hashes: {
-      matrix: hashFile('bench/framework-matrix.json'),
-      targets: hashFile(DEFAULT_TARGETS_PATH),
-      lockfile: hashFile('pnpm-lock.yaml'),
-      contract: benchmarkContractHash(),
-      contractsJson: hashFile('contracts/v5.json'),
-      scoring: scoringRubricHash(),
-      suites: suitesHash(),
-      cloudflarePlatform: hashFile(CLOUDFLARE_PLATFORM_ERAS_PATH),
-      cloudflareConfig: sha256(cloudflareAuditStable),
-      cloudflareOptimization: sha256(cloudflareOptimizationAuditStable),
-    },
+    hashes: provenanceHashes,
     cloudflarePlatform,
     cloudflareAudit: cloudflareAuditStable,
     cloudflareOptimizationAudit: cloudflareOptimizationAuditStable,

@@ -17,7 +17,7 @@ function hasFlag(flag) {
 async function listSuiteJsonPaths() {
   const entries = await fs.readdir('bench');
   return entries
-    .filter((entry) => /^results\.v4\.[^.]+\.json$/.test(entry) && !entry.includes('.dirty.'))
+    .filter((entry) => /^results\.v4\.[^.]+\.json$/.test(entry) && !entry.includes('.dirty.') && !entry.endsWith('.schema.json'))
     .map((entry) => path.join('bench', entry))
     .sort((a, b) => a.localeCompare(b));
 }

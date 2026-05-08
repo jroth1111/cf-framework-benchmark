@@ -4,6 +4,10 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { provenanceHashForRow } from "../bench/src/provenance.mjs";
+import { validate } from "../bench/src/validate-schema.mjs";
+import resultsSchema from "../bench/results.v4.schema.json" with { type: "json" };
+
+const REQUIRED_HASH_KEYS = resultsSchema.properties.provenance.properties.hashes.required;
 
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);
@@ -42,8 +46,12 @@ export async function verifyResultPair(jsonPath, { requireRowHashes = true } = {
   if (result.provenance?.git?.dirty === true && !path.basename(jsonPath).includes(".dirty.")) {
     fail("dirty provenance written to non-.dirty result path", failures);
   }
-  for (const name of ["matrix", "targets", "lockfile", "contract", "contractsJson", "scoring", "suites", "cloudflarePlatform", "cloudflareConfig", "cloudflareOptimization"]) {
+  for (const name of REQUIRED_HASH_KEYS) {
     if (!result.provenance?.hashes?.[name]) fail(`missing provenance.hashes.${name}`, failures);
+  }
+  const schemaResult = validate(resultsSchema, result);
+  if (!schemaResult.ok) {
+    for (const err of schemaResult.errors) fail(`schema: ${err}`, failures);
   }
   if (!result.provenance?.cloudflarePlatform?.activeEra) fail("missing provenance.cloudflarePlatform.activeEra", failures);
   if (!result.provenance?.cloudflareAudit?.ok) fail("missing or failing provenance.cloudflareAudit", failures);
@@ -112,7 +120,7 @@ function trackedResultJsonPaths() {
     cwd: process.cwd(),
     encoding: "utf8",
   });
-  return out.split(/\r?\n/).filter(Boolean);
+  return out.split(/\r?\n/).filter(Boolean).filter((p) => !p.endsWith(".schema.json"));
 }
 
 async function localResultJsonPaths() {
@@ -121,7 +129,7 @@ async function localResultJsonPaths() {
     throw err;
   });
   return entries
-    .filter((entry) => /^results.*\.json$/.test(entry))
+    .filter((entry) => /^results.*\.json$/.test(entry) && !entry.endsWith(".schema.json"))
     .map((entry) => path.join("bench", entry))
     .sort((a, b) => a.localeCompare(b));
 }

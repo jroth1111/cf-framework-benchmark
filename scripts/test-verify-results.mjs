@@ -7,6 +7,13 @@ import { provenanceHashForRow } from "../bench/src/provenance.mjs";
 import { verifyResultArtifactPolicy, verifyResultPair } from "./verify-results.mjs";
 
 const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "cf-bench-verify-results-"));
+const baseShape = {
+  iterations: 1,
+  frameworks: [],
+  profiles: ["parity"],
+  phases: ["cold"],
+  scenarios: [],
+};
 try {
   const git = { commit: "abc123", branch: "test", describe: "abc123", dirty: false };
   const seed = "seed-1";
@@ -31,6 +38,7 @@ try {
     JSON.stringify(
       {
         ts: "2026-05-05T00:00:00.000Z",
+        ...baseShape,
         runOrder: { seed },
         provenance: {
           git,
@@ -66,6 +74,7 @@ try {
     JSON.stringify(
       {
         ts: "2026-05-05T00:00:00.000Z",
+        ...baseShape,
         runOrder: { seed },
         provenance: {
           git,
@@ -93,6 +102,7 @@ try {
     JSON.stringify(
       {
         ts: "2026-05-05T00:00:00.000Z",
+        ...baseShape,
         runOrder: { seed },
         provenance: {
           git: dirtyGit,

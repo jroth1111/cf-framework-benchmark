@@ -58,6 +58,8 @@ await run("test:cloudflare-optimization", "pnpm", ["test:cloudflare-optimization
 await run("test:cloudflare-optimization-variants-schema", "pnpm", ["test:cloudflare-optimization-variants-schema"]);
 await run("test:smoke-contract-selectors", "pnpm", ["test:smoke-contract-selectors"]);
 await run("test:contract-api-cache", "pnpm", ["test:contract-api-cache"]);
+await run("test:contracts-schema", "pnpm", ["test:contracts-schema"]);
+await run("test:results-schema", "pnpm", ["test:results-schema"]);
 await run("cloudflare:config-audit", "pnpm", ["cloudflare:config-audit", "--fail-on-gaps"]);
 await run("cloudflare:optimization-audit", "pnpm", ["cloudflare:optimization-audit", "--fail-on-gaps"]);
 await run("test:build-enabled", "pnpm", ["test:build-enabled"]);

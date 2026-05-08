@@ -39,6 +39,8 @@
     "test:contract-api-cache": "node scripts/test-contract-api-cache.mjs",
     "test:cache-derivation": "node scripts/test-cache-derivation.mjs",
     "test:rubric-coverage": "node scripts/test-rubric-coverage.mjs",
+    "test:contracts-schema": "node scripts/test-contracts-schema.mjs",
+    "test:results-schema": "node scripts/test-results-schema-v4.mjs",
     "test:build-enabled": "node --check scripts/build-enabled.mjs",
     "check:startup": "node scripts/check-worker-startup.mjs",
     "test:contracts": "node scripts/contract-tests.mjs",

@@ -90,3 +90,4 @@ eslint-cache
 .dolt/
 *.db
 .beads-credential-key
+loop.md

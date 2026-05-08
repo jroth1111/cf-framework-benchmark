@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { buildCloudflareAudit } from "./cloudflare-config-audit.mjs";
+import { validateOrThrow } from "../bench/src/validate-schema.mjs";
 
 const TEXT_EXTENSIONS = new Set([".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".vue", ".svelte", ".astro", ".html", ".json", ".jsonc", ".toml"]);
 const SKIP_DIRS = new Set(["node_modules", "dist", "build", ".next", ".nuxt", ".output", ".astro", ".wrangler", "coverage"]);
@@ -400,9 +401,12 @@ export async function buildOptimizationAudit({
   matrixPath = path.join(cwd, "bench", "framework-matrix.json"),
   metadataPath = path.join(cwd, "bench", "cloudflare-frameworks.json"),
   variantsPath = path.join(cwd, "bench", "cloudflare-optimization-variants.json"),
+  variantsSchemaPath = path.join(cwd, "bench", "cloudflare-optimization-variants.schema.json"),
 } = {}) {
   const matrix = await readJson(matrixPath);
   const optimizationVariantsDoc = await readJson(variantsPath);
+  const variantsSchema = await readJson(variantsSchemaPath);
+  validateOrThrow(variantsSchema, optimizationVariantsDoc, `Cloudflare optimization variants at ${variantsPath}`);
   const configAudit = await buildCloudflareAudit({ cwd, matrixPath, metadataPath });
   const configByName = new Map(configAudit.frameworks.map((row) => [row.name, row]));
   const optimizationVariantGaps = validateOptimizationVariants(optimizationVariantsDoc);

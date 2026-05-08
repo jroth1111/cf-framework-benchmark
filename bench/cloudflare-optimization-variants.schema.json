@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cf-bench.dev/cloudflare-optimization-variants.schema.json",
+  "title": "cf-bench Cloudflare optimization variants",
+  "description": "Authoritative shape for bench/cloudflare-optimization-variants.json. Validated by bench/src/validate-schema.mjs from inside scripts/cloudflare-optimization-audit.mjs#buildOptimizationAudit before validateOptimizationVariants runs. Class-discriminated semantics (e.g., asset-routing-experiment requires configPatch.assets.run_worker_first) remain in validateOptimizationVariants. Drift is gated by scripts/test-cloudflare-optimization-variants-schema.mjs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "description",
+    "references",
+    "sourceRequirements",
+    "requiredClasses",
+    "rankingPolicy",
+    "variants"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generatedAt": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "description": { "type": "string", "minLength": 1 },
+    "references": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^https?://"
+      }
+    },
+    "sourceRequirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/sourceRequirement" }
+    },
+    "requiredClasses": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/optimizationClass" }
+    },
+    "rankingPolicy": { "$ref": "#/$defs/rankingPolicy" },
+    "variants": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/variant" }
+    }
+  },
+  "$defs": {
+    "optimizationClass": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "variantId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "frameworkName": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "variantRanking": {
+      "type": "string",
+      "enum": ["optimized-only", "diagnostic-only", "excluded"]
+    },
+    "variantStatus": {
+      "type": "string",
+      "enum": [
+        "enforced-by-audit",
+        "defined",
+        "diagnostic-only",
+        "requires-bindings",
+        "implemented"
+      ]
+    },
+    "frameworksField": {
+      "type": ["string", "array"],
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/frameworkName" }
+    },
+    "sourceRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "class"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "source": { "type": "string", "minLength": 1 },
+        "class": { "$ref": "#/$defs/optimizationClass" }
+      }
+    },
+    "rankingPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical", "optimized", "diagnostic"],
+      "properties": {
+        "canonical": { "type": "string", "minLength": 1 },
+        "optimized": { "type": "string", "minLength": 1 },
+        "diagnostic": { "type": "string", "minLength": 1 }
+      }
+    },
+    "verificationBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "static": { "type": "string", "minLength": 1 },
+        "runtime": { "type": "string", "minLength": 1 }
+      }
+    },
+    "contractAssertionBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "documentRoutes": { "type": "string", "minLength": 1 },
+        "apiRoutes": { "type": "string", "minLength": 1 }
+      }
+    },
+    "stringList": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "commandList": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "class", "status", "frameworks"],
+      "properties": {
+        "id": { "$ref": "#/$defs/variantId" },
+        "class": { "$ref": "#/$defs/optimizationClass" },
+        "status": { "$ref": "#/$defs/variantStatus" },
+        "frameworks": { "$ref": "#/$defs/frameworksField" },
+        "ranking": { "$ref": "#/$defs/variantRanking" },
+        "bucket": { "type": "string", "minLength": 1 },
+        "purpose": { "type": "string", "minLength": 1 },
+        "negativeControl": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "provenanceFile": { "type": "string", "minLength": 1 },
+        "configPatch": { "type": "object" },
+        "openNextConfig": { "type": "object" },
+        "contractAssertion": { "$ref": "#/$defs/contractAssertionBlock" },
+        "verification": { "$ref": "#/$defs/verificationBlock" },
+        "capturedHeaders": { "$ref": "#/$defs/stringList" },
+        "capturedFields": { "$ref": "#/$defs/stringList" },
+        "derivedFields": { "$ref": "#/$defs/stringList" },
+        "capturedCdpEvents": { "$ref": "#/$defs/stringList" },
+        "commands": { "$ref": "#/$defs/commandList" },
+        "requiredBindings": { "$ref": "#/$defs/stringList" }
+      }
+    }
+  }
+}

@@ -1,32 +1,9 @@
 import { handleContractApi } from "@cf-bench/bench-contract";
+import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
 
 type BenchEnv = Env & {
   ASSETS: Fetcher;
 };
-
-function normalizeBenchPath(pathname: string) {
-  return pathname.replace(/\/+$/, "") || "/";
-}
-
-function cacheKind(pathname: string) {
-  pathname = normalizeBenchPath(pathname);
-  if (pathname === "/stays" || pathname === "/blog") return "list";
-  if (pathname === "/hifi/stays") return "hifi-list";
-  if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "hifi-detail";
-  if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
-  return null;
-}
-
-function cacheHeader(pathname: string, profile: string | null) {
-  const kind = cacheKind(pathname);
-  if (profile === "idiomatic" || profile === "mobile-cold") {
-    if (kind === "hifi-detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
-    if (kind === "hifi-list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
-    if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
-    if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
-  }
-  return "no-store";
-}
 
 function resolvePagePath(url: URL) {
   if (url.pathname.startsWith("/api/")) return null;
@@ -52,7 +29,7 @@ function applyHtmlHeaders(response: Response, pathname: string, profile: string 
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/html")) return response;
   const headers = new Headers(response.headers);
-  headers.set("cache-control", cacheHeader(pathname, profile));
+  headers.set("cache-control", htmlCacheHeaderForPath(pathname, profile));
   if (!headers.has("server-timing")) {
     headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
   }

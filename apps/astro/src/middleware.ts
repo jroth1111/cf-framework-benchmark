@@ -1,13 +1,5 @@
 import { defineMiddleware } from "astro:middleware";
-import { benchCacheHeader } from "./lib/bench-cache";
-
-function benchmarkPageKind(pathname: string) {
-  if (pathname === "/stays" || pathname === "/blog") return "list";
-  if (pathname === "/hifi/stays") return "hifi-list";
-  if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "hifi-detail";
-  if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
-  return null;
-}
+import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const start = performance.now();
@@ -20,16 +12,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   const headers = new Headers(response.headers);
-  const kind = benchmarkPageKind(context.url.pathname);
-
-  if (kind) {
-    headers.set(
-      "cache-control",
-      benchCacheHeader(context.request.headers.get("x-cf-bench-profile"), kind)
-    );
-  } else {
-    headers.set("cache-control", "no-store");
-  }
+  headers.set(
+    "cache-control",
+    htmlCacheHeaderForPath(
+      context.url.pathname,
+      context.request.headers.get("x-cf-bench-profile")
+    )
+  );
   if (!headers.has("server-timing")) {
     headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
   }

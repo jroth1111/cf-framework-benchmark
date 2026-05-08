@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { formatUsd, queryListings } from "@cf-bench/dataset";
 
-useBenchPage("list");
+useBenchPage("list-stays");
 
 const route = useRoute();
 const page = Number(route.query.page || "1") || 1;

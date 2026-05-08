@@ -1,4 +1,5 @@
 import { handleContractApi } from "@cf-bench/bench-contract";
+import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
 import { getListing, getPost } from "@cf-bench/dataset";
 import { getHifiHeadHtml } from "@cf-bench/hifi-shell";
 import { render } from "../src/entry-server";
@@ -11,30 +12,12 @@ function normalizeBenchPath(pathname: string) {
 	return pathname.replace(/\/+$/, "") || "/";
 }
 
-function cacheKind(pathname: string) {
-	const normalizedPath = normalizeBenchPath(pathname);
-	if (normalizedPath === "/stays" || normalizedPath === "/blog") return "list";
-	if (/^\/stays\/[^/]+$/.test(normalizedPath) || /^\/blog\/[^/]+$/.test(normalizedPath)) return "detail";
-	return null;
-}
-
 function isHifiStaysListPath(pathname: string) {
 	return normalizeBenchPath(pathname) === "/hifi/stays";
 }
 
 function isHifiStayDetailPath(pathname: string) {
 	return /^\/hifi\/stays\/[^/]+$/.test(normalizeBenchPath(pathname));
-}
-
-function cacheHeader(pathname: string, profile: string | null) {
-	if (isHifiStaysListPath(pathname)) return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
-	if (isHifiStayDetailPath(pathname)) return "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
-	const kind = cacheKind(pathname);
-	if (profile === "idiomatic" || profile === "mobile-cold") {
-		if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
-		if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
-	}
-	return "no-store";
 }
 
 function isBenchRoute(pathname: string) {
@@ -99,7 +82,7 @@ function pageTitle(pathname: string) {
 function htmlHeaders(pathname: string, profile: string | null, start: number) {
 	return new Headers({
 		"content-type": "text/html; charset=utf-8",
-		"cache-control": cacheHeader(pathname, profile),
+		"cache-control": htmlCacheHeaderForPath(pathname, profile),
 		"server-timing": `cf_bench;dur=${(performance.now() - start).toFixed(1)}`,
 	});
 }

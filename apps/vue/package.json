@@ -12,6 +12,7 @@
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
+		"@cf-bench/bench-cache": "workspace:*",
 		"@cf-bench/bench-contract": "workspace:*",
 		"@cf-bench/bench-types": "workspace:*",
 		"@cf-bench/chart-core": "workspace:*",

@@ -9,6 +9,7 @@
     "deploy": "pnpm run build && wrangler deploy --minify"
   },
   "dependencies": {
+    "@cf-bench/bench-cache": "workspace:*",
     "@cf-bench/bench-contract": "workspace:*",
     "@cf-bench/bench-types": "workspace:*",
     "@cf-bench/chart-core": "workspace:*",

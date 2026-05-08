@@ -9,6 +9,7 @@
     "deploy": "pnpm run build && wrangler deploy --minify"
   },
   "dependencies": {
+    "@cf-bench/bench-cache": "workspace:*",
     "@cf-bench/bench-contract": "workspace:*",
     "@qwik.dev/core": "2.0.0-beta.34",
     "@qwik.dev/router": "2.0.0-beta.34",

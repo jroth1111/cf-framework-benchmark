@@ -8,7 +8,7 @@ const Media = lazy(async () => {
 })
 
 export const Route = createFileRoute('/media')({
-  headers: () => benchHeaders('no-store'),
+  headers: () => benchHeaders(),
   component: MediaPage,
 })
 

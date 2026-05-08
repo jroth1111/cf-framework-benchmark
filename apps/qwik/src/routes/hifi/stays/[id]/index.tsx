@@ -3,8 +3,8 @@ import { routeLoader$ } from "@qwik.dev/router";
 import { getListing } from "@cf-bench/dataset";
 import { attachHifiBookingForms, renderHifiStayDetailBody } from "@cf-bench/hifi-shell";
 
-export const useHifiStay = routeLoader$(({ params, headers }) => {
-  headers.set("cache-control", "public, max-age=0, s-maxage=300, stale-while-revalidate=86400");
+// cache-control is set by src/entry.cloudflare-pages.tsx (single source: @cf-bench/bench-cache).
+export const useHifiStay = routeLoader$(({ params }) => {
   return { listing: getListing(params.id) };
 });
 

@@ -5,7 +5,8 @@ import {
   getPost,
   queryListings,
 } from "@cf-bench/dataset";
-import { CACHE, esc, parseIntParam, toUrl, withServerTiming } from "@cf-bench/bench-utils";
+import { esc, parseIntParam, toUrl, withServerTiming } from "@cf-bench/bench-utils";
+import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
 
 function shell(framework, title, body, extraHead = "") {
   return `<!doctype html>
@@ -386,12 +387,6 @@ function mediaPage(framework) {
   );
 }
 
-function pageCacheControl(pathname) {
-  if (pathname === "/stays" || pathname === "/blog") return CACHE.short;
-  if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return CACHE.detail;
-  return CACHE.noStore;
-}
-
 export function matchBenchmarkPage(pathname) {
   if (pathname === "/") return { page: "home" };
   if (pathname === "/stays") return { page: "stays" };
@@ -437,8 +432,9 @@ export function handleControlRequest(framework, request, start) {
   const html = renderControlPage(framework, url);
   if (!html) return null;
 
+  const profile = request?.headers?.get?.("x-cf-bench-profile") ?? null;
   const headers = withServerTiming(null, start);
   headers.set("content-type", "text/html; charset=utf-8");
-  headers.set("cache-control", pageCacheControl(url.pathname));
+  headers.set("cache-control", htmlCacheHeaderForPath(url.pathname, profile));
   return new Response(html, { status: 200, headers });
 }

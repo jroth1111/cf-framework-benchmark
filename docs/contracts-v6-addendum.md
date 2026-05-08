@@ -32,8 +32,8 @@ The hifi suite (`mpa_airbnb_hifi`) requires:
 | Route | Required selectors | Document cache policy | Render |
 | --- | --- | --- | --- |
 | `/` | (shared with v5) `a[href="/stays"]` | `no-store` | shared |
-| `/hifi/stays` | `data-testid="stay-card"` | `public, s-maxage=60, stale-while-revalidate=300` | SSR |
-| `/hifi/stays/:id` | `stay-hero-image`, `stay-gallery`, `stay-reviews`, `stay-booking-form`, `stay-booking-total`, `stay-map` | `public, s-maxage=300, stale-while-revalidate=86400` | SSR |
+| `/hifi/stays` | `data-testid="stay-card"` | `public, max-age=0, s-maxage=60, stale-while-revalidate=300` | SSR |
+| `/hifi/stays/:id` | `stay-hero-image`, `stay-gallery`, `stay-reviews`, `stay-booking-form`, `stay-booking-total`, `stay-map` | `public, max-age=0, s-maxage=300, stale-while-revalidate=86400` | SSR |
 | `/blog`, `/blog/:slug` | (shared with v5) | shared | shared |
 
 ## Required Selectors
@@ -134,8 +134,8 @@ hifi rankings.
 
 | Route | Required `cache-control` |
 | --- | --- |
-| `/hifi/stays` | `public, s-maxage=60, stale-while-revalidate=300` |
-| `/hifi/stays/:id` | `public, s-maxage=300, stale-while-revalidate=86400` |
+| `/hifi/stays` | `public, max-age=0, s-maxage=60, stale-while-revalidate=300` |
+| `/hifi/stays/:id` | `public, max-age=0, s-maxage=300, stale-while-revalidate=86400` |
 
 The contract-tests runner extends `expectedHtmlCache(route)` to validate these
 policies for hifi routes.

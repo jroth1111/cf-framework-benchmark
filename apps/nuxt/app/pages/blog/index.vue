@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { blogPosts } from "@cf-bench/dataset";
 
-useBenchPage("list");
+useBenchPage("list-blog");
 </script>
 
 <template>

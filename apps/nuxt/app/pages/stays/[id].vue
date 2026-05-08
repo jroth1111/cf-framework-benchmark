@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getListing, formatUsd } from "@cf-bench/dataset";
 
-useBenchPage("detail");
+useBenchPage("detail-stays");
 
 const route = useRoute();
 const listing = getListing(String(route.params.id || ""));

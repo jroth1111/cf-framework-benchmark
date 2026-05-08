@@ -1,10 +1,11 @@
 import type { PageServerLoad } from "./$types";
 import { getPost } from "@cf-bench/dataset";
-import { benchCacheHeader } from "$lib/bench-cache";
+import { htmlCacheHeader } from "@cf-bench/bench-cache";
 
 export const load: PageServerLoad = async ({ params, request, setHeaders }) => {
-  const cache = benchCacheHeader(request.headers.get("x-cf-bench-profile"), "detail");
-  if (cache) setHeaders({ "cache-control": cache });
+  setHeaders({
+    "cache-control": htmlCacheHeader("/blog/:slug", request.headers.get("x-cf-bench-profile")),
+  });
 
   const post = getPost(params.slug);
   return { post };

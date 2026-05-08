@@ -8,6 +8,7 @@
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
+		"@cf-bench/bench-cache": "workspace:*",
 		"@cf-bench/bench-contract": "workspace:*",
 		"@cf-bench/dataset": "workspace:*",
 		"@cf-bench/hifi-shell": "workspace:*",

@@ -2,9 +2,9 @@
 import assert from "node:assert/strict";
 
 import { handleControlRequest } from "../packages/bench-control/src/index.js";
-import { CACHE, esc, parseIntParam, toUrl, withServerTiming } from "../packages/bench-utils/src/index.js";
+import { NO_STORE } from "../packages/bench-cache/src/index.js";
+import { esc, parseIntParam, toUrl, withServerTiming } from "../packages/bench-utils/src/index.js";
 
-assert.equal(CACHE.noStore, "no-store");
 assert.equal(parseIntParam("12", 0), 12);
 assert.equal(parseIntParam("12.9", 0), 12);
 assert.equal(parseIntParam("-2.9", 0), -2);
@@ -25,7 +25,7 @@ const response = handleControlRequest(
 
 assert.ok(response);
 assert.equal(response.status, 200);
-assert.equal(response.headers.get("cache-control"), "no-store");
+assert.equal(response.headers.get("cache-control"), NO_STORE);
 assert.match(response.headers.get("server-timing") || "", /^cf_bench;dur=\d+\.\d;desc="/);
 
 const html = await response.text();

@@ -72,24 +72,6 @@ export function getChartPoints(timeframe: string): number {
 }
 
 /**
- * Benchmark profiles and their settings
- */
-export const BENCHMARK_PROFILES = {
-  parity: {
-    chartCache: "no-store" as const,
-    throttling: "none" as const,
-  },
-  idiomatic: {
-    chartCache: "default" as const,
-    throttling: "none" as const,
-  },
-  "mobile-cold": {
-    chartCache: "default" as const,
-    throttling: "fast-4g" as const,
-  },
-} as const;
-
-/**
  * Network throttling profiles
  */
 export const NETWORK_PROFILES = {
@@ -139,16 +121,6 @@ export const PAGE_ROUTES = {
   media: "/media",
   blogPost: (slug: string) => `/blog/${slug}`,
   stayDetail: (id: string) => `/stays/${id}`,
-} as const;
-
-/**
- * Cache control directives
- */
-export const CACHE_CONTROL = {
-  noStore: "no-store",
-  publicShort: "public, max-age=0, s-maxage=60",
-  publicLong: "public, max-age=0, s-maxage=300",
-  publicExtended: "public, max-age=3600, s-maxage=300",
 } as const;
 
 /**

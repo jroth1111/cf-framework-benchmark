@@ -4,7 +4,7 @@ import { renderHifiStaysListBody } from '@cf-bench/hifi-shell'
 import { benchHeaders } from '../lib/headers'
 
 export const Route = createFileRoute('/hifi/stays/')({
-  headers: () => benchHeaders('public, max-age=0, s-maxage=60, stale-while-revalidate=300'),
+  headers: () => benchHeaders(),
   component: HifiStaysPage,
 })
 

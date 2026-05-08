@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 
+import { htmlCacheHeader } from "../packages/bench-cache/src/index.js";
 import {
   expectedDatasetContent,
   expectedHtmlCache,
@@ -14,8 +15,10 @@ const hifiRoutes = ["/", "/hifi/stays", "/hifi/stays/:id", "/blog", "/blog/:slug
 
 assert.equal(routeSample("/hifi/stays/:id"), "/hifi/stays/001");
 assert.deepEqual(routeSamples("/hifi/stays/:id"), ["/hifi/stays/001", "/hifi/stays/001/"]);
-assert.equal(expectedHtmlCache("/hifi/stays"), "s-maxage=60");
-assert.equal(expectedHtmlCache("/hifi/stays/:id"), "s-maxage=300");
+// expectedHtmlCache is subordinate to bench-cache's htmlCacheHeader for the
+// idiomatic (cache-preserving) profile; assert pass-through, not literal values.
+assert.equal(expectedHtmlCache("/hifi/stays"), htmlCacheHeader("/hifi/stays", "idiomatic"));
+assert.equal(expectedHtmlCache("/hifi/stays/:id"), htmlCacheHeader("/hifi/stays/:id", "idiomatic"));
 assert.deepEqual(requiredTestIdsForRoute("/hifi/stays"), ["stay-card"]);
 assert.deepEqual(requiredTestIdsForRoute("/hifi/stays/:id"), [
   "stay-hero-image",

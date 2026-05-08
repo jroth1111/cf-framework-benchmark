@@ -7,7 +7,7 @@ export default function HifiStaysPage() {
   const html = renderHifiStaysListBody(listings);
   return (
     <>
-      <BenchHeaders cacheControl="public, max-age=0, s-maxage=60, stale-while-revalidate=300" />
+      <BenchHeaders routeId="/hifi/stays" />
       <script async src="/__bench/sdk/maps.js" />
       <script async src="/__bench/sdk/analytics.js" />
       <div innerHTML={html} />

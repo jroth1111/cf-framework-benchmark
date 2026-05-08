@@ -4,7 +4,7 @@ import { BenchHeaders } from "../lib/headers";
 export default function IndexPage() {
   return (
     <>
-      <BenchHeaders cacheControl="no-store" />
+      <BenchHeaders routeId="/" />
       <Home />
     </>
   );

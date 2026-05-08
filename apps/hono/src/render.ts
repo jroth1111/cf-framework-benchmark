@@ -9,12 +9,7 @@ import {
   queryListings,
 } from "@cf-bench/dataset";
 import { getHifiHeadHtml } from "@cf-bench/hifi-shell";
-
-const CACHE = {
-  noStore: "no-store",
-  short: "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
-  detail: "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
-};
+import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
 
 type HonoPageMatch =
   | { page: "home" }
@@ -422,13 +417,6 @@ function renderHonoPage(input: URL | Request | string) {
   }
 }
 
-function pageCacheControl(pathname: string) {
-  pathname = pathname.replace(/\/+$/, "") || "/";
-  if (pathname === "/stays" || pathname === "/blog") return CACHE.short;
-  if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return CACHE.detail;
-  return CACHE.noStore;
-}
-
 export function renderHifiShell(title: string, bodyHtml: string) {
   return shell(title, bodyHtml, getHifiHeadHtml());
 }
@@ -440,8 +428,9 @@ export function handleHonoPageRequest(request: Request) {
   const html = renderHonoPage(url);
   if (!html) return null;
 
+  const profile = request.headers.get("x-cf-bench-profile");
   const headers = withServerTiming(null, performance.now());
   headers.set("content-type", "text/html; charset=utf-8");
-  headers.set("cache-control", pageCacheControl(url.pathname));
+  headers.set("cache-control", htmlCacheHeaderForPath(url.pathname, profile));
   return new Response(html, { status: 200, headers });
 }

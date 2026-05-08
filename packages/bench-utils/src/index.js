@@ -1,9 +1,3 @@
-export const CACHE = Object.freeze({
-  noStore: "no-store",
-  short: "public, max-age=0, s-maxage=60",
-  detail: "public, max-age=0, s-maxage=300",
-});
-
 export function toUrl(input) {
   if (input instanceof URL) return input;
   if (input instanceof Request) return new URL(input.url);

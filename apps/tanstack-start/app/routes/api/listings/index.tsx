@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { handleContractApi } from "@cf-bench/bench-contract";
+import { errorApiCacheHeader } from "@cf-bench/bench-cache";
 
 export const Route = createFileRoute("/api/listings/")({
   server: {
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/api/listings/")({
           status: 404,
           headers: {
             "content-type": "application/json; charset=utf-8",
-            "cache-control": "no-store",
+            "cache-control": errorApiCacheHeader("/api/listings"),
           },
         }),
     },

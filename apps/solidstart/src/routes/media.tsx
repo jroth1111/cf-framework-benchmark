@@ -9,7 +9,7 @@ const Media = lazy(async () => {
 export default function MediaPage() {
   return (
     <>
-      <BenchHeaders cacheControl="no-store" />
+      <BenchHeaders routeId="/media" />
       <Media />
     </>
   );

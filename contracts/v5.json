@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "contractVersion": "v5+v6-addendum",
-  "description": "Single source of truth for the per-route benchmark contract. Replaces switch statements previously embedded in scripts/contract-report.mjs, scripts/contract-tests.mjs, and the CONTRACT_ROUTES literal in scripts/cloudflare-config-audit.mjs. expectedDatasetSource names a dataset key (listings | blogPosts) the consumer resolves at runtime; staticSample is used by static-context consumers without dataset access.",
+  "description": "Single source of truth for the per-route benchmark contract. Replaces switch statements previously embedded in scripts/contract-report.mjs, scripts/contract-tests.mjs, and the CONTRACT_ROUTES literal in scripts/cloudflare-config-audit.mjs. expectedDatasetSource names a dataset key (listings | blogPosts) the consumer resolves at runtime; staticSample is used by static-context consumers without dataset access. expectedHtmlCache and expectedApiCache are the canonical idiomatic-profile cache-control values. The parity profile (used for fairness benchmarks) downgrades non-hifi cacheable HTML routes to no-store; the bench-cache package owns that derivation. expectedErrorApiCache is the cache-control value for API error responses (404 not_found, 400 unknown_symbol, ...).",
   "routes": [
     {
       "route": "/",
@@ -19,7 +19,7 @@
       "staticSample": "/stays",
       "suites": ["mpa_airbnb"],
       "requiredTestIds": ["stay-card"],
-      "expectedHtmlCache": "s-maxage=60",
+      "expectedHtmlCache": "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
       "expectedDatasetSource": "listings",
       "includeInAssetClassification": true
     },
@@ -29,7 +29,7 @@
       "staticSample": "/stays/001",
       "suites": ["mpa_airbnb"],
       "requiredTestIds": ["stay-description"],
-      "expectedHtmlCache": "s-maxage=300",
+      "expectedHtmlCache": "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
       "expectedDatasetSource": "listings",
       "includeInAssetClassification": true
     },
@@ -39,7 +39,7 @@
       "staticSample": "/blog",
       "suites": ["mpa_airbnb", "mpa_airbnb_hifi"],
       "requiredTestIds": ["blog-post-card"],
-      "expectedHtmlCache": "s-maxage=60",
+      "expectedHtmlCache": "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
       "expectedDatasetSource": "blogPosts",
       "includeInAssetClassification": true
     },
@@ -49,7 +49,7 @@
       "staticSample": "/blog/why-this-benchmark-exists",
       "suites": ["mpa_airbnb", "mpa_airbnb_hifi"],
       "requiredTestIds": ["blog-html"],
-      "expectedHtmlCache": "s-maxage=300",
+      "expectedHtmlCache": "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
       "expectedDatasetSource": "blogPosts",
       "includeInAssetClassification": true
     },
@@ -79,7 +79,7 @@
       "staticSample": "/hifi/stays",
       "suites": ["mpa_airbnb_hifi"],
       "requiredTestIds": ["stay-card"],
-      "expectedHtmlCache": "s-maxage=60",
+      "expectedHtmlCache": "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
       "expectedDatasetSource": "listings",
       "includeInAssetClassification": false
     },
@@ -96,7 +96,7 @@
         "stay-booking-total",
         "stay-map"
       ],
-      "expectedHtmlCache": "s-maxage=300",
+      "expectedHtmlCache": "public, max-age=0, s-maxage=300, stale-while-revalidate=86400",
       "expectedDatasetSource": "listings",
       "includeInAssetClassification": false
     },
@@ -108,6 +108,7 @@
       "requiredTestIds": [],
       "expectedHtmlCache": null,
       "expectedApiCache": "no-store",
+      "expectedErrorApiCache": "no-store",
       "responseDefaults": null,
       "expectedDatasetSource": null,
       "includeInAssetClassification": true
@@ -120,6 +121,7 @@
       "requiredTestIds": [],
       "expectedHtmlCache": null,
       "expectedApiCache": "no-store",
+      "expectedErrorApiCache": "no-store",
       "responseDefaults": null,
       "expectedDatasetSource": null,
       "includeInAssetClassification": false
@@ -131,7 +133,8 @@
       "suites": [],
       "requiredTestIds": [],
       "expectedHtmlCache": null,
-      "expectedApiCache": "s-maxage=60",
+      "expectedApiCache": "public, max-age=0, s-maxage=60",
+      "expectedErrorApiCache": "no-store",
       "responseDefaults": {
         "defaultPageSize": 20,
         "defaultResultCount": 20
@@ -146,7 +149,8 @@
       "suites": [],
       "requiredTestIds": [],
       "expectedHtmlCache": null,
-      "expectedApiCache": "s-maxage=300",
+      "expectedApiCache": "public, max-age=0, s-maxage=300",
+      "expectedErrorApiCache": "no-store",
       "responseDefaults": null,
       "expectedDatasetSource": null,
       "includeInAssetClassification": false
@@ -158,7 +162,8 @@
       "suites": [],
       "requiredTestIds": [],
       "expectedHtmlCache": null,
-      "expectedApiCache": "s-maxage=60",
+      "expectedApiCache": "public, max-age=0, s-maxage=60",
+      "expectedErrorApiCache": "no-store",
       "responseDefaults": {
         "defaultCandles": 360
       },
@@ -172,7 +177,8 @@
       "suites": [],
       "requiredTestIds": [],
       "expectedHtmlCache": null,
-      "expectedApiCache": "s-maxage=60",
+      "expectedApiCache": "public, max-age=0, s-maxage=60",
+      "expectedErrorApiCache": "no-store",
       "responseDefaults": {
         "defaultPageSize": 20,
         "defaultResultCount": 20

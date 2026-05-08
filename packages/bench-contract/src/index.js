@@ -6,12 +6,17 @@ import {
   queryMedia,
 } from "@cf-bench/dataset";
 import {
-  CACHE,
   getIsolateId,
   parseIntParam,
   toUrl,
   withServerTiming,
 } from "@cf-bench/bench-utils";
+import {
+  NO_STORE,
+  SDK_CACHE_HEADER,
+  apiCacheHeader,
+  errorApiCacheHeader,
+} from "@cf-bench/bench-cache";
 import {
   getAnalyticsSdkSource,
   getMapsSdkSource,
@@ -23,7 +28,6 @@ export { HIFI_SUITE_FRAMEWORKS };
 const BASE_SUITES = ["mpa_airbnb", "spa_trading_media"];
 const HIFI_SUITE = "mpa_airbnb_hifi";
 const HIFI_SUITE_FRAMEWORK_SET = new Set(HIFI_SUITE_FRAMEWORKS);
-const SDK_CACHE = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
 export { parseIntParam } from "@cf-bench/bench-utils";
 
 export function suiteSupportForFramework(framework) {
@@ -59,13 +63,13 @@ export function handleBench(framework) {
       contractVersion: "v3.0.0",
       suiteSupport: suiteSupportForFramework(framework),
     },
-    { cacheControl: CACHE.noStore, start }
+    { cacheControl: apiCacheHeader("/api/bench"), start }
   );
 }
 
 export function handleHealth() {
   const start = performance.now();
-  return json({ ok: true, ts: Date.now() }, { cacheControl: CACHE.noStore, start });
+  return json({ ok: true, ts: Date.now() }, { cacheControl: apiCacheHeader("/api/health"), start });
 }
 
 export function handleListings(input) {
@@ -85,7 +89,7 @@ export function handleListings(input) {
       page,
       pageSize,
     }),
-    { cacheControl: CACHE.short, start }
+    { cacheControl: apiCacheHeader("/api/listings"), start }
   );
 }
 
@@ -93,9 +97,9 @@ export function handleListing(id) {
   const start = performance.now();
   const listing = getListing(id);
   if (!listing) {
-    return json({ error: "not_found" }, { status: 404, cacheControl: CACHE.noStore, start });
+    return json({ error: "not_found" }, { status: 404, cacheControl: errorApiCacheHeader("/api/listings/:id"), start });
   }
-  return json({ listing }, { cacheControl: CACHE.detail, start });
+  return json({ listing }, { cacheControl: apiCacheHeader("/api/listings/:id"), start });
 }
 
 export function handlePrices(input) {
@@ -106,7 +110,7 @@ export function handlePrices(input) {
   const points = parseIntParam(url.searchParams.get("points"), 360);
 
   if (!chartSymbols.includes(symbol)) {
-    return json({ error: "unknown_symbol" }, { status: 400, cacheControl: CACHE.noStore, start });
+    return json({ error: "unknown_symbol" }, { status: 400, cacheControl: errorApiCacheHeader("/api/prices"), start });
   }
   return json(
     {
@@ -114,7 +118,7 @@ export function handlePrices(input) {
       timeframe,
       candles: generateCandles(symbol, { timeframe, points }),
     },
-    { cacheControl: CACHE.short, start }
+    { cacheControl: apiCacheHeader("/api/prices"), start }
   );
 }
 
@@ -125,13 +129,13 @@ export function handleMedia(input) {
   const page = parseIntParam(url.searchParams.get("page"), 1);
   const pageSize = parseIntParam(url.searchParams.get("pageSize"), 20);
 
-  return json(queryMedia({ channel, page, pageSize }), { cacheControl: CACHE.short, start });
+  return json(queryMedia({ channel, page, pageSize }), { cacheControl: apiCacheHeader("/api/media"), start });
 }
 
 function jsResponse(body, start) {
   const headers = withServerTiming(null, start);
   headers.set("content-type", "application/javascript; charset=utf-8");
-  headers.set("cache-control", SDK_CACHE);
+  headers.set("cache-control", SDK_CACHE_HEADER);
   return new Response(body, { status: 200, headers });
 }
 
@@ -147,7 +151,7 @@ export function handleSdkAnalytics() {
 
 export function handleBeacon() {
   const headers = withServerTiming(null, performance.now());
-  headers.set("cache-control", CACHE.noStore);
+  headers.set("cache-control", NO_STORE);
   return new Response(null, { status: 204, headers });
 }
 

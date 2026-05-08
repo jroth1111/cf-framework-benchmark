@@ -1,9 +1,3 @@
-export declare const CACHE: {
-  readonly noStore: "no-store";
-  readonly short: "public, max-age=0, s-maxage=60";
-  readonly detail: "public, max-age=0, s-maxage=300";
-};
-
 export declare function toUrl(
   input: URL | Request | string | { url: string } | null | undefined
 ): URL;

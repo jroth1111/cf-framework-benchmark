@@ -9,7 +9,7 @@ const Chart = lazy(async () => {
 export default function ChartPage() {
   return (
     <>
-      <BenchHeaders cacheControl="no-store" />
+      <BenchHeaders routeId="/chart" />
       <Chart />
     </>
   );

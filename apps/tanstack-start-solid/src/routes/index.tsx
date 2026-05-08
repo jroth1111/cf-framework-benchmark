@@ -3,7 +3,7 @@ import { Home } from '../../../solid/src/pages/Home'
 import { benchHeaders } from '../lib/headers'
 
 export const Route = createFileRoute('/')({
-  headers: () => benchHeaders('no-store'),
+  headers: () => benchHeaders(),
   component: IndexPage,
 })
 

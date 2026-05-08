@@ -8,7 +8,7 @@ const Chart = lazy(async () => {
 })
 
 export const Route = createFileRoute('/chart')({
-  headers: () => benchHeaders('no-store'),
+  headers: () => benchHeaders(),
   component: ChartPage,
 })
 

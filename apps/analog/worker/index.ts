@@ -1,17 +1,5 @@
 import app from "../dist/analog/server/index.mjs";
-
-function cacheKind(pathname: string) {
-  if (pathname === "/stays" || pathname === "/blog") return "list";
-  if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
-  return null;
-}
-
-function cacheHeader(pathname: string) {
-  const kind = cacheKind(pathname);
-  if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
-  if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
-  return "no-store";
-}
+import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
@@ -23,8 +11,9 @@ export default {
     }
 
     const url = new URL(request.url);
+    const profile = request.headers.get("x-cf-bench-profile");
     const headers = new Headers(response.headers);
-    headers.set("cache-control", cacheHeader(url.pathname));
+    headers.set("cache-control", htmlCacheHeaderForPath(url.pathname, profile));
     if (!headers.has("server-timing")) {
       headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
     }

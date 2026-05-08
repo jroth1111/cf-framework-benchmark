@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getPost } from "@cf-bench/dataset";
 
-useBenchPage("detail");
+useBenchPage("detail-blog");
 
 const route = useRoute();
 const post = getPost(String(route.params.slug || ""));

@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { queryListings } from "@cf-bench/dataset";
 import { renderHifiStaysListBody } from "@cf-bench/hifi-shell";
+import { htmlCacheHeader } from "@cf-bench/bench-cache";
 
+const requestHeaders = useRequestHeaders(["x-cf-bench-profile"]);
+const profile = requestHeaders["x-cf-bench-profile"] || null;
 const cacheControl = useResponseHeader("cache-control");
-cacheControl.value = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
+cacheControl.value = htmlCacheHeader("/hifi/stays", profile);
 
 useHead({
   title: "Stays (hifi)",

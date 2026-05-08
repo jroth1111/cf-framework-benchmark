@@ -1,32 +1,8 @@
 import { createApp } from "honox/server";
 import { handleContractApi } from "@cf-bench/bench-contract";
+import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
 
 type Env = { ASSETS?: Fetcher };
-
-const CACHE_LIST = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
-const CACHE_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
-const CACHE_HIFI_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
-
-type PageKind = "list" | "detail" | "hifi-list" | "hifi-detail" | null;
-
-function benchmarkPageKind(pathname: string): PageKind {
-	pathname = pathname.replace(/\/+$/, "") || "/";
-	if (pathname === "/hifi/stays") return "hifi-list";
-	if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "hifi-detail";
-	if (pathname === "/stays" || pathname === "/blog") return "list";
-	if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
-	return null;
-}
-
-function benchmarkPageCache(profile: string | null, kind: PageKind): string {
-	if (kind === "hifi-list") return CACHE_LIST;
-	if (kind === "hifi-detail") return CACHE_HIFI_DETAIL;
-	if (profile === "idiomatic" || profile === "mobile-cold") {
-		if (kind === "detail") return CACHE_DETAIL;
-		if (kind === "list") return CACHE_LIST;
-	}
-	return "no-store";
-}
 
 function getIsolateId(): string {
 	const g = globalThis as typeof globalThis & { __CF_BENCH_ISOLATE_ID?: string };
@@ -59,10 +35,9 @@ export default {
 		const contentType = response.headers.get("content-type") ?? "";
 		if (!contentType.includes("text/html")) return response;
 
-		const kind = benchmarkPageKind(normalizedPathname);
 		const profile = request.headers.get("x-cf-bench-profile");
 		const headers = new Headers(response.headers);
-		headers.set("cache-control", benchmarkPageCache(profile, kind));
+		headers.set("cache-control", htmlCacheHeaderForPath(normalizedPathname, profile));
 		headers.set(
 			"server-timing",
 			`cf_bench;dur=${(performance.now() - start).toFixed(1)};desc="${getIsolateId()}"`

@@ -1,3 +1,4 @@
+import { NO_STORE } from "@cf-bench/bench-cache";
 import app from "../dist/server/entry-server.js";
 
 export default {
@@ -19,7 +20,7 @@ export default {
       headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
     }
     if (!headers.has("cache-control")) {
-      headers.set("cache-control", "no-store");
+      headers.set("cache-control", NO_STORE);
     }
 
     return new Response(response.body, {

@@ -1,7 +1,18 @@
-const CACHE_LIST = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
-const CACHE_DETAIL = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
+import { htmlCacheHeader } from "@cf-bench/bench-cache";
 
-export function useBenchPage(kind: "home" | "chart" | "media" | "list" | "detail") {
+type BenchPageKind = "home" | "chart" | "media" | "list-stays" | "list-blog" | "detail-stays" | "detail-blog";
+
+const ROUTE_BY_KIND: Record<BenchPageKind, string> = {
+  home: "/",
+  chart: "/chart",
+  media: "/media",
+  "list-stays": "/stays",
+  "list-blog": "/blog",
+  "detail-stays": "/stays/:id",
+  "detail-blog": "/blog/:slug",
+};
+
+export function useBenchPage(kind: BenchPageKind) {
   const requestHeaders = useRequestHeaders(["x-cf-bench-profile"]);
   const profile = requestHeaders["x-cf-bench-profile"] || null;
   const cacheControl = useResponseHeader("cache-control");
@@ -18,11 +29,5 @@ export function useBenchPage(kind: "home" | "chart" | "media" | "list" | "detail
     });
   }
 
-  if (profile === "idiomatic" || profile === "mobile-cold") {
-    if (kind === "list") cacheControl.value = CACHE_LIST;
-    else if (kind === "detail") cacheControl.value = CACHE_DETAIL;
-    else cacheControl.value = "no-store";
-  } else {
-    cacheControl.value = "no-store";
-  }
+  cacheControl.value = htmlCacheHeader(ROUTE_BY_KIND[kind], profile);
 }

@@ -1,13 +1,5 @@
 import type { Handle } from "@sveltejs/kit";
-import { benchCacheHeader } from "$lib/bench-cache";
-
-function benchmarkPageKind(pathname: string) {
-  if (pathname === "/stays" || pathname === "/blog") return "list";
-  if (pathname === "/hifi/stays") return "list";
-  if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "detail";
-  if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
-  return null;
-}
+import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
 
 function getIsolateId() {
   const globalAny = globalThis as Record<string, unknown>;
@@ -23,11 +15,11 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (!event.url.pathname.startsWith("/api/")) {
     const contentType = response.headers.get("content-type") || "";
     if (contentType.includes("text/html")) {
-      const kind = benchmarkPageKind(event.url.pathname);
-      const cache =
-        kind && benchCacheHeader(event.request.headers.get("x-cf-bench-profile"), kind);
-
-      response.headers.set("cache-control", cache ?? "no-store");
+      const profile = event.request.headers.get("x-cf-bench-profile");
+      response.headers.set(
+        "cache-control",
+        htmlCacheHeaderForPath(event.url.pathname, profile)
+      );
       if (!response.headers.has("server-timing")) {
         response.headers.set(
           "server-timing",

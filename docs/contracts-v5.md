@@ -109,11 +109,16 @@ The parity profile is allowed to override chart data fetches to `no-store`.
 Document routes must report the route-specific cache policy declared by the app
 contract:
 
+The canonical (idiomatic-profile) values below are owned by `contracts/v5.json`
+and emitted by `@cf-bench/bench-cache`. The parity profile downgrades non-hifi
+cacheable HTML routes to `no-store`; hifi routes always emit the canonical value
+because the hifi suite measures cached responses.
+
 | Route | Expected document cache policy |
 | --- | --- |
 | `/`, `/chart`, `/media` | `no-store` |
-| `/stays`, `/blog` | includes `s-maxage=60` |
-| `/stays/:id`, `/blog/:slug` | includes `s-maxage=300` |
+| `/stays`, `/blog` | `public, max-age=0, s-maxage=60, stale-while-revalidate=300` |
+| `/stays/:id`, `/blog/:slug` | `public, max-age=0, s-maxage=300, stale-while-revalidate=600` |
 
 Cache-control mismatches block canonical ranking for the affected target.
 

@@ -50,6 +50,9 @@ importers:
       '@angular/router':
         specifier: 21.2.11
         version: 21.2.11(@angular/common@21.2.11(@angular/core@21.2.11(@angular/compiler@21.2.11)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.11(@angular/compiler@21.2.11)(rxjs@7.8.2))(@angular/platform-browser@21.2.11(@angular/animations@21.2.11(@angular/core@21.2.11(@angular/compiler@21.2.11)(rxjs@7.8.2)))(@angular/common@21.2.11(@angular/core@21.2.11(@angular/compiler@21.2.11)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.11(@angular/compiler@21.2.11)(rxjs@7.8.2)))(rxjs@7.8.2)
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -156,6 +159,9 @@ importers:
       '@angular/ssr':
         specifier: 21.2.9
         version: 21.2.9(51c1e057a4a6788656eb5be0adbc5436)
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -211,6 +217,9 @@ importers:
       '@astrojs/cloudflare':
         specifier: 13.3.1
         version: 13.3.1(@types/node@25.6.0)(astro@6.2.2(@types/node@25.6.0)(aws4fetch@1.0.20)(db0@0.3.4)(ioredis@5.10.1)(jiti@2.6.1)(lightningcss@1.32.0)(rollup@4.60.3)(sass@1.97.3)(terser@5.46.0)(yaml@2.8.2))(jiti@2.6.1)(lightningcss@1.32.0)(sass@1.97.3)(terser@5.46.0)(wrangler@4.87.0(@cloudflare/workers-types@4.20260505.1))(yaml@2.8.2)
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-config':
         specifier: workspace:*
         version: link:../../packages/bench-config
@@ -261,6 +270,9 @@ importers:
 
   apps/hono:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-config':
         specifier: workspace:*
         version: link:../../packages/bench-config
@@ -295,6 +307,9 @@ importers:
 
   apps/hono-solid:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -354,6 +369,9 @@ importers:
 
   apps/hono-vue:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -412,6 +430,9 @@ importers:
 
   apps/honox:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-config':
         specifier: workspace:*
         version: link:../../packages/bench-config
@@ -458,6 +479,9 @@ importers:
 
   apps/next:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-config':
         specifier: workspace:*
         version: link:../../packages/bench-config
@@ -513,6 +537,9 @@ importers:
 
   apps/nuxt:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -559,6 +586,9 @@ importers:
 
   apps/qwik:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -599,6 +629,9 @@ importers:
 
   apps/react:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -651,6 +684,9 @@ importers:
 
   apps/react-router:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -718,6 +754,9 @@ importers:
 
   apps/redwood:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-config':
         specifier: workspace:*
         version: link:../../packages/bench-config
@@ -785,6 +824,9 @@ importers:
 
   apps/solid:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-config':
         specifier: workspace:*
         version: link:../../packages/bench-config
@@ -831,6 +873,9 @@ importers:
 
   apps/solidstart:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -883,6 +928,9 @@ importers:
 
   apps/svelte:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-config':
         specifier: workspace:*
         version: link:../../packages/bench-config
@@ -929,6 +977,9 @@ importers:
 
   apps/tanstack-start:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-config':
         specifier: workspace:*
         version: link:../../packages/bench-config
@@ -993,6 +1044,9 @@ importers:
 
   apps/tanstack-start-solid:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -1051,6 +1105,9 @@ importers:
 
   apps/vike:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -1103,6 +1160,9 @@ importers:
 
   apps/vue:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -1161,6 +1221,9 @@ importers:
 
   apps/vue-c3:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -1216,6 +1279,9 @@ importers:
 
   apps/waku:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../../packages/bench-cache
       '@cf-bench/bench-contract':
         specifier: workspace:*
         version: link:../../packages/bench-contract
@@ -1293,10 +1359,15 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0
 
+  packages/bench-cache: {}
+
   packages/bench-config: {}
 
   packages/bench-contract:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../bench-cache
       '@cf-bench/bench-utils':
         specifier: workspace:*
         version: link:../bench-utils
@@ -1306,6 +1377,9 @@ importers:
 
   packages/bench-control:
     dependencies:
+      '@cf-bench/bench-cache':
+        specifier: workspace:*
+        version: link:../bench-cache
       '@cf-bench/bench-utils':
         specifier: workspace:*
         version: link:../bench-utils

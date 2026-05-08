@@ -4,6 +4,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { blogPosts, listings } from "../packages/dataset/src/index.js";
 import {
+  apiCacheHeader,
+  errorApiCacheHeader,
+  htmlCacheHeader,
+} from "../packages/bench-cache/src/index.js";
+import {
   DEFAULT_MATRIX_PATH,
   DEFAULT_SUITES_DIR,
   DEFAULT_TARGETS_PATH,
@@ -51,6 +56,14 @@ function expectHeaderIncludes(res, name, expected, label) {
   expect(
     value.toLowerCase().includes(expected),
     `${label} missing ${name} contains ${expected} (got: ${value || "<empty>"})`
+  );
+}
+
+function expectHeaderEqual(res, name, expected, label) {
+  const value = res.headers.get(name) || "";
+  expect(
+    value === expected,
+    `${label} expected ${name}=${JSON.stringify(expected)}, got ${JSON.stringify(value)}`
   );
 }
 
@@ -157,25 +170,9 @@ function requiredTestIdsForRoute(route) {
   return ROUTES_BY_PATH.get(route)?.requiredTestIds ?? [];
 }
 
-function expectedHtmlCache(route) {
-  return ROUTES_BY_PATH.get(route)?.expectedHtmlCache ?? null;
-}
-
-function expectedApiCache(route) {
-  const value = ROUTES_BY_PATH.get(route)?.expectedApiCache ?? null;
-  if (typeof value !== "string") {
-    throw new Error(`contracts/v5.json missing expectedApiCache for API route ${route}`);
-  }
-  return value;
-}
-
 function responseDefaults(route) {
   return ROUTES_BY_PATH.get(route)?.responseDefaults ?? null;
 }
-
-// Error responses (404 not_found, 400 unknown_symbol, …) share a single
-// uniform cache contract that is not per-route data.
-const ERROR_API_CACHE = "no-store";
 
 function expectedDatasetContent(route) {
   const source = ROUTES_BY_PATH.get(route)?.expectedDatasetSource;
@@ -202,7 +199,7 @@ async function runFramework(framework, requiredRoutes, expectedSuiteSupport) {
 
   const bench = await fetchJson(`${framework.name} /api/bench`, `${baseUrl}/api/bench`, 200);
   if (bench) {
-    expectHeaderIncludes(bench.res, "cache-control", expectedApiCache("/api/bench"), `${framework.name} /api/bench`);
+    expectHeaderEqual(bench.res, "cache-control", apiCacheHeader("/api/bench"), `${framework.name} /api/bench`);
     expect(typeof bench.body?.isolateId === "string", `${framework.name} /api/bench isolateId missing`);
     expect(typeof bench.body?.hits === "number", `${framework.name} /api/bench hits missing`);
     expect(typeof bench.body?.now === "number", `${framework.name} /api/bench now missing`);
@@ -227,7 +224,7 @@ async function runFramework(framework, requiredRoutes, expectedSuiteSupport) {
 
   const health = await fetchJson(`${framework.name} /api/health`, `${baseUrl}/api/health`, 200);
   if (health) {
-    expectHeaderIncludes(health.res, "cache-control", expectedApiCache("/api/health"), `${framework.name} /api/health`);
+    expectHeaderEqual(health.res, "cache-control", apiCacheHeader("/api/health"), `${framework.name} /api/health`);
     expect(health.body?.ok === true, `${framework.name} /api/health ok missing`);
     expect(typeof health.body?.ts === "number", `${framework.name} /api/health ts missing`);
   }
@@ -235,7 +232,7 @@ async function runFramework(framework, requiredRoutes, expectedSuiteSupport) {
   const listingsDefaults = responseDefaults("/api/listings");
   const listingsRes = await fetchJson(`${framework.name} /api/listings`, `${baseUrl}/api/listings?pageSize=1`, 200);
   if (listingsRes) {
-    expectHeaderIncludes(listingsRes.res, "cache-control", expectedApiCache("/api/listings"), `${framework.name} /api/listings`);
+    expectHeaderEqual(listingsRes.res, "cache-control", apiCacheHeader("/api/listings"), `${framework.name} /api/listings`);
     expect(Array.isArray(listingsRes.body?.results), `${framework.name} /api/listings results missing`);
     expect(typeof listingsRes.body?.total === "number", `${framework.name} /api/listings total missing`);
     expect(listingsRes.body?.pageSize === 1, `${framework.name} /api/listings pageSize mismatch for explicit query`);
@@ -255,13 +252,13 @@ async function runFramework(framework, requiredRoutes, expectedSuiteSupport) {
 
   const listingOk = await fetchJson(`${framework.name} /api/listings/001`, `${baseUrl}/api/listings/001`, 200);
   if (listingOk) {
-    expectHeaderIncludes(listingOk.res, "cache-control", expectedApiCache("/api/listings/:id"), `${framework.name} /api/listings/001`);
+    expectHeaderEqual(listingOk.res, "cache-control", apiCacheHeader("/api/listings/:id"), `${framework.name} /api/listings/001`);
     expect(typeof listingOk.body?.listing?.id === "string", `${framework.name} /api/listings/001 listing missing`);
   }
 
   const listingMissing = await fetchJson(`${framework.name} /api/listings/999`, `${baseUrl}/api/listings/999`, 404);
   if (listingMissing) {
-    expectHeaderIncludes(listingMissing.res, "cache-control", ERROR_API_CACHE, `${framework.name} /api/listings/999`);
+    expectHeaderEqual(listingMissing.res, "cache-control", errorApiCacheHeader("/api/listings/:id"), `${framework.name} /api/listings/999`);
     expect(listingMissing.body?.error === "not_found", `${framework.name} /api/listings/999 error mismatch`);
   }
 
@@ -272,7 +269,7 @@ async function runFramework(framework, requiredRoutes, expectedSuiteSupport) {
     200
   );
   if (prices) {
-    expectHeaderIncludes(prices.res, "cache-control", expectedApiCache("/api/prices"), `${framework.name} /api/prices`);
+    expectHeaderEqual(prices.res, "cache-control", apiCacheHeader("/api/prices"), `${framework.name} /api/prices`);
     expect(prices.body?.symbol === "BTC", `${framework.name} /api/prices symbol mismatch`);
     expect(Array.isArray(prices.body?.candles), `${framework.name} /api/prices candles missing`);
     expect(prices.body?.candles?.length === 120, `${framework.name} /api/prices candles length mismatch`);
@@ -288,14 +285,14 @@ async function runFramework(framework, requiredRoutes, expectedSuiteSupport) {
 
   const pricesBad = await fetchJson(`${framework.name} /api/prices bad`, `${baseUrl}/api/prices?symbol=BAD`, 400);
   if (pricesBad) {
-    expectHeaderIncludes(pricesBad.res, "cache-control", ERROR_API_CACHE, `${framework.name} /api/prices bad`);
+    expectHeaderEqual(pricesBad.res, "cache-control", errorApiCacheHeader("/api/prices"), `${framework.name} /api/prices bad`);
     expect(pricesBad.body?.error === "unknown_symbol", `${framework.name} /api/prices bad error mismatch`);
   }
 
   const mediaDefaults = responseDefaults("/api/media");
   const media = await fetchJson(`${framework.name} /api/media`, `${baseUrl}/api/media?pageSize=3`, 200);
   if (media) {
-    expectHeaderIncludes(media.res, "cache-control", expectedApiCache("/api/media"), `${framework.name} /api/media`);
+    expectHeaderEqual(media.res, "cache-control", apiCacheHeader("/api/media"), `${framework.name} /api/media`);
     expect(Array.isArray(media.body?.results), `${framework.name} /api/media results missing`);
     expect(typeof media.body?.total === "number", `${framework.name} /api/media total missing`);
     expect(typeof media.body?.page === "number", `${framework.name} /api/media page missing`);
@@ -319,10 +316,10 @@ async function runFramework(framework, requiredRoutes, expectedSuiteSupport) {
       const page = await fetchHtml(`${framework.name} ${sample}`, `${baseUrl}${sample}`);
       if (!page) continue;
 
-      const expectedCache = expectedHtmlCache(route);
-      if (expectedCache) {
-        expectHeaderIncludes(page.res, "cache-control", expectedCache, `${framework.name} ${sample}`);
-      }
+      // HTML probes always send x-cf-bench-profile=idiomatic; bench-cache emits the
+      // canonical (preserved) value for that profile.
+      const expectedCache = htmlCacheHeader(route, "idiomatic");
+      expectHeaderEqual(page.res, "cache-control", expectedCache, `${framework.name} ${sample}`);
 
       for (const marker of requiredTestIdsForRoute(route)) {
         expect(hasTestId(page.text, marker), `${framework.name} ${sample} missing data-testid=${marker}`);

@@ -14,7 +14,7 @@ export default function HifiStayDetailPage() {
 
   return (
     <>
-      <BenchHeaders cacheControl="public, max-age=0, s-maxage=300, stale-while-revalidate=86400" />
+      <BenchHeaders routeId="/hifi/stays/:id" />
       <script async src="/__bench/sdk/maps.js" />
       <script async src="/__bench/sdk/analytics.js" />
       <Show

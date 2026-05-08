@@ -1,7 +1,10 @@
 import type { PageServerLoad } from "./$types";
 import { queryListings } from "@cf-bench/dataset";
+import { htmlCacheHeader } from "@cf-bench/bench-cache";
 
-export const load: PageServerLoad = async ({ setHeaders }) => {
-  setHeaders({ "cache-control": "public, max-age=0, s-maxage=60, stale-while-revalidate=300" });
+export const load: PageServerLoad = async ({ request, setHeaders }) => {
+  setHeaders({
+    "cache-control": htmlCacheHeader("/hifi/stays", request.headers.get("x-cf-bench-profile")),
+  });
   return { listings: queryListings({ page: 1, pageSize: 12 }).results };
 };

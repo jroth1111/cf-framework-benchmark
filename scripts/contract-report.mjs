@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildCloudflareAudit } from "./cloudflare-config-audit.mjs";
 import { blogPosts, listings } from "../packages/dataset/src/index.js";
+import { apiCacheHeader, htmlCacheHeader } from "../packages/bench-cache/src/index.js";
 import {
   DEFAULT_MATRIX_PATH,
   DEFAULT_SUITES_DIR,
@@ -60,7 +61,14 @@ export function requiredTestIdsForRoute(route) {
 }
 
 export function expectedHtmlCache(route) {
-  return ROUTES_BY_PATH.get(route)?.expectedHtmlCache ?? null;
+  // Probes send x-cf-bench-profile=idiomatic; bench-cache emits the canonical
+  // (preserved) HTML cache value for that profile. Single source: @cf-bench/bench-cache.
+  if (!ROUTES_BY_PATH.get(route) || ROUTES_BY_PATH.get(route)?.kind !== "html") return null;
+  return htmlCacheHeader(route, "idiomatic");
+}
+
+export function expectedApiCache(route) {
+  return apiCacheHeader(route);
 }
 
 function hasTestId(html, id) {
@@ -145,7 +153,7 @@ async function probeHtml({ framework, baseUrl, route, path, suiteByRoute }) {
   if (expectedCache) {
     checks.push({
       name: "cache-control",
-      ok: headers["cache-control"].toLowerCase().includes(expectedCache),
+      ok: headers["cache-control"] === expectedCache,
       detail: headers["cache-control"],
     });
   }

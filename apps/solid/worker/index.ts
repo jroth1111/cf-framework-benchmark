@@ -1,4 +1,5 @@
 import { handleContractApi } from "@cf-bench/bench-contract";
+import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
 import { renderRoute } from "./render";
 
 type Env = {
@@ -16,26 +17,6 @@ let clientManifestPromise: Promise<ManifestEntry> | null = null;
 
 function normalizeBenchPath(pathname: string) {
   return pathname.replace(/\/+$/, "") || "/";
-}
-
-function cacheKind(pathname: string) {
-  pathname = normalizeBenchPath(pathname);
-  if (pathname === "/stays" || pathname === "/blog") return "list";
-  if (/^\/stays\/[^/]+$/.test(pathname) || /^\/blog\/[^/]+$/.test(pathname)) return "detail";
-  if (pathname === "/hifi/stays") return "hifi-list";
-  if (/^\/hifi\/stays\/[^/]+$/.test(pathname)) return "hifi-detail";
-  return null;
-}
-
-function cacheHeader(pathname: string, profile: string | null) {
-  const kind = cacheKind(pathname);
-  if (kind === "hifi-list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
-  if (kind === "hifi-detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
-  if (profile === "idiomatic" || profile === "mobile-cold") {
-    if (kind === "detail") return "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
-    if (kind === "list") return "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
-  }
-  return "no-store";
 }
 
 function assetRequestFor(url: URL, request: Request) {
@@ -58,7 +39,7 @@ function needsClient(pathname: string) {
 function applyHtmlHeaders(headersInit: HeadersInit | null, pathname: string, profile: string | null, start: number) {
   const headers = new Headers(headersInit ?? undefined);
   headers.set("content-type", "text/html; charset=utf-8");
-  headers.set("cache-control", cacheHeader(pathname, profile));
+  headers.set("cache-control", htmlCacheHeaderForPath(pathname, profile));
   if (!headers.has("server-timing")) {
     headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
   }

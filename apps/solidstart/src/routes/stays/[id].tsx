@@ -6,7 +6,7 @@ export default function StayDetailPage() {
   const params = useParams<{ id: string }>();
   return (
     <>
-      <BenchHeaders cacheControl="public, max-age=0, s-maxage=300, stale-while-revalidate=600" />
+      <BenchHeaders routeId="/stays/:id" />
       <StayDetail id={params.id} />
     </>
   );

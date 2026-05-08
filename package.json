@@ -55,6 +55,7 @@
     "bench:stability": "node scripts/bench-stability.mjs",
     "bench:load": "pnpm -C bench run load",
     "bench:remote": "node scripts/bench-remote.mjs",
+    "bench:report:regen": "node scripts/regen-report.mjs",
     "lighthouse:compare": "node scripts/lighthouse-compare.mjs"
   },
   "devDependencies": {

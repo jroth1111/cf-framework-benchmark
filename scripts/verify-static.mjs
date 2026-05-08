@@ -56,6 +56,9 @@ await run("test:no-direct-targets-read", "pnpm", ["test:no-direct-targets-read"]
 await run("test:app-delegation", "pnpm", ["test:app-delegation"]);
 await run("test:cloudflare-optimization", "pnpm", ["test:cloudflare-optimization"]);
 await run("test:cloudflare-optimization-variants-schema", "pnpm", ["test:cloudflare-optimization-variants-schema"]);
+await run("test:selectors-derived", "pnpm", ["test:selectors-derived"]);
+await run("test:dataset-derived-paths", "pnpm", ["test:dataset-derived-paths"]);
+await run("test:required-testid-coverage", "pnpm", ["test:required-testid-coverage"]);
 await run("test:smoke-contract-selectors", "pnpm", ["test:smoke-contract-selectors"]);
 await run("test:contract-api-cache", "pnpm", ["test:contract-api-cache"]);
 await run("test:contracts-schema", "pnpm", ["test:contracts-schema"]);

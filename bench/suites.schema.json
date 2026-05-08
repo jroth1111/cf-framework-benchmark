@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cf-bench.local/schemas/bench/suites.schema.json",
+  "title": "Benchmark suite schema",
+  "description": "Validates bench/suites/*.json. Scenarios must reference v5 routes by routeId and test-ids by { requiredTestId } reference objects — no literal [data-testid=\"...\"] or raw path strings in waitFor or interaction fields.",
+  "type": "object",
+  "required": ["id", "description", "scenarios"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/scenario" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "testIdRef": {
+      "type": "object",
+      "required": ["requiredTestId"],
+      "properties": {
+        "requiredTestId": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "waitForValue": {
+      "description": "Either a non-testid CSS selector string (e.g. a[href='/stays']) or a requiredTestId reference object. Never a literal [data-testid=...] string.",
+      "type": ["string", "object"]
+    },
+    "interaction": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "symbolSelect": { "$ref": "#/$defs/testIdRef" },
+        "timeframeSelect": { "$ref": "#/$defs/testIdRef" },
+        "click": { "$ref": "#/$defs/testIdRef" },
+        "waitFor": { "$ref": "#/$defs/testIdRef" },
+        "targetSymbol": { "type": "string" },
+        "targetTimeframe": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "scenario": {
+      "type": "object",
+      "required": ["name", "routeId", "type"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "routeId": { "type": "string", "pattern": "^/" },
+        "type": { "type": "string", "enum": ["document", "spa"] },
+        "waitFor": { "$ref": "#/$defs/waitForValue" },
+        "waitUntil": { "type": "string" },
+        "interactType": { "type": "string" },
+        "interactions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/interaction" }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

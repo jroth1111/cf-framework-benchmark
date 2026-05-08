@@ -1,38 +1,37 @@
 {
   "id": "mpa_airbnb_hifi",
   "description": "Workers-only high-fidelity Airbnb-shaped MPA. Mobile journey with hero image LCP, photo gallery, reviews, booking widget, static map, and third-party SDK weight. Governed by docs/contracts-v6-addendum.md.",
-  "requiredRoutes": ["/", "/hifi/stays", "/hifi/stays/:id", "/blog", "/blog/:slug"],
   "scenarios": [
     {
       "name": "home",
-      "path": "/",
+      "routeId": "/",
       "type": "document",
       "waitFor": "a[href=\"/stays\"]"
     },
     {
       "name": "hifi_stays",
-      "path": "/hifi/stays",
+      "routeId": "/hifi/stays",
       "type": "document",
-      "waitFor": "[data-testid=\"stay-card\"]"
+      "waitFor": { "requiredTestId": "stay-card" }
     },
     {
       "name": "hifi_stay_detail",
-      "path": "/hifi/stays/001",
+      "routeId": "/hifi/stays/:id",
       "type": "document",
-      "waitFor": "[data-testid=\"stay-hero-image\"]",
+      "waitFor": { "requiredTestId": "stay-hero-image" },
       "interactType": "journey"
     },
     {
       "name": "blog",
-      "path": "/blog",
+      "routeId": "/blog",
       "type": "document",
-      "waitFor": "[data-testid=\"blog-post-card\"]"
+      "waitFor": { "requiredTestId": "blog-post-card" }
     },
     {
       "name": "blog_post",
-      "path": "/blog/why-this-benchmark-exists",
+      "routeId": "/blog/:slug",
       "type": "document",
-      "waitFor": "[data-testid=\"blog-html\"]"
+      "waitFor": { "requiredTestId": "blog-html" }
     }
   ]
 }

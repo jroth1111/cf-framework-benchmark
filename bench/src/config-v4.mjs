@@ -5,6 +5,59 @@ import { validateOrThrow } from "./validate-schema.mjs";
 
 const BENCH_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_ROOT = path.resolve(BENCH_DIR, "..");
+const V5_PATH = path.join(REPO_ROOT, "contracts", "v5.json");
+
+let _cachedV5Doc = null;
+async function loadV5Doc() {
+  if (_cachedV5Doc) return _cachedV5Doc;
+  _cachedV5Doc = JSON.parse(await fs.readFile(V5_PATH, "utf8"));
+  return _cachedV5Doc;
+}
+
+let _cachedDataset = null;
+async function loadDatasetContext() {
+  if (_cachedDataset) return _cachedDataset;
+  const { blogPosts, listings } = await import("../../packages/dataset/src/index.js");
+  _cachedDataset = { blogPosts, listings };
+  return _cachedDataset;
+}
+
+function resolveStaticSampleExpr(staticSample, route, dataset) {
+  if (typeof staticSample === "string") return staticSample;
+  if (staticSample && typeof staticSample === "object" && typeof staticSample.from === "string") {
+    const match = /^dataset\.(\w+)\[(\d+)\]\.(\w+)$/.exec(staticSample.from);
+    if (!match) throw new Error(`Unsupported staticSample.from expression: ${staticSample.from}`);
+    const [, collection, idxStr, field] = match;
+    const val = dataset[collection]?.[Number(idxStr)]?.[field];
+    if (val == null) {
+      throw new Error(`Cannot resolve ${staticSample.from}: result is null/undefined`);
+    }
+    return route.replace(/:([^/]+)/, String(val));
+  }
+  throw new Error(`Invalid staticSample for route ${route}: ${JSON.stringify(staticSample)}`);
+}
+
+function resolveTestIdRef(selector) {
+  if (typeof selector === "string") return selector;
+  if (selector && typeof selector === "object" && typeof selector.requiredTestId === "string") {
+    return `[data-testid="${selector.requiredTestId}"]`;
+  }
+  return selector;
+}
+
+function resolveScenario(sc, v5RouteMap, dataset) {
+  if (!sc.routeId) {
+    return { ...sc, waitFor: resolveTestIdRef(sc.waitFor) };
+  }
+  const v5Route = v5RouteMap.get(sc.routeId);
+  if (!v5Route) {
+    throw new Error(`Suite scenario routeId "${sc.routeId}" not found in v5 routes`);
+  }
+  const resolvedPath = resolveStaticSampleExpr(v5Route.staticSample, sc.routeId, dataset);
+  const resolvedWaitFor = resolveTestIdRef(sc.waitFor);
+  const { routeId: _routeId, ...rest } = sc;
+  return { ...rest, path: resolvedPath, waitFor: resolvedWaitFor };
+}
 
 export const DEFAULT_MATRIX_PATH = path.join(BENCH_DIR, "framework-matrix.json");
 export const DEFAULT_MATRIX_SCHEMA_PATH = path.join(BENCH_DIR, "framework-matrix.schema.json");
@@ -217,12 +270,19 @@ export async function resolveLiveTargets({
 export async function loadSuite(id, suitesDir = DEFAULT_SUITES_DIR) {
   const suitePath = path.join(suitesDir, `${id}.json`);
   const doc = await readJson(suitePath);
-  const scenarios = Array.isArray(doc.scenarios) ? doc.scenarios : [];
-  const requiredRoutes = Array.isArray(doc.requiredRoutes) ? doc.requiredRoutes : [];
+  const rawScenarios = Array.isArray(doc.scenarios) ? doc.scenarios : [];
 
-  if (!scenarios.length) {
+  if (!rawScenarios.length) {
     throw new Error(`Suite ${id} has no scenarios.`);
   }
+
+  const [v5Doc, dataset] = await Promise.all([loadV5Doc(), loadDatasetContext()]);
+  const v5RouteMap = new Map(v5Doc.routes.map((r) => [r.route, r]));
+
+  const scenarios = rawScenarios.map((sc) => resolveScenario(sc, v5RouteMap, dataset));
+
+  // Derive requiredRoutes from v5 suite membership
+  const requiredRoutes = v5Doc.routes.filter((r) => r.suites.includes(id)).map((r) => r.route);
 
   return { id, path: suitePath, doc, scenarios, requiredRoutes };
 }

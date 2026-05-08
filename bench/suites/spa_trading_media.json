@@ -1,18 +1,17 @@
 {
   "id": "spa_trading_media",
   "description": "Workers-only SPA benchmark focused on chart and media interactions",
-  "requiredRoutes": ["/chart", "/media"],
   "scenarios": [
     {
       "name": "chart",
-      "path": "/chart",
+      "routeId": "/chart",
       "type": "spa",
-      "waitFor": "[data-testid=\"chart-canvas\"]",
+      "waitFor": { "requiredTestId": "chart-canvas" },
       "interactions": [
         {
           "kind": "chart-switch",
-          "symbolSelect": "[data-testid=\"symbol-select\"]",
-          "timeframeSelect": "[data-testid=\"timeframe-select\"]",
+          "symbolSelect": { "requiredTestId": "symbol-select" },
+          "timeframeSelect": { "requiredTestId": "timeframe-select" },
           "targetSymbol": "ETH",
           "targetTimeframe": "15m"
         }
@@ -20,19 +19,19 @@
     },
     {
       "name": "media",
-      "path": "/media",
+      "routeId": "/media",
       "type": "spa",
-      "waitFor": "[data-testid=\"media-card\"]",
+      "waitFor": { "requiredTestId": "media-card" },
       "interactions": [
         {
           "kind": "media-open-first",
-          "click": "[data-testid=\"media-card\"]",
-          "waitFor": "[data-testid=\"media-player\"]"
+          "click": { "requiredTestId": "media-card" },
+          "waitFor": { "requiredTestId": "media-player" }
         },
         {
           "kind": "media-next",
-          "click": "[data-testid=\"media-next\"]",
-          "waitFor": "[data-testid=\"media-player\"]"
+          "click": { "requiredTestId": "media-next" },
+          "waitFor": { "requiredTestId": "media-player" }
         }
       ]
     }

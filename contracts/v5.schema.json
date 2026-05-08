@@ -44,7 +44,10 @@
       "properties": {
         "route": { "type": "string", "pattern": "^/" },
         "kind": { "$ref": "#/$defs/kind" },
-        "staticSample": { "type": "string", "minLength": 1 },
+        "staticSample": {
+          "type": ["string", "object"],
+          "description": "Literal path string or { from: 'dataset.<collection>[<idx>].<field>' } for dataset-derived samples"
+        },
         "suites": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 },

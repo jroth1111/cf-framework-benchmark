@@ -46,7 +46,7 @@
     {
       "route": "/blog/:slug",
       "kind": "html",
-      "staticSample": "/blog/why-this-benchmark-exists",
+      "staticSample": { "from": "dataset.blogPosts[0].slug" },
       "suites": ["mpa_airbnb", "mpa_airbnb_hifi"],
       "requiredTestIds": ["blog-html"],
       "expectedHtmlCache": "public, max-age=0, s-maxage=300, stale-while-revalidate=600",

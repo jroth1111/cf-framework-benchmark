@@ -12,6 +12,20 @@ const CONTRACTS_PATH = path.resolve(
   "v5.json"
 );
 const CONTRACTS = JSON.parse(await fs.readFile(CONTRACTS_PATH, "utf8"));
+const { blogPosts, listings: datasetListings } = await import("../packages/dataset/src/index.js");
+
+function resolveStaticSample(staticSample, route) {
+  if (typeof staticSample === "string") return staticSample;
+  if (staticSample && typeof staticSample === "object" && typeof staticSample.from === "string") {
+    const match = /^dataset\.(\w+)\[(\d+)\]\.(\w+)$/.exec(staticSample.from);
+    if (!match) return route;
+    const [, collection, idxStr, field] = match;
+    const ds = { blogPosts, listings: datasetListings };
+    const val = ds[collection]?.[Number(idxStr)]?.[field];
+    return val != null ? route.replace(/:([^/]+)/, String(val)) : route;
+  }
+  return route;
+}
 
 function argValue(flag, fallback = null) {
   const idx = process.argv.indexOf(flag);
@@ -76,7 +90,7 @@ function routeMatchesPattern(route, pattern) {
 
 const CONTRACT_ROUTES = CONTRACTS.routes
   .filter((route) => route.includeInAssetClassification)
-  .map((route) => route.staticSample);
+  .map((route) => resolveStaticSample(route.staticSample, route.route));
 
 function classifyAssetRouting(assets) {
   if (!assets) {

@@ -153,10 +153,23 @@ async function fetchHtmlStatus(label, url) {
   return { res, text: await res.text() };
 }
 
+function resolveStaticSample(staticSample, route) {
+  if (typeof staticSample === "string") return staticSample;
+  if (staticSample && typeof staticSample === "object" && typeof staticSample.from === "string") {
+    const match = /^dataset\.(\w+)\[(\d+)\]\.(\w+)$/.exec(staticSample.from);
+    if (!match) return route;
+    const [, collection, idxStr, field] = match;
+    const ds = { blogPosts, listings };
+    const val = ds[collection]?.[Number(idxStr)]?.[field];
+    return val != null ? route.replace(/:([^/]+)/, String(val)) : route;
+  }
+  return route;
+}
+
 function routeSample(route) {
-  if (route === "/blog/:slug") return `/blog/${blogPosts[0]?.slug || "why-this-benchmark-exists"}`;
   const entry = ROUTES_BY_PATH.get(route);
-  return entry?.staticSample ?? route;
+  if (!entry) return route;
+  return resolveStaticSample(entry.staticSample, route);
 }
 
 function routeSamples(route) {

@@ -43,10 +43,23 @@ const matrixPath = toAbsolutePath(argValue("--matrix", null), DEFAULT_MATRIX_PAT
 const suitesDir = toAbsolutePath(argValue("--suites-dir", null), DEFAULT_SUITES_DIR);
 const failOnViolations = hasFlag("--fail-on-violations");
 
+function resolveStaticSample(staticSample, route) {
+  if (typeof staticSample === "string") return staticSample;
+  if (staticSample && typeof staticSample === "object" && typeof staticSample.from === "string") {
+    const match = /^dataset\.(\w+)\[(\d+)\]\.(\w+)$/.exec(staticSample.from);
+    if (!match) return route;
+    const [, collection, idxStr, field] = match;
+    const ds = { blogPosts, listings };
+    const val = ds[collection]?.[Number(idxStr)]?.[field];
+    return val != null ? route.replace(/:([^/]+)/, String(val)) : route;
+  }
+  return route;
+}
+
 export function routeSample(route) {
-  if (route === "/blog/:slug") return `/blog/${blogPosts[0]?.slug || "why-this-benchmark-exists"}`;
   const entry = ROUTES_BY_PATH.get(route);
-  return entry?.staticSample ?? route;
+  if (!entry) return route;
+  return resolveStaticSample(entry.staticSample, route);
 }
 
 export function routeSamples(route) {
@@ -225,7 +238,7 @@ async function probeUnknownRoute({ framework, baseUrl }) {
   return { framework, path, url, status, headers, checks, ok: checks.every((check) => check.ok) };
 }
 
-async function probeApi({ framework, baseUrl, path, expectedStatus = 200 }) {
+async function probeApi({ framework, baseUrl, path, expectedStatus = 200, expectedApiCache = null }) {
   const url = `${baseUrl}${path}`;
   const checks = [];
   let status = null;
@@ -259,6 +272,13 @@ async function probeApi({ framework, baseUrl, path, expectedStatus = 200 }) {
     ok: headers["server-timing"].toLowerCase().includes("cf_bench"),
     detail: headers["server-timing"],
   });
+  if (expectedApiCache !== null) {
+    checks.push({
+      name: "cache-control",
+      ok: headers["cache-control"] === expectedApiCache,
+      detail: headers["cache-control"],
+    });
+  }
 
   return { framework, path, url, status, headers, bodyShape: body ? Object.keys(body).sort() : [], ok: checks.every((check) => check.ok), checks };
 }
@@ -323,10 +343,10 @@ export async function main() {
     }
     routes.push(await probeUnknownRoute({ framework: framework.name, baseUrl }));
 
-    api.push(await probeApi({ framework: framework.name, baseUrl, path: "/api/bench" }));
-    api.push(await probeApi({ framework: framework.name, baseUrl, path: "/api/listings?pageSize=1" }));
-    api.push(await probeApi({ framework: framework.name, baseUrl, path: "/api/prices?symbol=BTC&timeframe=1h&points=120" }));
-    api.push(await probeApi({ framework: framework.name, baseUrl, path: "/api/media?pageSize=3" }));
+    for (const apiRoute of CONTRACTS.routes.filter((r) => r.kind === "api")) {
+      const sample = resolveStaticSample(apiRoute.staticSample, apiRoute.route);
+      api.push(await probeApi({ framework: framework.name, baseUrl, path: sample, expectedApiCache: apiRoute.expectedApiCache }));
+    }
 
     const ok = routes.every((route) => route.ok) && api.every((endpoint) => endpoint.ok);
     report.frameworks.push({

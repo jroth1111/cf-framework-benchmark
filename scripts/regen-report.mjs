@@ -22,10 +22,14 @@ async function listSuiteJsonPaths() {
     .sort((a, b) => a.localeCompare(b));
 }
 
+function suiteIdFromPath(jsonPath) {
+  return path.basename(jsonPath).match(/^results\.v4\.([^.]+)/)?.[1] ?? null;
+}
+
 async function regenOne(jsonPath, { suffix = '' } = {}) {
   const raw = await fs.readFile(jsonPath, 'utf8');
   const out = JSON.parse(raw);
-  const md = buildMarkdown(out);
+  const md = buildMarkdown(out, { suiteId: suiteIdFromPath(jsonPath) });
   const mdPath = jsonPath.replace(/\.json$/, `.md${suffix}`);
   await fs.writeFile(mdPath, md);
   return mdPath;
@@ -67,7 +71,7 @@ async function main() {
         ? await (async () => {
             const raw = await fs.readFile(target, 'utf8');
             const out = JSON.parse(raw);
-            const md = buildMarkdown(out);
+            const md = buildMarkdown(out, { suiteId: suiteIdFromPath(target) });
             await fs.writeFile(outArg, md);
             return outArg;
           })()

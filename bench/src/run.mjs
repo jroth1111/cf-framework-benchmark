@@ -2535,7 +2535,8 @@ async function main() {
 
   // Also write a markdown summary
   const mdPath = outPath.replace(/\.json$/, '.md');
-  const md = buildMarkdown(out, { iterationsArg });
+  const suiteId = path.basename(outPath).match(/^results\.v4\.([^.]+)/)?.[1] ?? null;
+  const md = buildMarkdown(out, { iterationsArg, suiteId });
   await fs.writeFile(new URL(mdPath, 'file://'), md);
   console.log(`📝 Markdown summary written to ${mdPath}`);
 }

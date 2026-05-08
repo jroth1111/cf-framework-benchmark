@@ -39,6 +39,19 @@ export function deriveReportInputs(out) {
   })();
   const iterationsArg = out?.cli?.iterationsArg ?? null;
   const formatBucketKey = (key) => key.replace(/::/g, ' | ');
+  const formatBucketKeyShort = (key) => {
+    const parts = String(key).split('::');
+    const out = [];
+    for (const part of parts) {
+      if (part.includes('[')) continue;
+      const m = part.match(/^([\w-]+)=(.+)$/);
+      if (!m) continue;
+      const [, k, v] = m;
+      if (k === 'delivery' || k === 'impl' || k === 'data' || k === 'scenario') continue;
+      out.push(`${k}=${v}`);
+    }
+    return out.join(' · ');
+  };
   return {
     frameworkNames,
     profileNames,
@@ -48,6 +61,7 @@ export function deriveReportInputs(out) {
     iterationsLabel,
     iterationsArg,
     formatBucketKey,
+    formatBucketKeyShort,
   };
 }
 
@@ -75,6 +89,8 @@ export function buildMarkdown(out, derived = {}) {
     iterationsLabel,
     iterationsArg,
     formatBucketKey,
+    formatBucketKeyShort,
+    suiteId = null,
   } = ctx;
 
   const summary = out.summary;
@@ -156,6 +172,77 @@ export function buildMarkdown(out, derived = {}) {
   md += `| Flamegraphs enabled | ${flamegraphs.enabled ? 'true' : 'false'} |\n`;
   md += `| Flamegraph captures | ${flamegraphCaptures.length} |\n`;
   md += `| Flamegraph output dir | ${flamegraphs.enabled ? flamegraphs.outputDir : '—'} |\n\n`;
+
+  md += `## Stable Findings\n\n`;
+  md += `Frameworks where the leader's median is materially ahead of both the next-best and the cohort median within the same contract bucket. Lower is better. Gate: bucket has ≥3 frameworks, leader is ≥10% better than the cohort median AND ≥5% better than the next-best. Top 10 by Δ vs median.\n\n`;
+  const stableInteractionMs = (s) => {
+    const values = [s.inp?.p50, s.chartSwitchMs?.p50, s.chartDrawMs?.p50].filter((v) => Number.isFinite(v));
+    if (!values.length) return null;
+    return values.reduce((a, b) => a + b, 0) / values.length;
+  };
+  const stableMetrics = [
+    { key: 'lcp', get: (s) => s.lcp?.p50, fmt: (v) => `${v.toFixed(0)}ms` },
+    { key: 'ttfb', get: (s) => s.ttfb?.p50, fmt: (v) => `${v.toFixed(0)}ms` },
+    { key: 'tbt', get: (s) => s.tbt?.p50, fmt: (v) => `${v.toFixed(0)}ms` },
+    { key: 'scriptBoot', get: (s) => s.scriptBootMs?.p50, fmt: (v) => `${v.toFixed(0)}ms` },
+    { key: 'interaction', get: stableInteractionMs, fmt: (v) => `${v.toFixed(0)}ms` },
+    { key: 'heap', get: (s) => s.heapUsed?.p50, fmt: formatBytes },
+  ];
+  const findings = [];
+  const allScenarioNames = [...scenarioNames, ...clientNavScenarios];
+  for (const profile of profileNames) {
+    for (const phase of phases) {
+      for (const scenario of allScenarioNames) {
+        const rowsForScen = summary.filter((s) => s.profile === profile && s.phase === phase && s.scenario === scenario);
+        const bucketsForScen = new Map();
+        for (const row of rowsForScen) {
+          const key = row.bucketKeyScenario || 'unknown';
+          const list = bucketsForScen.get(key) || [];
+          list.push(row);
+          bucketsForScen.set(key, list);
+        }
+        for (const [, bucketRows] of bucketsForScen) {
+          if (bucketRows.length < 3) continue;
+          for (const m of stableMetrics) {
+            const points = bucketRows
+              .map((r) => ({ fw: r.framework, value: m.get(r) }))
+              .filter((p) => Number.isFinite(p.value));
+            if (points.length < 3) continue;
+            points.sort((a, b) => a.value - b.value);
+            const best = points[0];
+            const others = points.slice(1).map((p) => p.value);
+            const secondBest = others[0];
+            const sortedOthers = [...others].sort((a, b) => a - b);
+            const mid = Math.floor(sortedOthers.length / 2);
+            const median = sortedOthers.length % 2 === 1
+              ? sortedOthers[mid]
+              : (sortedOthers[mid - 1] + sortedOthers[mid]) / 2;
+            if (!(median > 0) || !(secondBest > 0)) continue;
+            const dMedian = (median - best.value) / median;
+            const dNext = (secondBest - best.value) / secondBest;
+            if (dMedian >= 0.10 && dNext >= 0.05) {
+              findings.push({
+                profile, phase, scenario, metric: m.key,
+                fw: best.fw, value: best.value, fmt: m.fmt,
+                dNext, dMedian,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  findings.sort((a, b) => b.dMedian - a.dMedian);
+  md += `| Suite | Profile | Phase | Scenario | Metric | Best | Δ vs next | Δ vs median |\n`;
+  md += `|-------|---------|-------|----------|--------|-----:|----------:|------------:|\n`;
+  if (!findings.length) {
+    md += `| ${suiteId || '—'} | — | — | — | — | — | — | — |\n`;
+  } else {
+    for (const f of findings.slice(0, 10)) {
+      md += `| ${suiteId || '—'} | ${f.profile} | ${f.phase} | ${f.scenario} | ${f.metric} (${f.fw}) | ${f.fmt(f.value)} | ${(f.dNext * 100).toFixed(1)}% | ${(f.dMedian * 100).toFixed(1)}% |\n`;
+    }
+  }
+  md += '\n';
 
   md += `## Scenarios\n\n`;
   md += `| Name | Type | Path | Wait for | Client nav |\n`;
@@ -297,18 +384,22 @@ export function buildMarkdown(out, derived = {}) {
   md += '\n';
 
   md += `### Bench API snapshot\n\n`;
-  md += `| Framework | Status | Isolate | Server time | CF-Ray | Cache |\n`;
-  md += `|-----------|-------:|---------|-------------|--------|-------|\n`;
+  const benchApiTotal = frameworkNames.length;
+  const benchApiOk = frameworkNames.filter((fw) => benchApiByFramework[fw]?.status === 200).length;
+  const benchApiIsolates = new Set();
+  const benchApiColos = {};
   for (const fw of frameworkNames) {
     const api = benchApiByFramework[fw];
-    const status = api?.status ?? '—';
-    const isolate = api?.data?.isolateId ?? '—';
-    const serverNow = api?.data?.now ?? '—';
-    const cfRay = api?.headers?.['cf-ray'] ?? '—';
-    const cacheStatus = api?.headers?.['cf-cache-status'] ?? '—';
-    md += `| ${fw} | ${status} | ${isolate} | ${serverNow} | ${cfRay} | ${cacheStatus} |\n`;
+    if (api?.data?.isolateId) benchApiIsolates.add(api.data.isolateId);
+    const cfRay = api?.headers?.['cf-ray'];
+    const colo = typeof cfRay === 'string' ? cfRay.split('-').pop() : null;
+    if (colo) benchApiColos[colo] = (benchApiColos[colo] || 0) + 1;
   }
-  md += '\n';
+  const benchApiColoLabel = Object.entries(benchApiColos)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([c, n]) => `${c}=${n}`)
+    .join(', ') || '—';
+  md += `Bench API: ${benchApiOk}/${benchApiTotal} ok, ${benchApiIsolates.size} unique isolates, colos: ${benchApiColoLabel}\n\n`;
 
   md += `## Edge & Cache Summary\n\n`;
   md += `### Cloudflare colos (cf-ray)\n\n`;
@@ -324,12 +415,11 @@ export function buildMarkdown(out, derived = {}) {
   md += '\n';
 
   md += `### Trace header coverage\n\n`;
-  md += `| Field | Rows |\n`;
-  md += `|-------|-----:|\n`;
-  for (const [field, count] of Object.entries(traceCorrelation.headerCoverage)) {
-    md += `| ${field} | ${count} |\n`;
-  }
-  md += '\n';
+  const coverage = traceCorrelation.headerCoverage || {};
+  const coverageLabel = Object.entries(coverage)
+    .map(([field, count]) => `${field}=${count}`)
+    .join(' · ') || '—';
+  md += `${coverageLabel}\n\n`;
 
   md += `### Cache status by colo\n\n`;
   md += `| Colo | Rows | Cache statuses |\n`;
@@ -377,10 +467,15 @@ export function buildMarkdown(out, derived = {}) {
   md += `### Link headers\n\n`;
   md += `| Value | Count |\n`;
   md += `|-------|------:|\n`;
-  const linkHeaderEntries = Object.entries(linkHeaderSummary).sort(([a], [b]) => a.localeCompare(b));
+  const linkHeaderEntries = Object.entries(linkHeaderSummary).sort(([, a], [, b]) => b - a);
   if (linkHeaderEntries.length) {
-    for (const [val, count] of linkHeaderEntries) {
+    const top = linkHeaderEntries.slice(0, 5);
+    for (const [val, count] of top) {
       md += `| ${val} | ${count} |\n`;
+    }
+    const tail = linkHeaderEntries.length - top.length;
+    if (tail > 0) {
+      md += `| (+${tail} more) | — |\n`;
     }
   } else {
     md += `| — | 0 |\n`;
@@ -404,7 +499,16 @@ export function buildMarkdown(out, derived = {}) {
   md += '\n';
 
   md += `## Config Snapshot\n\n`;
-  md += `\`\`\`json\n${JSON.stringify(config, null, 2)}\n\`\`\`\n\n`;
+  const cfgScenarioCount = Array.isArray(out.scenarios) ? out.scenarios.length : 0;
+  const cfgThrottlingProfiles = Object.keys(config.throttlingProfiles || {}).join(', ') || '—';
+  md += `| Field | Value |\n`;
+  md += `|-------|-------|\n`;
+  md += `| Iterations | ${iterationsLabel} |\n`;
+  md += `| Warmup | ${warmupEnabled ? 'enabled' : 'disabled'} |\n`;
+  md += `| Profiles | ${profileNames.join(', ')} |\n`;
+  md += `| Scenarios | ${cfgScenarioCount} |\n`;
+  md += `| Throttling profiles | ${cfgThrottlingProfiles} |\n\n`;
+  md += `Full config retained in JSON at \`config.data\`${configPath ? ` (source: ${configPath})` : ''}.\n\n`;
 
   md += `## Bundle Sizes\n\n`;
   md += `| Framework | JS | CSS | Total |\n`;
@@ -413,6 +517,14 @@ export function buildMarkdown(out, derived = {}) {
     const b = bundleSizes[fw];
     md += `| ${fw} | ${formatBytes(b?.js || 0)} | ${formatBytes(b?.css || 0)} | ${formatBytes(b?.total || 0)} |\n`;
   }
+
+  md += `\n## Bucket Key Glossary\n\n`;
+  md += `Bucket keys group results that are contract-comparable. Section headings show a short sigil (e.g. \`tier=framework-runtime · cf=worker-first · render=ssr · hydration=framework\`); the full key in the JSON adds \`delivery\` (Node/static/edge runtime class), \`impl\` (native/adapter/wrapper), and the per-scenario \`render\`/\`data\`/\`hydration\` triple. Segments:\n\n`;
+  md += `- \`delivery\`: runtime class — workers, node, static, etc.\n`;
+  md += `- \`impl\`: implementation kind — native, adapter, wrapper.\n`;
+  md += `- \`tier\`: entry class per \`docs/contracts-v5.md\` (worker-baseline, framework-runtime, framework-prerender, …).\n`;
+  md += `- \`cf\`: Cloudflare Static Assets routing mode (worker-only, worker-first, worker-first-for-contract-routes, …).\n`;
+  md += `- \`render\` / \`data\` / \`hydration\`: per-scenario triple describing how the route is rendered, where data comes from, and how the page hydrates.\n\n`;
 
   md += `\n## Performance Metrics (p50 · p95)\n\n`;
   md += `Note: TTFB is server/network; LCP/TBT/CPU/Heap are client-side metrics. p95 in parentheses where n≥3.\n\n`;
@@ -433,7 +545,7 @@ export function buildMarkdown(out, derived = {}) {
         const bucketKeys = [...bucketsForScenario.keys()].sort((a, b) => a.localeCompare(b));
         for (const bucketKey of bucketKeys) {
           const bucketRows = bucketsForScenario.get(bucketKey) || [];
-          md += `##### ${scenario.charAt(0).toUpperCase() + scenario.slice(1)} — ${formatBucketKey(bucketKey)}\n\n`;
+          md += `##### ${scenario.charAt(0).toUpperCase() + scenario.slice(1)} — ${formatBucketKeyShort(bucketKey)}\n\n`;
           md += `| Framework | TTFB (server) | LCP (client) | TBT (client) | Script (client) | CPU (client) | Heap (client) |\n`;
           md += `|-----------|--------------:|-------------:|-------------:|---------------:|-------------:|--------------:|\n`;
           for (const s of bucketRows) {
@@ -538,7 +650,7 @@ export function buildMarkdown(out, derived = {}) {
         const bucketKeys = [...bucketsForScenario.keys()].sort((a, b) => a.localeCompare(b));
         for (const bucketKey of bucketKeys) {
           const bucketRows = bucketsForScenario.get(bucketKey) || [];
-          md += `#### ${scenario.charAt(0).toUpperCase() + scenario.slice(1)} — ${formatBucketKey(bucketKey)}\n\n`;
+          md += `#### ${scenario.charAt(0).toUpperCase() + scenario.slice(1)} — ${formatBucketKeyShort(bucketKey)}\n\n`;
           md += `| Framework | TTFB | LCP | CLS | TBT | CPU | Heap |\n`;
           md += `|-----------|-----:|----:|----:|----:|----:|-----:|\n`;
           for (const s of bucketRows) {
@@ -560,11 +672,19 @@ export function buildMarkdown(out, derived = {}) {
       const byBucket = bucketScores[profile]?.[phase] || {};
       for (const [bucketKey, scored] of Object.entries(byBucket)) {
         if (!Array.isArray(scored) || !scored.length) continue;
-        md += `##### Bucket: ${formatBucketKey(bucketKey)}\n\n`;
+        const bucketIsSolo = scored.length === 1;
+        md += `##### Bucket: ${formatBucketKeyShort(bucketKey)}\n\n`;
         md += `| Framework | Score |\n`;
         md += `|-----------|------:|\n`;
         for (const row of scored) {
-          const score = row.score == null ? (row.incomplete ? '— (incomplete)' : '—') : row.score.toFixed(3);
+          let score;
+          if (row.score == null) {
+            if (row.incomplete) score = '— (incomplete)';
+            else if (row.solo === true || bucketIsSolo) score = '— (solo: no peers in bucket)';
+            else score = '—';
+          } else {
+            score = row.score.toFixed(3);
+          }
           md += `| ${row.framework} | ${score} |\n`;
         }
         md += `\n`;

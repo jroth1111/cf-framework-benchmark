@@ -35,6 +35,7 @@
     "test:cloudflare-optimization": "node scripts/test-cloudflare-optimization-audit.mjs",
     "test:cloudflare-optimization-variants-schema": "node scripts/test-cloudflare-optimization-variants-schema.mjs",
     "test:smoke-contract-selectors": "node scripts/test-smoke-contract-selectors.mjs",
+    "test:contract-api-cache": "node scripts/test-contract-api-cache.mjs",
     "test:build-enabled": "node --check scripts/build-enabled.mjs",
     "check:startup": "node scripts/check-worker-startup.mjs",
     "test:contracts": "node scripts/contract-tests.mjs",

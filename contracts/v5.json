@@ -107,8 +107,22 @@
       "suites": [],
       "requiredTestIds": [],
       "expectedHtmlCache": null,
+      "expectedApiCache": "no-store",
+      "responseDefaults": null,
       "expectedDatasetSource": null,
       "includeInAssetClassification": true
+    },
+    {
+      "route": "/api/health",
+      "kind": "api",
+      "staticSample": "/api/health",
+      "suites": [],
+      "requiredTestIds": [],
+      "expectedHtmlCache": null,
+      "expectedApiCache": "no-store",
+      "responseDefaults": null,
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": false
     },
     {
       "route": "/api/listings",
@@ -117,6 +131,23 @@
       "suites": [],
       "requiredTestIds": [],
       "expectedHtmlCache": null,
+      "expectedApiCache": "s-maxage=60",
+      "responseDefaults": {
+        "defaultPageSize": 20,
+        "defaultResultCount": 20
+      },
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": false
+    },
+    {
+      "route": "/api/listings/:id",
+      "kind": "api",
+      "staticSample": "/api/listings/001",
+      "suites": [],
+      "requiredTestIds": [],
+      "expectedHtmlCache": null,
+      "expectedApiCache": "s-maxage=300",
+      "responseDefaults": null,
       "expectedDatasetSource": null,
       "includeInAssetClassification": false
     },
@@ -127,6 +158,10 @@
       "suites": [],
       "requiredTestIds": [],
       "expectedHtmlCache": null,
+      "expectedApiCache": "s-maxage=60",
+      "responseDefaults": {
+        "defaultCandles": 360
+      },
       "expectedDatasetSource": null,
       "includeInAssetClassification": false
     },
@@ -137,6 +172,11 @@
       "suites": [],
       "requiredTestIds": [],
       "expectedHtmlCache": null,
+      "expectedApiCache": "s-maxage=60",
+      "responseDefaults": {
+        "defaultPageSize": 20,
+        "defaultResultCount": 20
+      },
       "expectedDatasetSource": null,
       "includeInAssetClassification": false
     }

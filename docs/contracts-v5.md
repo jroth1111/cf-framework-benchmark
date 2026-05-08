@@ -93,7 +93,9 @@ behavior, not a canonical framework-hydration row.
 Every benchmarked target must serve:
 
 - `/api/bench`
+- `/api/health`
 - `/api/listings?pageSize=1`
+- `/api/listings/001`
 - `/api/prices?symbol=BTC&timeframe=1h&points=120`
 - `/api/media?pageSize=3`
 

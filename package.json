@@ -54,6 +54,7 @@
     "test:config-v4-enum-parity": "node scripts/test-config-v4-enum-parity.mjs",
     "test:response-defaults-runtime": "node scripts/test-response-defaults-runtime.mjs",
     "test:no-inline-route-registration": "node scripts/test-no-inline-route-registration.mjs",
+    "test:colo-regions-coverage": "node scripts/test-colo-regions-coverage.mjs",
     "test:authority-audit": "node scripts/test-single-framework-registry.mjs && node scripts/test-cache-derivation.mjs && node scripts/test-selectors-derived.mjs && node scripts/test-dataset-derived-paths.mjs && node scripts/test-required-testid-coverage.mjs && node scripts/test-rubric-coverage.mjs && node scripts/test-profile-catalog-external.mjs && node scripts/test-results-schema-v4.mjs && node scripts/test-canonical-geography.mjs && node scripts/test-marker-contract.mjs && node scripts/test-contract-version-derived.mjs && node scripts/test-lighthouse-rubric-parity.mjs && node scripts/test-platform-era-stamp.mjs && node scripts/test-runner-imports-timings.mjs && node scripts/test-config-v4-enum-parity.mjs && node scripts/test-response-defaults-runtime.mjs && node scripts/test-no-inline-route-registration.mjs && node scripts/test-contracts-schema.mjs",
     "test:build-enabled": "node --check scripts/build-enabled.mjs",
     "check:startup": "node scripts/check-worker-startup.mjs",

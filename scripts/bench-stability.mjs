@@ -144,6 +144,7 @@ const profile = argValue("--profile", "parity");
 const maxDriftPct = Math.max(0, Number(argValue("--max-drift-pct", "10")) || 10);
 const summaryPath = path.resolve(process.cwd(), argValue("--out", "bench/results.v4.stability.json"));
 const keepResults = hasFlag("--keep-results");
+const allowCrossEra = hasFlag("--allow-cross-era");
 const repoBenchDir = path.dirname(summaryPath);
 const rawBaseDir = keepResults
   ? path.resolve(process.cwd(), argValue("--out-dir", path.join(repoBenchDir, "results.v4.stability.runs")))
@@ -176,6 +177,7 @@ try {
   if (keepResults) await fs.mkdir(rawBaseDir, { recursive: true });
 
   const metricSamples = [];
+  const observedEras = new Set();
   for (let repeat = 1; repeat <= repeats; repeat += 1) {
     const runRecord = { repeat, suites: [] };
     for (const suite of ["mpa_airbnb", "spa_trading_media"]) {
@@ -203,6 +205,13 @@ try {
       const result = JSON.parse(await fs.readFile(outPath, "utf8"));
       const samples = extractMetricSamples(suite, result);
       metricSamples.push(...samples);
+
+      // Collect platform eras from this run's rows for cross-era detection
+      const rows = Array.isArray(result.summary) ? result.summary : [];
+      for (const row of rows) {
+        if (row.platformEra) observedEras.add(row.platformEra);
+      }
+
       runRecord.suites.push({
         suite,
         durationMs,
@@ -212,6 +221,16 @@ try {
     }
     summary.runs.push(runRecord);
   }
+
+  // Cross-era guard: reject mixed-era comparisons unless --allow-cross-era is passed.
+  // This can occur if a platform era changes between stability repeats.
+  if (observedEras.size > 1 && !allowCrossEra) {
+    throw new Error(
+      `Cross-era stability run detected: observed platform eras [${[...observedEras].join(', ')}]. ` +
+      `Pass --allow-cross-era to compare across era boundaries.`
+    );
+  }
+  summary.platformEras = [...observedEras];
 
   summary.driftBudget.violations = driftViolations(metricSamples, { maxDriftPct });
   if (summary.driftBudget.violations.length) {
@@ -235,6 +254,7 @@ try {
     `- profile: ${summary.profile}`,
     `- maxDriftPct: ${summary.driftBudget.maxDriftPct}`,
     `- rawOutputDir: ${summary.rawOutputDir || "<temp cleaned>"}`,
+    `- platformEras: ${summary.platformEras?.join(', ') || '—'}`,
     ...(summary.error ? [`- error: ${summary.error}`] : []),
     "",
     "| Repeat | Suite | Duration ms | Metric samples | Raw output |",

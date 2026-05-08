@@ -73,6 +73,7 @@ await run("test:lighthouse-rubric-parity", "pnpm", ["test:lighthouse-rubric-pari
 await run("test:config-v4-enum-parity", "pnpm", ["test:config-v4-enum-parity"]);
 await run("test:response-defaults-runtime", "pnpm", ["test:response-defaults-runtime"]);
 await run("test:no-inline-route-registration", "pnpm", ["test:no-inline-route-registration"]);
+await run("test:colo-regions-coverage", "pnpm", ["test:colo-regions-coverage"]);
 await run("cloudflare:config-audit", "pnpm", ["cloudflare:config-audit", "--fail-on-gaps"]);
 await run("cloudflare:optimization-audit", "pnpm", ["cloudflare:optimization-audit", "--fail-on-gaps"]);
 await run("test:build-enabled", "pnpm", ["test:build-enabled"]);

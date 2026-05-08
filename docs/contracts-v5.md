@@ -134,7 +134,13 @@ and real DOM state.
 
 | Class | Use |
 | --- | --- |
-| `canonical` | Clean git tree, live Workers targets, v5 contract report passed, seeded order, row hashes, full provenance, MEL + US + EU remote coverage when publishing geography claims. |
+| `canonical` | Clean git tree, live Workers targets, v5 contract report passed, seeded order, row hashes, full provenance, global geography coverage (APAC + US + EU). |
+| `canonical-MEL-only` | All canonical requirements met except geography: run from MEL colo only. Treated as a single-region reference; not a global claim. |
+| `canonical-apac-only` | APAC coverage present; US and EU missing. |
+| `canonical-us-only` | US coverage present; APAC and EU missing. |
+| `canonical-eu-only` | EU coverage present; APAC and US missing. |
+| `canonical-apac+us` | APAC and US coverage present; EU missing. |
+| `canonical-no-geo` | No `cf-ray` / colo headers observed; geography unverifiable. |
 | `diagnostic` | Dirty tree, partial framework set, skipped contract report, local target, or exploratory profile. |
 | `smoke` | Fast sanity run with suffixed output. Never a headline source. |
 | `flame` | CPU profile investigation with suffixed output. |
@@ -142,6 +148,11 @@ and real DOM state.
 
 Canonical unsuffixed result files are refused when the git tree is dirty.
 Diagnostic runs must use suffixed filenames or explicit flags.
+Every result file self-labels its `result.canonical.class`; non-global classes emit a Limitations note in the generated Markdown report.
+
+## Scoring Model Versioning
+
+The scoring rubric (`bench/scoring-rubric.json`) is versioned independently from the v5 contract. Its `model` field (e.g., `real-world-choice-v2`) increments when metric weights or scenario weights change materially. The rubric hash is stored in `provenance.hashes.scoring` and is included in the benchmark provenance summary, but it is **not** part of `provenance.hashes.contract` — rubric changes do not invalidate the contract hash. Old runs remain legible against their declared model version.
 
 ## Anti-Gaming Requirements
 
@@ -157,9 +168,9 @@ Diagnostic runs must use suffixed filenames or explicit flags.
 
 ## Canonical Geography
 
-Canonical geography coverage is MEL + US + EU. These regions are reported
-separately. They are not averaged into a global winner because geography,
-network path, and Cloudflare colo behavior are material parts of Workers timing.
+Canonical geography coverage is defined in `bench/canonical-geography.json` as APAC + US + EU. The region-to-colo mapping is in `bench/colo-regions.json`. These regions are reported separately and are not averaged into a global winner because geography, network path, and Cloudflare colo behavior are material parts of Workers timing.
+
+The runner self-labels every result with `result.canonical.class` (see Result Classes above). Canonical writes that fail the geography requirement are redirected to a `.dirty.` filename unless `--allow-incomplete-geography` is passed explicitly. The Markdown report emits a Limitations note for any non-global coverage class.
 
 ## Failure Policy
 

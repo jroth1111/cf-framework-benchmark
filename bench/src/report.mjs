@@ -373,7 +373,15 @@ export function buildMarkdown(out, derived = {}) {
   md += `| Cloudflare config hash | ${provenance.hashes?.cloudflareConfig || '—'} |\n`;
   md += `| Cloudflare optimization hash | ${provenance.hashes?.cloudflareOptimization || '—'} |\n`;
   md += `| Lockfile hash | ${provenance.hashes?.lockfile || '—'} |\n`;
-  md += `| Dataset | ${datasetInfo ? `${datasetInfo.name}@${datasetInfo.version}` : '—'} |\n\n`;
+  const canonical = out.canonical ?? null;
+  md += `| Result class | ${canonical?.class || '—'} |\n`;
+  md += `| Dataset | ${datasetInfo ? `${datasetInfo.name}@${datasetInfo.version}` : '—'} |\n`;
+  if (canonical && canonical.geographyCoverage && canonical.geographyCoverage !== 'global') {
+    const missingRegions = ['APAC', 'US', 'EU'].filter((r) => !(canonical.regions || []).includes(r));
+    const unknownNote = (canonical.unknown || []).length ? ` Unknown colos: ${canonical.unknown.join(', ')}.` : '';
+    md += `\n> ⚠️ **Limitations — Geography:** coverage=${canonical.geographyCoverage} — does not satisfy v5 canonical-global requirement. Missing regions: ${missingRegions.join(', ') || 'none'}.${unknownNote}\n`;
+  }
+  md += '\n';
 
   md += `### Framework versions\n\n`;
   md += `| Framework | Packages |\n`;

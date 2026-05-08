@@ -341,7 +341,7 @@ export function queryListings(params = {}) {
   const city = params.city || '';
   const max = typeof params.max === 'number' ? params.max : null;
   const sort = params.sort || 'relevance';
-  const pageSize = clampInt(params.pageSize, 24, 1, 50);
+  const pageSize = clampInt(params.pageSize, 20, 1, 50);
   const page = clampInt(params.page, 1, 1, Number.MAX_SAFE_INTEGER);
 
   let rows = listings.slice();

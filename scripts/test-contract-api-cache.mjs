@@ -157,6 +157,34 @@ for (const entry of beaconRoutes) {
   );
 }
 
+// 8. Dataset default page sizes must match contract responseDefaults.
+//    queryListings and queryMedia must return the same pageSize as the
+//    contract declares — the contract is the authority home for defaults.
+const { queryListings, queryMedia } = await import("../packages/dataset/src/index.js");
+const listingsContract = apiRoutes.find((r) => r.route === "/api/listings");
+const mediaContract = apiRoutes.find((r) => r.route === "/api/media");
+
+assert.equal(
+  queryListings({}).pageSize,
+  listingsContract.responseDefaults.defaultPageSize,
+  `queryListings default pageSize must match contract defaultPageSize (${listingsContract.responseDefaults.defaultPageSize})`
+);
+assert.equal(
+  queryListings({}).results.length,
+  listingsContract.responseDefaults.defaultResultCount,
+  `queryListings default result count must match contract defaultResultCount (${listingsContract.responseDefaults.defaultResultCount})`
+);
+assert.equal(
+  queryMedia({}).pageSize,
+  mediaContract.responseDefaults.defaultPageSize,
+  `queryMedia default pageSize must match contract defaultPageSize (${mediaContract.responseDefaults.defaultPageSize})`
+);
+assert.equal(
+  queryMedia({}).results.length,
+  mediaContract.responseDefaults.defaultResultCount,
+  `queryMedia default result count must match contract defaultResultCount (${mediaContract.responseDefaults.defaultResultCount})`
+);
+
 console.log(
-  `contract-api-cache: ${apiRoutes.length} api route(s) carry expectedApiCache; ${sdkRoutes.length} sdk-fixture route(s); ${beaconRoutes.length} beacon route(s); ${cacheCallSites.length} cache-control assertion(s) verified to flow through @cf-bench/bench-cache helpers; ${responseDefaultsRoutes.size} responseDefaults route(s) wired.`
+  `contract-api-cache: ${apiRoutes.length} api route(s) carry expectedApiCache; ${sdkRoutes.length} sdk-fixture route(s); ${beaconRoutes.length} beacon route(s); ${cacheCallSites.length} cache-control assertion(s) verified to flow through @cf-bench/bench-cache helpers; ${responseDefaultsRoutes.size} responseDefaults route(s) wired; dataset defaults aligned.`
 );

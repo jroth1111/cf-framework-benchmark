@@ -1,4 +1,4 @@
-import { NO_STORE } from "@cf-bench/bench-cache";
+import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
 import app from "../dist/server/entry-server.js";
 
 export default {
@@ -15,12 +15,12 @@ export default {
       return response;
     }
 
+    const { pathname } = new URL(request.url);
+    const profile = request.headers.get("x-cf-bench-profile");
     const headers = new Headers(response.headers);
+    headers.set("cache-control", htmlCacheHeaderForPath(pathname, profile));
     if (!headers.has("server-timing")) {
       headers.set("server-timing", `cf_bench;dur=${(performance.now() - start).toFixed(1)}`);
-    }
-    if (!headers.has("cache-control")) {
-      headers.set("cache-control", NO_STORE);
     }
 
     return new Response(response.body, {

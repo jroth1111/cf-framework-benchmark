@@ -1,8 +1,12 @@
-import app from "../dist/analog/server/index.mjs";
+import { handleContractApi } from "@cf-bench/bench-contract";
 import { htmlCacheHeaderForPath } from "@cf-bench/bench-cache";
+import app from "../dist/analog/server/index.mjs";
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    const api = handleContractApi("analog", request);
+    if (api) return api;
+
     const start = performance.now();
     const response = await app.fetch(request, env, ctx);
     const contentType = response.headers.get("content-type") || "";

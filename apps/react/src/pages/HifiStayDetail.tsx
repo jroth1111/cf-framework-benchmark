@@ -9,6 +9,8 @@ export function HifiStayDetail() {
 
     return (
         <>
+            <script async src="/__bench/sdk/maps.js" />
+            <script async src="/__bench/sdk/analytics.js" />
             <div dangerouslySetInnerHTML={{ __html: parts.body }} />
             {parts.script ? <script dangerouslySetInnerHTML={{ __html: parts.script }} /> : null}
         </>

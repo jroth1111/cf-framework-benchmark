@@ -11,6 +11,8 @@ export default createRoute((c) => {
 	}
 	return c.render(
 		<>
+			<script async src="/__bench/sdk/maps.js" />
+			<script async src="/__bench/sdk/analytics.js" />
 			<div dangerouslySetInnerHTML={{ __html: parts.body }} />
 			{listing ? <script dangerouslySetInnerHTML={{ __html: parts.script }} /> : null}
 		</>,

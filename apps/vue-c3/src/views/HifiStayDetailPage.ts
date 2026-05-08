@@ -11,6 +11,10 @@ export default defineComponent({
 		onMounted(() => {
 			attachHifiBookingForms();
 		});
-		return () => h("div", { innerHTML: parts.value.body });
+		return () => [
+			h("script", { async: true, src: "/__bench/sdk/maps.js" }),
+			h("script", { async: true, src: "/__bench/sdk/analytics.js" }),
+			h("div", { innerHTML: parts.value.body }),
+		];
 	},
 });

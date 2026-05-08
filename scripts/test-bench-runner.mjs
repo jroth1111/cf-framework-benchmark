@@ -28,15 +28,22 @@ assert.equal(
 );
 
 // Scoring rubric loader: model literal lives in bench/scoring-rubric.json,
-// metricWeights and scenarioWeights each sum to 1.0, and the file produces
-// a non-null hash that the runner stamps into provenance.hashes.scoring.
+// metricWeights sums to 1.0, scenarioWeights is keyed per-suite with each
+// suite's weights summing to 1.0, and the file produces a non-null hash that
+// the runner stamps into provenance.hashes.scoring.
 {
   const rubric = loadScoringRubric();
   assert.equal(rubric.model, "real-world-choice-v1");
   const sumMetric = Object.values(rubric.metricWeights).reduce((s, w) => s + Number(w), 0);
-  const sumScenario = Object.values(rubric.scenarioWeights).reduce((s, w) => s + Number(w), 0);
   assert.ok(Math.abs(sumMetric - 1) < 1e-6, `metricWeights must sum to 1.0 (got ${sumMetric})`);
-  assert.ok(Math.abs(sumScenario - 1) < 1e-6, `scenarioWeights must sum to 1.0 (got ${sumScenario})`);
+  const suiteIds = Object.keys(rubric.scenarioWeights);
+  assert.ok(suiteIds.length > 0, "scenarioWeights must declare at least one suite");
+  for (const suiteId of suiteIds) {
+    const weights = rubric.scenarioWeights[suiteId];
+    assert.ok(weights && typeof weights === "object" && !Array.isArray(weights), `scenarioWeights["${suiteId}"] must be an object`);
+    const sum = Object.values(weights).reduce((s, w) => s + Number(w), 0);
+    assert.ok(Math.abs(sum - 1) < 1e-6, `scenarioWeights["${suiteId}"] must sum to 1.0 (got ${sum})`);
+  }
   const hash = scoringRubricHash();
   assert.ok(typeof hash === "string" && hash.length === 64, `scoringRubricHash must be 64-char sha256 (got ${hash})`);
 }

@@ -193,12 +193,22 @@ export function loadScoringRubric() {
     throw new Error(`${SCORING_RUBRIC_PATH} must include model, metricWeights, scenarioWeights.`);
   }
   const sumMetric = Object.values(rubric.metricWeights).reduce((s, w) => s + Number(w || 0), 0);
-  const sumScenario = Object.values(rubric.scenarioWeights).reduce((s, w) => s + Number(w || 0), 0);
   if (Math.abs(sumMetric - 1) > 1e-6) {
     throw new Error(`${SCORING_RUBRIC_PATH}: metricWeights must sum to 1.0 (got ${sumMetric}).`);
   }
-  if (Math.abs(sumScenario - 1) > 1e-6) {
-    throw new Error(`${SCORING_RUBRIC_PATH}: scenarioWeights must sum to 1.0 (got ${sumScenario}).`);
+  const suiteIds = Object.keys(rubric.scenarioWeights);
+  if (!suiteIds.length) {
+    throw new Error(`${SCORING_RUBRIC_PATH}: scenarioWeights must declare at least one suite (mpa_airbnb, spa_trading_media, mpa_airbnb_hifi, ...).`);
+  }
+  for (const suiteId of suiteIds) {
+    const weights = rubric.scenarioWeights[suiteId];
+    if (!weights || typeof weights !== 'object' || Array.isArray(weights)) {
+      throw new Error(`${SCORING_RUBRIC_PATH}: scenarioWeights["${suiteId}"] must be an object mapping scenario name → weight.`);
+    }
+    const sum = Object.values(weights).reduce((s, w) => s + Number(w || 0), 0);
+    if (Math.abs(sum - 1) > 1e-6) {
+      throw new Error(`${SCORING_RUBRIC_PATH}: scenarioWeights["${suiteId}"] must sum to 1.0 (got ${sum}).`);
+    }
   }
   return rubric;
 }
@@ -2134,7 +2144,28 @@ async function main() {
 
   const scoringRubric = loadScoringRubric();
   const metricWeights = scoringRubric.metricWeights;
-  const scenarioWeights = scoringRubric.scenarioWeights;
+  const suiteId = path.basename(outPath).match(/^results\.v4\.([^.]+)/)?.[1] ?? null;
+  if (!suiteId) {
+    throw new Error(
+      `bench runner: unable to derive suiteId from outPath ${outPath}; expected results.v4.<suite>.json. ` +
+      `scenarioWeights are looked up per-suite in bench/scoring-rubric.json.`
+    );
+  }
+  const scenarioWeights = scoringRubric.scenarioWeights[suiteId];
+  if (!scenarioWeights) {
+    throw new Error(
+      `bench/scoring-rubric.json: missing scenarioWeights["${suiteId}"]. ` +
+      `Every benchmark suite must declare per-scenario weights summing to 1.0.`
+    );
+  }
+  for (const scenario of scenarioNames) {
+    if (!Object.prototype.hasOwnProperty.call(scenarioWeights, scenario)) {
+      throw new Error(
+        `bench/scoring-rubric.json: scenarioWeights["${suiteId}"] missing scenario "${scenario}". ` +
+        `Every scenario in the suite must have a declared weight (no fallback).`
+      );
+    }
+  }
 
   const formatBucketKey = (key) => key.replace(/::/g, ' | ');
 
@@ -2165,7 +2196,7 @@ async function main() {
     const eligible = frameworksInBucket.filter((fw) => !incomplete.has(fw));
     const scores = new Map(eligible.map((fw) => [fw, { score: 0, weight: 0 }]));
     for (const scenario of scenarioNames) {
-      const scWeight = scenarioWeights[scenario] ?? 0.2;
+      const scWeight = scenarioWeights[scenario];
       const scRows = summary
         .filter((s) => s.profile === profile && s.phase === phase && s.scenario === scenario)
         .filter((s) => eligible.includes(s.framework));
@@ -2535,7 +2566,6 @@ async function main() {
 
   // Also write a markdown summary
   const mdPath = outPath.replace(/\.json$/, '.md');
-  const suiteId = path.basename(outPath).match(/^results\.v4\.([^.]+)/)?.[1] ?? null;
   const md = buildMarkdown(out, { iterationsArg, suiteId });
   await fs.writeFile(new URL(mdPath, 'file://'), md);
   console.log(`📝 Markdown summary written to ${mdPath}`);

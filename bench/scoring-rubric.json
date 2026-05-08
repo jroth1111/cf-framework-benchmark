@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "model": "real-world-choice-v1",
   "direction": "lower-is-better",
   "normalization": "min-max per metric within each profile/phase/tier/contract bucket; missing metrics are omitted and remaining observed weights are renormalized",
@@ -13,10 +13,23 @@
     "heap": 0.05
   },
   "scenarioWeights": {
-    "home": 0.1,
-    "stays": 0.25,
-    "blog": 0.2,
-    "chart": 0.25,
-    "media": 0.2
+    "mpa_airbnb": {
+      "home": 0.15,
+      "stays": 0.25,
+      "stay_detail": 0.2,
+      "blog": 0.2,
+      "blog_post": 0.2
+    },
+    "spa_trading_media": {
+      "chart": 0.55,
+      "media": 0.45
+    },
+    "mpa_airbnb_hifi": {
+      "home": 0.1,
+      "hifi_stays": 0.2,
+      "hifi_stay_detail": 0.4,
+      "blog": 0.15,
+      "blog_post": 0.15
+    }
   }
 }

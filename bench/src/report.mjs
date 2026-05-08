@@ -140,7 +140,16 @@ export function buildMarkdown(out, derived = {}) {
   const bundleSizes = out.bundleSizes || {};
   const scoringRubric = out.scoring;
   const metricWeights = scoringRubric.metricWeights || {};
-  const scenarioWeights = scoringRubric.scenarioWeights || {};
+  const allScenarioWeights = scoringRubric.scenarioWeights || {};
+  // Per-suite shape: { mpa_airbnb: { home: 0.15, ... }, ... }
+  // Legacy flat shape (pre-E3): { home: 0.1, stays: 0.25, ... } — supported
+  // for byte-exact regen of historical results files.
+  const isPerSuite = Object.values(allScenarioWeights).every(
+    (v) => v && typeof v === 'object' && !Array.isArray(v)
+  );
+  const scenarioWeights = isPerSuite
+    ? ((suiteId && allScenarioWeights[suiteId]) || {})
+    : allScenarioWeights;
   const bucketScores = out.bucketScores;
 
   let md = `# Framework Benchmark Results\n\n`;
@@ -664,7 +673,15 @@ export function buildMarkdown(out, derived = {}) {
   }
 
   md += `\n## Bucketed Scores\n\n`;
-  md += `> **Scoring rubric (${scoringRubric.model})**: lower is better. Metrics are min-max normalized within each profile/phase/tier/contract bucket, then weighted as LCP ${metricWeights.lcp}, TBT ${metricWeights.tbt}, TTFB ${metricWeights.ttfb}, interaction ${metricWeights.interaction}, script boot ${metricWeights.scriptBoot}, JS transfer ${metricWeights.jsBytes}, heap ${metricWeights.heap}. Scenario mix is home ${scenarioWeights.home}, stays ${scenarioWeights.stays}, blog ${scenarioWeights.blog}, chart ${scenarioWeights.chart}, media ${scenarioWeights.media}. Missing metrics are omitted and observed weights are renormalized. Failed or incomplete framework/scenario runs are not ranked.\n\n`;
+  const scenarioMix = isPerSuite
+    ? Object.entries(scenarioWeights)
+        .map(([name, weight]) => `${name} ${weight}`)
+        .join(', ')
+    : `home ${scenarioWeights.home}, stays ${scenarioWeights.stays}, blog ${scenarioWeights.blog}, chart ${scenarioWeights.chart}, media ${scenarioWeights.media}`;
+  const scenarioMixLabel = isPerSuite
+    ? `Scenario mix (${suiteId || 'unknown suite'}) is ${scenarioMix || '—'}`
+    : `Scenario mix is ${scenarioMix}`;
+  md += `> **Scoring rubric (${scoringRubric.model})**: lower is better. Metrics are min-max normalized within each profile/phase/tier/contract bucket, then weighted as LCP ${metricWeights.lcp}, TBT ${metricWeights.tbt}, TTFB ${metricWeights.ttfb}, interaction ${metricWeights.interaction}, script boot ${metricWeights.scriptBoot}, JS transfer ${metricWeights.jsBytes}, heap ${metricWeights.heap}. ${scenarioMixLabel}. Missing metrics are omitted and observed weights are renormalized. Failed or incomplete framework/scenario runs are not ranked.\n\n`;
   for (const profile of profileNames) {
     md += `### Profile: ${profile}\n\n`;
     for (const phase of phases) {

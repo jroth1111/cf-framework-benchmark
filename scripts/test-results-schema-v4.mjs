@@ -68,10 +68,10 @@ const resultPaths = entries
   .filter((entry) => /^results.*\.json$/.test(entry) && !entry.endsWith(".schema.json"))
   .sort();
 
-// Keys added in Phase E5a/E5d. Existing result files were generated before
+// Keys added in Phase E5a/E5b/E5d. Existing result files were generated before
 // these were introduced; they will be missing until the next bench run.
-// Hard-fail on any other schema violation; warn only for these two.
-const PHASE_E5_KEYS = new Set(["runnerTimings", "profiles"]);
+// Hard-fail on any other schema violation; warn only for these keys.
+const PHASE_E5_KEYS = new Set(["runnerTimings", "profiles", "coloRegions", "canonicalGeography"]);
 
 let liveCount = 0;
 for (const entry of resultPaths) {

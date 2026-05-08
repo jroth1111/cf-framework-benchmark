@@ -11,6 +11,7 @@ import { buildOptimizationAudit } from '../../scripts/cloudflare-optimization-au
 import { DEFAULT_TARGETS_PATH } from './config-v4.mjs';
 import { provenanceHashForRow, sha256 } from './provenance.mjs';
 import { buildMarkdown, formatBytes, formatDuration } from './report.mjs';
+import { classifyGeography, canonicalClass, loadCanonicalGeography } from './canonical-class.mjs';
 import resultsSchema from '../results.v4.schema.json' with { type: 'json' };
 import runnerTimingsCatalog from '../runner-timings.json' with { type: 'json' };
 import profilesCatalog from '../profiles.json' with { type: 'json' };
@@ -114,6 +115,24 @@ export function assertCanonicalResultWritable({ outPath, gitInfo, allowDirtyProv
   };
 }
 
+export function assertCanonicalGeography({ outPath, edgeLocations, allowIncompleteGeography = false }) {
+  if (!isCanonicalResultPath(outPath)) return { checked: false };
+  const geoConfig = loadCanonicalGeography();
+  const distinct = edgeLocations?.distinct || edgeLocations || [];
+  const { regions, unknown, coverage } = classifyGeography(distinct);
+  const required = new Set(geoConfig.requiredRegions || ['APAC', 'US', 'EU']);
+  const missing = [...required].filter((r) => !regions.has(r));
+  if (missing.length > 0 && !allowIncompleteGeography) {
+    throw new Error(
+      `Refusing to write canonical results to ${outPath}: geography coverage is "${coverage}" (missing regions: ${missing.join(', ')}).\n` +
+      `Required: ${[...required].join(', ')}. Edge locations observed: ${distinct.join(', ')}.\n` +
+      `  - Use a suffixed output path (e.g. results.v4.<suite>.dirty.json)\n` +
+      `  - Pass --allow-incomplete-geography to override this check`
+    );
+  }
+  return { checked: true, coverage, regions, missing, allowedOverride: missing.length > 0 && allowIncompleteGeography };
+}
+
 export function benchmarkContractHashInput() {
   return {
     version: 2,
@@ -125,6 +144,8 @@ export function benchmarkContractHashInput() {
       resultsSchema: hashFile('bench/results.v4.schema.json'),
       runnerTimings: hashFile('bench/runner-timings.json'),
       profiles: hashFile('bench/profiles.json'),
+      coloRegions: hashFile('bench/colo-regions.json'),
+      canonicalGeography: hashFile('bench/canonical-geography.json'),
     },
   };
 }
@@ -2008,8 +2029,10 @@ async function main() {
 
   await browser.close();
 
+  const activePlatformEra = cloudflarePlatform?.activeEra || null;
   for (const row of all) {
     row.provenanceHash = provenanceHashForRow(row, gitInfo, runSeed);
+    if (activePlatformEra) row.platformEra = activePlatformEra;
   }
 
   const failureSummary = new Map();
@@ -2509,6 +2532,8 @@ async function main() {
     cloudflareOptimization: sha256(cloudflareOptimizationAuditStable),
     runnerTimings: hashFile('bench/runner-timings.json'),
     profiles: hashFile('bench/profiles.json'),
+    coloRegions: hashFile('bench/colo-regions.json'),
+    canonicalGeography: hashFile('bench/canonical-geography.json'),
   };
   for (const key of REQUIRED_PROVENANCE_HASHES) {
     if (!provenanceHashes[key]) {
@@ -2593,6 +2618,18 @@ async function main() {
     summary,
     rows: all
   };
+
+  // Compute canonical class self-label and enforce geography gate.
+  const allowIncompleteGeography = flag('--allow-incomplete-geography');
+  const distinct = edgeLocations?.distinct || [];
+  const geoResult = classifyGeography(distinct);
+  out.canonical = {
+    class: canonicalClass(distinct),
+    geographyCoverage: geoResult.coverage,
+    regions: [...geoResult.regions],
+    unknown: geoResult.unknown,
+  };
+  assertCanonicalGeography({ outPath, edgeLocations: distinct, allowIncompleteGeography });
 
   await fs.writeFile(outPath, JSON.stringify(out, null, 2));
   console.log(`\n✅ Results written to ${outPath}`);

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0.0",
+  "regions": {
+    "APAC": ["MEL", "SYD", "AKL", "HKG", "SIN", "NRT", "ICN", "BOM"],
+    "US":   ["IAD", "EWR", "SJC", "ORD", "LAX", "ATL", "DFW", "MIA", "SEA"],
+    "EU":   ["FRA", "AMS", "CDG", "LHR", "ARN", "MAD", "MIL", "DUB"]
+  },
+  "notes": "Seeded from current Cloudflare colo prefixes; expand as edge expands. Used to self-label canonical geography per docs/contracts-v5.md Canonical Geography."
+}

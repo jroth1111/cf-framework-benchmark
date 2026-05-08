@@ -99,7 +99,9 @@
             "cloudflareConfig",
             "cloudflareOptimization",
             "runnerTimings",
-            "profiles"
+            "profiles",
+            "coloRegions",
+            "canonicalGeography"
           ],
           "properties": {
             "matrix": { "type": "string", "minLength": 1 },
@@ -113,7 +115,9 @@
             "cloudflareConfig": { "type": "string", "minLength": 1 },
             "cloudflareOptimization": { "type": "string", "minLength": 1 },
             "runnerTimings": { "type": "string", "minLength": 1 },
-            "profiles": { "type": "string", "minLength": 1 }
+            "profiles": { "type": "string", "minLength": 1 },
+            "coloRegions": { "type": "string", "minLength": 1 },
+            "canonicalGeography": { "type": "string", "minLength": 1 }
           },
           "additionalProperties": true
         },
@@ -176,10 +180,21 @@
           "iteration": { "type": "integer", "minimum": 0 },
           "ok": { "type": "boolean" },
           "url": { "type": "string" },
-          "provenanceHash": { "type": "string" }
+          "provenanceHash": { "type": "string" },
+          "platformEra": { "type": "string" }
         },
         "additionalProperties": true
       }
+    },
+    "canonical": {
+      "type": "object",
+      "properties": {
+        "class": { "type": "string", "minLength": 1 },
+        "geographyCoverage": { "type": "string" },
+        "regions": { "type": "array", "items": { "type": "string" } },
+        "unknown": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
     },
     "failures": { "type": "array" },
     "failureSummary": { "type": "object", "additionalProperties": true },

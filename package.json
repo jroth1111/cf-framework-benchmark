@@ -43,6 +43,8 @@
     "test:results-schema": "node scripts/test-results-schema-v4.mjs",
     "test:runner-imports-timings": "node scripts/test-runner-imports-timings.mjs",
     "test:profile-catalog-external": "node scripts/test-profile-catalog-external.mjs",
+    "test:canonical-geography": "node scripts/test-canonical-geography.mjs",
+    "test:platform-era-stamp": "node scripts/test-platform-era-stamp.mjs",
     "test:build-enabled": "node --check scripts/build-enabled.mjs",
     "check:startup": "node scripts/check-worker-startup.mjs",
     "test:contracts": "node scripts/contract-tests.mjs",

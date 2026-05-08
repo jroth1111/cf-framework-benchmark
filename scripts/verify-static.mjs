@@ -62,6 +62,8 @@ await run("test:contracts-schema", "pnpm", ["test:contracts-schema"]);
 await run("test:results-schema", "pnpm", ["test:results-schema"]);
 await run("test:runner-imports-timings", "pnpm", ["test:runner-imports-timings"]);
 await run("test:profile-catalog-external", "pnpm", ["test:profile-catalog-external"]);
+await run("test:canonical-geography", "pnpm", ["test:canonical-geography"]);
+await run("test:platform-era-stamp", "pnpm", ["test:platform-era-stamp"]);
 await run("cloudflare:config-audit", "pnpm", ["cloudflare:config-audit", "--fail-on-gaps"]);
 await run("cloudflare:optimization-audit", "pnpm", ["cloudflare:optimization-audit", "--fail-on-gaps"]);
 await run("test:build-enabled", "pnpm", ["test:build-enabled"]);

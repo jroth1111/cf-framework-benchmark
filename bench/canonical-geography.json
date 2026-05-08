@@ -1,0 +1,5 @@
+{
+  "schemaVersion": "1.0.0",
+  "requiredRegions": ["APAC", "US", "EU"],
+  "notes": "Supersedes the prose declaration at docs/contracts-v5.md Canonical Geography section. Used to refuse canonical writes that miss any required region when assertCanonicalResultWritable is called without --allow-incomplete-geography."
+}

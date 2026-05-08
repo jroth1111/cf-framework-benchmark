@@ -123,6 +123,40 @@ for (const route of ["/api/listings", "/api/prices", "/api/media"]) {
   );
 }
 
+// 7. SDK-fixture and beacon routes must declare expectedApiCache matching
+//    the constants in @cf-bench/bench-cache. These routes are handled by
+//    bench-contract but were previously ungoverned by the contract.
+const sdkRoutes = contractV5.routes.filter((entry) => entry.kind === "sdk-fixture");
+const beaconRoutes = contractV5.routes.filter((entry) => entry.kind === "beacon");
+assert.ok(sdkRoutes.length >= 2, `expected at least 2 sdk-fixture routes (got ${sdkRoutes.length})`);
+assert.ok(beaconRoutes.length >= 1, `expected at least 1 beacon route (got ${beaconRoutes.length})`);
+
+const { SDK_CACHE_HEADER, NO_STORE } = await import("../packages/bench-cache/src/index.js");
+for (const entry of sdkRoutes) {
+  assert.equal(
+    entry.expectedApiCache,
+    SDK_CACHE_HEADER,
+    `contracts/v5.json route ${entry.route} expectedApiCache must match SDK_CACHE_HEADER`
+  );
+  assert.equal(
+    entry.responseDefaults,
+    null,
+    `contracts/v5.json route ${entry.route} responseDefaults must be null`
+  );
+}
+for (const entry of beaconRoutes) {
+  assert.equal(
+    entry.expectedApiCache,
+    NO_STORE,
+    `contracts/v5.json route ${entry.route} expectedApiCache must be no-store`
+  );
+  assert.equal(
+    entry.responseDefaults,
+    null,
+    `contracts/v5.json route ${entry.route} responseDefaults must be null`
+  );
+}
+
 console.log(
-  `contract-api-cache: ${apiRoutes.length} api route(s) carry expectedApiCache; ${cacheCallSites.length} cache-control assertion(s) verified to flow through @cf-bench/bench-cache helpers; ${responseDefaultsRoutes.size} responseDefaults route(s) wired.`
+  `contract-api-cache: ${apiRoutes.length} api route(s) carry expectedApiCache; ${sdkRoutes.length} sdk-fixture route(s); ${beaconRoutes.length} beacon route(s); ${cacheCallSites.length} cache-control assertion(s) verified to flow through @cf-bench/bench-cache helpers; ${responseDefaultsRoutes.size} responseDefaults route(s) wired.`
 );

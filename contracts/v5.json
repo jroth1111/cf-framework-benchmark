@@ -253,6 +253,45 @@
       },
       "expectedDatasetSource": null,
       "includeInAssetClassification": false
+    },
+    {
+      "route": "/__bench/sdk/maps.js",
+      "kind": "sdk-fixture",
+      "staticSample": "/__bench/sdk/maps.js",
+      "suites": [],
+      "requiredTestIds": [],
+      "expectedHtmlCache": null,
+      "expectedApiCache": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800",
+      "expectedErrorApiCache": null,
+      "responseDefaults": null,
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": false
+    },
+    {
+      "route": "/__bench/sdk/analytics.js",
+      "kind": "sdk-fixture",
+      "staticSample": "/__bench/sdk/analytics.js",
+      "suites": [],
+      "requiredTestIds": [],
+      "expectedHtmlCache": null,
+      "expectedApiCache": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800",
+      "expectedErrorApiCache": null,
+      "responseDefaults": null,
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": false
+    },
+    {
+      "route": "/__bench/beacon",
+      "kind": "beacon",
+      "staticSample": "/__bench/beacon",
+      "suites": [],
+      "requiredTestIds": [],
+      "expectedHtmlCache": null,
+      "expectedApiCache": "no-store",
+      "expectedErrorApiCache": null,
+      "responseDefaults": null,
+      "expectedDatasetSource": null,
+      "includeInAssetClassification": false
     }
   ]
 }

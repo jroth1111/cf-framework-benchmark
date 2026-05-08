@@ -327,6 +327,18 @@ assert.equal(
   "benchmark provenance contract hash must include bench/results.v4.schema.json (E4)"
 );
 
+assert.equal(
+  typeof benchmarkContractHashInput().contracts.runnerTimings,
+  "string",
+  "benchmark provenance contract hash must include bench/runner-timings.json (E5d)"
+);
+
+assert.equal(
+  typeof benchmarkContractHashInput().contracts.profiles,
+  "string",
+  "benchmark provenance contract hash must include bench/profiles.json (E5a)"
+);
+
 assert.equal(isCanonicalResultPath("bench/results.v4.mpa_airbnb.json"), true);
 assert.equal(isCanonicalResultPath("bench/results.v4.mpa_airbnb.dirty.json"), false);
 assert.equal(isCanonicalResultPath("bench/results.v4.spa_trading_media.smoke.json"), false);

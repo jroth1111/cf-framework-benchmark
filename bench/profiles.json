@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "headerName": "x-cf-bench-profile",
+  "validValues": ["parity", "idiomatic", "mobile-cold"],
+  "profiles": [
+    {
+      "id": "parity",
+      "device": "default",
+      "throttling": null,
+      "chartCache": "no-store",
+      "htmlCachePolicy": "downgrade-non-hifi"
+    },
+    {
+      "id": "idiomatic",
+      "device": "default",
+      "throttling": null,
+      "chartCache": "default",
+      "htmlCachePolicy": "preserve"
+    },
+    {
+      "id": "mobile-cold",
+      "device": "iPhone 14",
+      "throttling": "slow-3g",
+      "chartCache": "default",
+      "htmlCachePolicy": "preserve"
+    }
+  ]
+}

@@ -12,6 +12,8 @@ import { DEFAULT_TARGETS_PATH } from './config-v4.mjs';
 import { provenanceHashForRow, sha256 } from './provenance.mjs';
 import { buildMarkdown, formatBytes, formatDuration } from './report.mjs';
 import resultsSchema from '../results.v4.schema.json' with { type: 'json' };
+import runnerTimingsCatalog from '../runner-timings.json' with { type: 'json' };
+import profilesCatalog from '../profiles.json' with { type: 'json' };
 
 const REQUIRED_PROVENANCE_HASHES = resultsSchema.properties.provenance.properties.hashes.required;
 
@@ -25,70 +27,11 @@ const CLOUDFLARE_PLATFORM_ERAS_PATH = 'bench/cloudflare-platform-eras.json';
 const DEFAULT_OUT = new URL('../results.v4.json', import.meta.url);
 const NON_CANONICAL_RESULT_SUFFIXES = ['.smoke.', '.dirty.', '.flame.', '.stability.'];
 
-/**
- * Timing constants for benchmark measurements.
- * These values balance accuracy vs. test execution speed.
- */
-const TIMING = {
-  /** Time between chart ready checks (poll interval) */
-  CHART_READY_POLL_MS: 100,
-  /** Time after mouse/wheel interactions to allow UI to settle */
-  INTERACTION_SETTLE_MS: 150,
-  /** Time after control changes (dropdowns, checkboxes) to reflect state */
-  CONTROL_CHANGE_MS: 250,
-  /** Time after warmup route hit before moving to next route */
-  WARMUP_SETTLE_MS: 500,
-  /** Required quiet window after last LCP update before sampling metrics */
-  LCP_STABLE_WINDOW_MS: 1000,
-  /** Max time to wait for LCP to stabilize */
-  LCP_MAX_WAIT_MS: 5000,
-  /** Max time to wait for hydration markers (if present) */
-  HYDRATION_MAX_WAIT_MS: 2000,
-  /** Extra settle time after LCP stability to capture long tasks */
-  POST_LOAD_SETTLE_MS: 500,
-  /** Max time to wait for client-nav selector or URL */
-  CLIENT_NAV_TIMEOUT_MS: 12000,
-  /** Max time to wait for scenario readiness selectors */
-  SCENARIO_WAIT_TIMEOUT_MS: 12000,
-  /** Hard cap for an entire scenario (guard against hung navigations) */
-  SCENARIO_HARD_TIMEOUT_MS: 60000,
-  /** Max time to wait for CDP metrics collection */
-  CDP_TIMEOUT_MS: 5000,
-  /** Max time to wait for INP to be recorded after interactions */
-  INP_SETTLE_MS: 1500,
-};
-
-const NAV_RETRY = {
-  maxAttempts: 3,
-  backoffMs: 750,
-};
-
-const NETWORK_PROFILES = {
-  none: {
-    offline: false,
-    latency: 0,
-    downloadThroughput: -1,
-    uploadThroughput: -1,
-    connectionType: 'none',
-  },
-  'fast-4g': {
-    offline: false,
-    latency: 150,
-    downloadThroughput: Math.floor((1.6 * 1024 * 1024) / 8),
-    uploadThroughput: Math.floor((0.75 * 1024 * 1024) / 8),
-    connectionType: 'cellular4g',
-  },
-  'slow-3g': {
-    offline: false,
-    latency: 400,
-    downloadThroughput: Math.floor((0.4 * 1024 * 1024) / 8),
-    uploadThroughput: Math.floor((0.4 * 1024 * 1024) / 8),
-    connectionType: 'cellular3g',
-  },
-};
-
-const VIEWPORT = { width: 1280, height: 720 };
-const BENCH_PROFILE_HEADER = 'x-cf-bench-profile';
+const TIMING = runnerTimingsCatalog.timing;
+const NAV_RETRY = runnerTimingsCatalog.navRetry;
+const NETWORK_PROFILES = runnerTimingsCatalog.networkProfiles;
+const VIEWPORT = runnerTimingsCatalog.viewport;
+const BENCH_PROFILE_HEADER = runnerTimingsCatalog.benchProfileHeader;
 
 function resolveDeviceContext(profileSettings) {
   const deviceName = profileSettings?.device;
@@ -180,6 +123,8 @@ export function benchmarkContractHashInput() {
       contractsJson: hashFile('contracts/v5.json'),
       contractSchema: hashFile('contracts/v5.schema.json'),
       resultsSchema: hashFile('bench/results.v4.schema.json'),
+      runnerTimings: hashFile('bench/runner-timings.json'),
+      profiles: hashFile('bench/profiles.json'),
     },
   };
 }
@@ -1780,10 +1725,10 @@ async function main() {
   const profiles = profileArg
     ? (profileArg === 'both' ? ['parity', 'idiomatic'] : [profileArg])
     : (Array.isArray(config.profiles) && config.profiles.length ? config.profiles : ['parity', 'idiomatic']);
-  const profileSettings = config.profileSettings || {
-    parity: { chartCache: 'no-store' },
-    idiomatic: { chartCache: 'default' },
-  };
+  const defaultProfileSettings = Object.fromEntries(
+    profilesCatalog.profiles.map((p) => [p.id, { chartCache: p.chartCache, ...(p.throttling ? { throttling: p.throttling } : {}), ...(p.device && p.device !== 'default' ? { device: p.device } : {}) }])
+  );
+  const profileSettings = config.profileSettings || defaultProfileSettings;
   const throttleArg = arg('--throttle', null);
   const cpuArg = arg('--cpu', null);
   const networkArg = arg('--network', null);
@@ -2562,6 +2507,8 @@ async function main() {
     cloudflarePlatform: hashFile(CLOUDFLARE_PLATFORM_ERAS_PATH),
     cloudflareConfig: sha256(cloudflareAuditStable),
     cloudflareOptimization: sha256(cloudflareOptimizationAuditStable),
+    runnerTimings: hashFile('bench/runner-timings.json'),
+    profiles: hashFile('bench/profiles.json'),
   };
   for (const key of REQUIRED_PROVENANCE_HASHES) {
     if (!provenanceHashes[key]) {

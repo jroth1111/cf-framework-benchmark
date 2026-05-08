@@ -41,6 +41,8 @@
     "test:rubric-coverage": "node scripts/test-rubric-coverage.mjs",
     "test:contracts-schema": "node scripts/test-contracts-schema.mjs",
     "test:results-schema": "node scripts/test-results-schema-v4.mjs",
+    "test:runner-imports-timings": "node scripts/test-runner-imports-timings.mjs",
+    "test:profile-catalog-external": "node scripts/test-profile-catalog-external.mjs",
     "test:build-enabled": "node --check scripts/build-enabled.mjs",
     "check:startup": "node scripts/check-worker-startup.mjs",
     "test:contracts": "node scripts/contract-tests.mjs",

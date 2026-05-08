@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bench/profiles.schema.json",
+  "title": "Benchmark Profile Catalog",
+  "description": "Canonical profile definitions for the benchmark runner. Declares valid --profile values, per-profile device/throttling settings, and the HTTP header name used to pass the profile to app workers.",
+  "type": "object",
+  "required": ["schemaVersion", "headerName", "validValues", "profiles"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "headerName": {
+      "type": "string",
+      "description": "HTTP request header name sent to app workers to identify the active benchmark profile."
+    },
+    "validValues": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "device", "throttling", "chartCache", "htmlCachePolicy"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "device": { "type": "string" },
+          "throttling": { "type": ["string", "null"] },
+          "chartCache": { "type": ["string", "null"] },
+          "htmlCachePolicy": {
+            "type": "string",
+            "enum": ["preserve", "downgrade-non-hifi"]
+          }
+        }
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    }
+  }
+}

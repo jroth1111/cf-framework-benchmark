@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bench/runner-timings.schema.json",
+  "title": "Runner Timings Catalog",
+  "description": "Canonical timing, retry, viewport, and network-throttle constants for the benchmark runner. bench/src/run.mjs imports this; packages/bench-config re-exports timing constants from here.",
+  "type": "object",
+  "required": ["schemaVersion", "timing", "navRetry", "viewport", "networkProfiles", "benchProfileHeader"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "timing": {
+      "type": "object",
+      "required": [
+        "CHART_READY_POLL_MS",
+        "INTERACTION_SETTLE_MS",
+        "CONTROL_CHANGE_MS",
+        "WARMUP_SETTLE_MS",
+        "LCP_STABLE_WINDOW_MS",
+        "LCP_MAX_WAIT_MS",
+        "HYDRATION_MAX_WAIT_MS",
+        "POST_LOAD_SETTLE_MS",
+        "CLIENT_NAV_TIMEOUT_MS",
+        "SCENARIO_WAIT_TIMEOUT_MS",
+        "SCENARIO_HARD_TIMEOUT_MS",
+        "CDP_TIMEOUT_MS",
+        "INP_SETTLE_MS"
+      ],
+      "additionalProperties": { "type": "integer" }
+    },
+    "navRetry": {
+      "type": "object",
+      "required": ["maxAttempts", "backoffMs"],
+      "additionalProperties": false,
+      "properties": {
+        "maxAttempts": { "type": "integer", "minimum": 1 },
+        "backoffMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "viewport": {
+      "type": "object",
+      "required": ["width", "height"],
+      "additionalProperties": false,
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "networkProfiles": {
+      "type": "object",
+      "required": ["none", "fast-4g", "slow-3g"],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["offline", "latency", "downloadThroughput", "uploadThroughput", "connectionType"],
+        "additionalProperties": false,
+        "properties": {
+          "offline": { "type": "boolean" },
+          "latency": { "type": "number" },
+          "downloadThroughput": { "type": "number" },
+          "uploadThroughput": { "type": "number" },
+          "connectionType": { "type": "string" }
+        }
+      }
+    },
+    "benchProfileHeader": { "type": "string" }
+  }
+}

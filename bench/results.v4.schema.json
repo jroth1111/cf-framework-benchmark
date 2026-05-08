@@ -97,7 +97,9 @@
             "suites",
             "cloudflarePlatform",
             "cloudflareConfig",
-            "cloudflareOptimization"
+            "cloudflareOptimization",
+            "runnerTimings",
+            "profiles"
           ],
           "properties": {
             "matrix": { "type": "string", "minLength": 1 },
@@ -109,7 +111,9 @@
             "suites": { "type": "string", "minLength": 1 },
             "cloudflarePlatform": { "type": "string", "minLength": 1 },
             "cloudflareConfig": { "type": "string", "minLength": 1 },
-            "cloudflareOptimization": { "type": "string", "minLength": 1 }
+            "cloudflareOptimization": { "type": "string", "minLength": 1 },
+            "runnerTimings": { "type": "string", "minLength": 1 },
+            "profiles": { "type": "string", "minLength": 1 }
           },
           "additionalProperties": true
         },

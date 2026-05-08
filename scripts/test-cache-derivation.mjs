@@ -23,6 +23,8 @@ const ALLOWED_FILES = new Set([
   "docs/contracts-v3.md",
   "docs/cloudflare-best-practices.md",
   "bench/cloudflare-platform-eras.json",
+  "bench/profiles.json",
+  "bench/profiles.schema.json",
   "scripts/test-cache-derivation.mjs",
   "scripts/test-contract-api-cache.mjs",
   "package.json",

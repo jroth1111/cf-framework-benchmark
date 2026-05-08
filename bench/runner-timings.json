@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1.0.0",
+  "timing": {
+    "CHART_READY_POLL_MS": 100,
+    "INTERACTION_SETTLE_MS": 150,
+    "CONTROL_CHANGE_MS": 250,
+    "WARMUP_SETTLE_MS": 500,
+    "LCP_STABLE_WINDOW_MS": 1000,
+    "LCP_MAX_WAIT_MS": 5000,
+    "HYDRATION_MAX_WAIT_MS": 2000,
+    "POST_LOAD_SETTLE_MS": 500,
+    "CLIENT_NAV_TIMEOUT_MS": 12000,
+    "SCENARIO_WAIT_TIMEOUT_MS": 12000,
+    "SCENARIO_HARD_TIMEOUT_MS": 60000,
+    "CDP_TIMEOUT_MS": 5000,
+    "INP_SETTLE_MS": 1500
+  },
+  "navRetry": {
+    "maxAttempts": 3,
+    "backoffMs": 750
+  },
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "networkProfiles": {
+    "none": {
+      "offline": false,
+      "latency": 0,
+      "downloadThroughput": -1,
+      "uploadThroughput": -1,
+      "connectionType": "none"
+    },
+    "fast-4g": {
+      "offline": false,
+      "latency": 150,
+      "downloadThroughput": 209715,
+      "uploadThroughput": 98304,
+      "connectionType": "cellular4g"
+    },
+    "slow-3g": {
+      "offline": false,
+      "latency": 400,
+      "downloadThroughput": 52428,
+      "uploadThroughput": 52428,
+      "connectionType": "cellular3g"
+    }
+  },
+  "benchProfileHeader": "x-cf-bench-profile"
+}

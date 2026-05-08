@@ -3,6 +3,7 @@
 // non-hifi cacheable HTML routes to no-store; hifi routes always emit the rich
 // header (the hifi suite measures cached responses).
 import contracts from "../../../contracts/v5.json" with { type: "json" };
+import profilesCatalog from "../../../bench/profiles.json" with { type: "json" };
 
 export const NO_STORE = "no-store";
 
@@ -14,7 +15,11 @@ export const SDK_CACHE_HEADER = "public, max-age=0, s-maxage=86400, stale-while-
 
 const ROUTES_BY_PATH = new Map(contracts.routes.map((r) => [r.route, r]));
 
-const HTML_PROFILES_THAT_PRESERVE_CACHE = new Set(["idiomatic", "mobile-cold"]);
+const HTML_PROFILES_THAT_PRESERVE_CACHE = new Set(
+  profilesCatalog.profiles
+    .filter((p) => p.htmlCachePolicy === "preserve")
+    .map((p) => p.id)
+);
 
 function isHifiRoute(routeId) {
   return typeof routeId === "string" && routeId.startsWith("/hifi/");

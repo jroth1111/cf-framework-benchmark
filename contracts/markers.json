@@ -13,10 +13,8 @@
       "switchStartTs": "number?"
     },
     "chartCore": {
-      "avgDrawTimeMs": "number",
-      "maxDrawTimeMs": "number",
-      "drawCount": "number",
-      "totalDrawTimeMs": "number"
+      "lastDrawMs": "number",
+      "drawCount": "number"
     },
     "media": {
       "ready": "boolean",
@@ -34,7 +32,7 @@
   },
   "requiredFields": {
     "chart": ["ready"],
-    "chartCore": ["avgDrawTimeMs", "maxDrawTimeMs", "drawCount", "totalDrawTimeMs"],
+    "chartCore": ["lastDrawMs", "drawCount"],
     "media": ["ready"],
     "hifi": []
   }

@@ -33,10 +33,8 @@ export interface MediaMetrics {
  * Low-level chart rendering performance metrics
  */
 export interface ChartCoreMetrics {
-  avgDrawTimeMs: number;
-  maxDrawTimeMs: number;
+  lastDrawMs: number;
   drawCount: number;
-  totalDrawTimeMs: number;
 }
 
 /**

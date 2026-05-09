@@ -352,6 +352,37 @@ export async function main() {
       api.push(await probeApi({ framework: framework.name, baseUrl, path: sample, expectedApiCache: apiRoute.expectedApiCache }));
     }
 
+    // Probe SDK-fixture and beacon routes (kind !== html && kind !== api).
+    // These share the same shape as API routes — cache-control and content-type.
+    for (const nonApiRoute of CONTRACTS.routes.filter((r) => r.kind !== "html" && r.kind !== "api")) {
+      const sample = resolveStaticSample(nonApiRoute.staticSample, nonApiRoute.route);
+      api.push(await probeApi({ framework: framework.name, baseUrl, path: sample, expectedApiCache: nonApiRoute.expectedApiCache }));
+    }
+
+    // Probe API error paths for routes that declare expectedErrorApiCache.
+    // /api/listings/:id with nonexistent ID → 404
+    // /api/prices with invalid symbol → 400
+    const listingsEntry = ROUTES_BY_PATH.get("/api/listings/:id");
+    if (listingsEntry?.expectedErrorApiCache) {
+      api.push(await probeApi({
+        framework: framework.name,
+        baseUrl,
+        path: "/api/listings/nonexistent__cf_bench_error_probe",
+        expectedStatus: 404,
+        expectedApiCache: listingsEntry.expectedErrorApiCache,
+      }));
+    }
+    const pricesEntry = ROUTES_BY_PATH.get("/api/prices");
+    if (pricesEntry?.expectedErrorApiCache) {
+      api.push(await probeApi({
+        framework: framework.name,
+        baseUrl,
+        path: "/api/prices?symbol=INVALID_SYMBOL__cf_bench",
+        expectedStatus: 400,
+        expectedApiCache: pricesEntry.expectedErrorApiCache,
+      }));
+    }
+
     const ok = routes.every((route) => route.ok) && api.every((endpoint) => endpoint.ok);
     report.frameworks.push({
       name: framework.name,

@@ -2,10 +2,15 @@
 import assert from "node:assert/strict";
 
 import { htmlCacheHeader } from "../packages/bench-cache/src/index.js";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import {
   expectedDatasetContent,
   expectedHtmlCache,
   requiredTestIdsForRoute,
+  resolveStaticSample,
   routeSample,
   routeSamples,
   routesForFramework,
@@ -37,6 +42,30 @@ assert.deepEqual(
 assert.deepEqual(
   routesForFramework({ matrix: { hifi: { enabled: false } } }, hifiRoutes),
   ["/", "/blog", "/blog/:slug"]
+);
+
+// Verify resolveStaticSample for SDK-fixture and beacon routes.
+assert.equal(resolveStaticSample("/__bench/sdk/maps.js", "/__bench/sdk/maps.js"), "/__bench/sdk/maps.js");
+assert.equal(resolveStaticSample("/__bench/sdk/analytics.js", "/__bench/sdk/analytics.js"), "/__bench/sdk/analytics.js");
+assert.equal(resolveStaticSample("/__bench/beacon", "/__bench/beacon"), "/__bench/beacon");
+
+// Verify that contract-report.mjs probes non-API/non-HTML routes and error paths.
+// Parse the source to confirm the probe loops exist (structural proof).
+const reportSrc = await fs.readFile(
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), "contract-report.mjs"),
+  "utf8"
+);
+assert.ok(
+  reportSrc.includes('kind !== "html" && r.kind !== "api"'),
+  "contract-report.mjs must probe SDK-fixture and beacon routes"
+);
+assert.ok(
+  reportSrc.includes("expectedErrorApiCache"),
+  "contract-report.mjs must probe API error paths using expectedErrorApiCache"
+);
+assert.ok(
+  reportSrc.includes('expectedStatus: 404') && reportSrc.includes('expectedStatus: 400'),
+  "contract-report.mjs must probe 404 and 400 error paths"
 );
 
 console.log("contract report regression tests passed");

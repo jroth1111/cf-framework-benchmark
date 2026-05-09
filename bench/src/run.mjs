@@ -2685,7 +2685,7 @@ async function main() {
   // Also write a markdown summary
   const mdPath = writeOutPath.replace(/\.json$/, '.md');
   const md = buildMarkdown(out, { iterationsArg, suiteId });
-  await fs.writeFile(new URL(mdPath, 'file://'), md);
+  await fs.writeFile(mdPath, md);
   console.log(`📝 Markdown summary written to ${mdPath}`);
 }
 

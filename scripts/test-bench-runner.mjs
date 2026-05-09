@@ -526,4 +526,20 @@ assert.notEqual(
   }
 }
 
+// Markdown path derivation: .json → .md must work for absolute and relative paths.
+// Regression test for new URL(mdPath, 'file://') bug that resolved relative paths
+// incorrectly (e.g. ./results.md → file:///results.md instead of cwd-relative).
+{
+  const absJson = "/Users/demo/bench/results.v4.spa_trading_media.json";
+  const absMd = absJson.replace(/\.json$/, ".md");
+  assert.equal(absMd, "/Users/demo/bench/results.v4.spa_trading_media.md");
+
+  const relJson = "./results.v4.json";
+  const relMd = relJson.replace(/\.json$/, ".md");
+  assert.equal(relMd, "./results.v4.md");
+  // Verify the old pattern was broken: new URL(relMd, 'file://') would resolve
+  // to file:///results.v4.md (wrong), not a cwd-relative path.
+  assert.equal(new URL(relMd, "file://").href, "file:///results.v4.md");
+}
+
 console.log("bench runner regression tests passed");

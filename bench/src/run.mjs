@@ -1361,7 +1361,7 @@ function errorToString(err) {
 
 function isRetryableNavError(err) {
   const msg = errorToString(err).toLowerCase();
-  if (/^http_(408|429|5\\d\\d)$/.test(msg)) return true;
+  if (/^http_(408|429|5\d\d)$/.test(msg)) return true;
   if (msg.includes('timeout')) return true;
   if (msg.includes('net::err') || msg.includes('err_aborted') || msg.includes('frame was detached')) return true;
   return false;

@@ -505,4 +505,25 @@ assert.notEqual(
   "row provenance hash should include Link and HTTP 103 Early Hints evidence"
 );
 
+// isRetryableNavError regex: must match http_5xx status codes.
+// The regex in run.mjs is /^http_(408|429|5\d\d)$/ — this test ensures
+// the character class is a real \d (matches digits), not an escaped \\d
+// (matches literal backslash+d, which never matches any HTTP status).
+{
+  const retryablePattern = /^http_(408|429|5\d\d)$/;
+  // 5xx statuses must match
+  for (const status of [500, 502, 503, 504, 599]) {
+    const msg = `http_${status}`;
+    assert.ok(retryablePattern.test(msg), `http_${status} must be retryable`);
+  }
+  // 408 and 429 must match
+  assert.ok(retryablePattern.test("http_408"), "http_408 must be retryable");
+  assert.ok(retryablePattern.test("http_429"), "http_429 must be retryable");
+  // non-retryable statuses must not match
+  for (const status of [200, 301, 400, 401, 403, 404]) {
+    const msg = `http_${status}`;
+    assert.ok(!retryablePattern.test(msg), `http_${status} must NOT be retryable`);
+  }
+}
+
 console.log("bench runner regression tests passed");

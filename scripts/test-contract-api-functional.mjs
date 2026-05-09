@@ -118,6 +118,9 @@ for (const route of sdkRoutes) {
 {
   const res = await assertHandled("/__bench/beacon", { expectStatus: 204 });
   assert.ok(res.headers.get("cache-control")?.includes("no-store"), "/__bench/beacon is no-store");
+  const beaconTiming = res.headers.get("server-timing") || "";
+  assert.ok(beaconTiming.includes("cf_bench"), "/__bench/beacon must include server-timing");
+  assert.ok(/cf_bench;dur=[0-9]/.test(beaconTiming), `/__bench/beacon server-timing must have numeric dur, got: ${beaconTiming}`);
   assert.equal(await res.text(), "", "/__bench/beacon body is empty");
 }
 

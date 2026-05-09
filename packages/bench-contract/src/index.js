@@ -158,7 +158,8 @@ export function handleSdkAnalytics() {
 }
 
 export function handleBeacon() {
-  const headers = withServerTiming(null, performance.now());
+  const start = performance.now();
+  const headers = withServerTiming(null, start);
   headers.set("cache-control", NO_STORE);
   return new Response(null, { status: 204, headers });
 }
